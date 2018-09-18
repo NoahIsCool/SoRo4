@@ -1,0 +1,12 @@
+#ifndef AUTONOMOUS_GLOBAL_H
+#define AUTONOMOUS_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(AUTONOMOUS_LIBRARY)
+#  define AUTONOMOUSSHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define AUTONOMOUSSHARED_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // AUTONOMOUS_GLOBAL_H

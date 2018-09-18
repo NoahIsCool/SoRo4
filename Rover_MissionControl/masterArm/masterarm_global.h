@@ -1,0 +1,12 @@
+#ifndef MASTERARM_GLOBAL_H
+#define MASTERARM_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(MASTERARM_LIBRARY)
+#  define MASTERARMSHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define MASTERARMSHARED_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // MASTERARM_GLOBAL_H

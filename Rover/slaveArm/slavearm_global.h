@@ -1,0 +1,12 @@
+#ifndef SLAVEARM_GLOBAL_H
+#define SLAVEARM_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(SLAVEARM_LIBRARY)
+#  define SLAVEARMSHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define SLAVEARMSHARED_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // SLAVEARM_GLOBAL_H

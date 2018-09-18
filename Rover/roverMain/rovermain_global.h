@@ -1,0 +1,12 @@
+#ifndef ROVERMAIN_GLOBAL_H
+#define ROVERMAIN_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(ROVERMAIN_LIBRARY)
+#  define ROVERMAINSHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define ROVERMAINSHARED_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // ROVERMAIN_GLOBAL_H
