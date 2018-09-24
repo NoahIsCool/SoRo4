@@ -18,9 +18,9 @@ TEMPLATE = subdirs
 
 SUBDIRS = \
     autonomous \
-    roverMain \
     slaveArm \
-    driveSystem
+    driveSystem \
+    roverMain
 
 CONFIG += ordered
 
