@@ -32,6 +32,7 @@ HEADERS += \
         drivecontroller_global.h 
 
 unix {
-    target.path = /usr/lib
+    #target.path = /usr/lib
+    target.path = bin/
     INSTALLS += target
 }
