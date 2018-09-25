@@ -18,7 +18,8 @@
 
 #pragma once
 #include <string>
-#include <gst/gst.h>
+
+#include "gst/gst.h"
 #include <glib.h>
 #include <gst/gstbin.h>
 #include <glib/gerror.h>

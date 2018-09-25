@@ -13,7 +13,7 @@
  * expressed or implied by its publication or distribution.
  **********************************************************************/
 
-#include "videoServer.h"
+#include "videoserver.h"
 
 using namespace logger;
 using namespace videoStreamer;
@@ -46,7 +46,7 @@ VideoServer::VideoServer(std::string configFile){
                         LOG_I(LOG_TAG,"Good news, everybody! I found the " + devices[i].name + " camera!",true);
                     devices[i].exists = true;
                     }else{
-                        LOG_ERR(LOG_TAG,"Sweet File-not-found of Puget Sound! Cant find the " + devices[i].name + " device. You should probably check to see if it is plugged in.",true);
+                        LOG_E(LOG_TAG,"Sweet File-not-found of Puget Sound! Cant find the " + devices[i].name + " device. You should probably check to see if it is plugged in.",true);
                     devices[i].exists = false;
                 }
             }

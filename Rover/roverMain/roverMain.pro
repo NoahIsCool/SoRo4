@@ -14,6 +14,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += $$PWD/..
+INCLUDEPATH += /usr/include/gstreamer-1.0 /usr/include/glib-2.0 /usr/lib/x86_64-linux-gnu/glib-2.0/include
+INCLUDEPATH += /opt/project-remoteVideo/shared /usr/lib/arm-linux-gnueabihf/glib-2.0/include
+
 SOURCES += \
         main.cpp
 
@@ -21,3 +25,10 @@ SOURCES += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+unix:!macx: LIBS += -L$$PWD/../bin/ -lvideoServer
+
+INCLUDEPATH += $$PWD/../videoServer
+DEPENDPATH += $$PWD/../videoServer
+
+unix:!macx: LIBS += -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -lUseful -lCRC
