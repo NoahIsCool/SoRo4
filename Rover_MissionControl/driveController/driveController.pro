@@ -10,7 +10,7 @@ QT       -= gui
 
 TARGET = driveController
 TEMPLATE = lib
-DESTDIR = ../../bin
+DESTDIR = ../../Rover_missionControl/libs
 
 DEFINES += DRIVECONTROLLER_LIBRARY
 

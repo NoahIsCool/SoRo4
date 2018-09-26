@@ -10,7 +10,7 @@ QT       -= gui
 
 TARGET = masterArm
 TEMPLATE = lib
-DESTDIR = ../../bin
+DESTDIR = ../../Rover_missionControl/libs
 
 DEFINES += MASTERARM_LIBRARY
 

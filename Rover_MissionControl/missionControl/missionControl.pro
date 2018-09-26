@@ -2,7 +2,7 @@ QT -= gui
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
-DESTDIR = ../../bin
+DESTDIR = ../../Rover_missionControl/bin
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -17,6 +17,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp
+
+LIBS += -L../../Rover_missionControl/libs -ldriveController -lmasterArm
+
+QMAKE_LFLAGS += -Wl,--rpath=\\\$\$ORIGIN/../libs
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
