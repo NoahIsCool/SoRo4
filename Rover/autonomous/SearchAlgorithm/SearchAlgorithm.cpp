@@ -1,11 +1,14 @@
 #include <list>
 #include <queue>
 #include <set>
-#include "findPath.h"
+#include "SearchAlgorithm.h"
 
 //Higher value means more avoidance from the algorithm
 const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
 const double SearchAlgorithm::GRADWEIGHT = 1.0; //Weight given to the difference in elevation between two nodes when calculating cost
+Cell** SearchAlgorithm::map; //Matrix of Cell objects
+int SearchAlgorithm::maxx; //max x-value on the map
+int SearchAlgorithm::maxy; //max y-value on the map
 
 std::list<double*> SearchAlgorithm::findPath(double * source, double * dest, Cell ** map, int maxx, int maxy)
 {
@@ -29,7 +32,7 @@ std::list<double*> SearchAlgorithm::findPath(double * source, double * dest)
 
 	//Create the source node and add it to the open list
 	std::priority_queue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
-	std::set<Node> closed;
+	std::set<Node, compareNodes> closed;
 
 	Node sourceNode(sourcex, sourcey, nullptr, 0.0, 0.0);
 	Node destNode(destx, desty, nullptr, 0.0, 0.0);

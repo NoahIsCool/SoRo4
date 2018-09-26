@@ -49,7 +49,7 @@ private:
 	Comparator class for a min priority queue of Nodes. Compares nodes based on their f value.
 	*/
 	struct compareNodes {
-		bool operator() (Node n1, Node n2) {
+		bool operator() (const Node& n1, const Node& n2) const {
 			return n1.f > n2.f;
 		}
 	};
