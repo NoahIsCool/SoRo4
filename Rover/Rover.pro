@@ -21,7 +21,6 @@ SUBDIRS = \
     slaveArm \
     driveSystem \
     roverMain \
-    videoServer
 
 CONFIG += ordered
 

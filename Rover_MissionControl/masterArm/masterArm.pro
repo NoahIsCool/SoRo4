@@ -10,6 +10,7 @@ QT       -= gui
 
 TARGET = masterArm
 TEMPLATE = lib
+DESTDIR = ../../bin
 
 DEFINES += MASTERARM_LIBRARY
 

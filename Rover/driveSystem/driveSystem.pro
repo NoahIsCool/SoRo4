@@ -10,6 +10,7 @@ QT       -= gui
 
 TARGET = driveSystem
 TEMPLATE = lib
+DESTDIR = ../../Rover/libs
 
 DEFINES += DRIVESYSTEM_LIBRARY
 
@@ -31,7 +32,7 @@ HEADERS += \
         drivesystem.h \
         drivesystem_global.h 
 
-unix {
-    target.path = /usr/lib
+#unix {
+    target.path = $$PWD/
     INSTALLS += target
-}
+#}

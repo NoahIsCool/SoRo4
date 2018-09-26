@@ -1,14 +1,12 @@
 ﻿#include <QCoreApplication>
 
-#include "videoServer/videoserver.h"
+#include "autonomous/autonomous.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    VideoServer server("/opt/project-remoteVideo/config/server.conf");
-
-    server.run();
+    Autonomous autonomous;
 
     return a.exec();
 }

@@ -10,6 +10,7 @@ QT       -= gui
 
 TARGET = driveController
 TEMPLATE = lib
+DESTDIR = ../../bin
 
 DEFINES += DRIVECONTROLLER_LIBRARY
 

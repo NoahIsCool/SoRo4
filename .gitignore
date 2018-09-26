@@ -1,2 +1,6 @@
 build-Rover-Desktop_Qt_5_11_1_GCC_64bit-Debug
 build-Rover_MissionControl-Desktop_Qt_5_11_1_GCC_64bit-Debug
+Rover/libs
+Rover/bin
+Rover_MissionControl/bin
+Rover_MissionControl/libs
