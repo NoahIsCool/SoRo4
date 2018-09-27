@@ -10,6 +10,7 @@ QT       -= gui
 
 TARGET = slaveArm
 TEMPLATE = lib
+DESTDIR = ../../Rover/libs
 
 DEFINES += SLAVEARM_LIBRARY
 

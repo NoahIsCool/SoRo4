@@ -20,7 +20,7 @@ SUBDIRS = \
     autonomous \
     slaveArm \
     driveSystem \
-    roverMain
+    roverMain \
 
 CONFIG += ordered
 

@@ -10,6 +10,7 @@ QT       -= gui
 
 TARGET = autonomous
 TEMPLATE = lib
+DESTDIR = ../../Rover/libs
 
 DEFINES += AUTONOMOUS_LIBRARY
 
@@ -31,7 +32,7 @@ HEADERS += \
         autonomous.h \
         autonomous_global.h 
 
-unix {
-    target.path = /usr/lib
+#unix {
+    target.path = $$PWD
     INSTALLS += target
-}
+#}
