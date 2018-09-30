@@ -41,17 +41,47 @@ int main(int argc, char* argv[])
 		std::vector<std::string> tokens = tokenize(line, reg);
 		std::vector<std::string>::iterator it = tokens.begin();
 
-		int x = std::stoi(it[0]); //convert string to int
-		int y = std::stoi(it[1]); 
+		int sizeX = std::stoi(it[0]); //convert string to int
+		int sizeY = std::stoi(it[1]); 
 		
+		//Make new map. Not the most efficient way to do it, see
+		//int *ary = new int[sizeX*sizeY];
 
-		/*std::cout << "Map input:\n";
-		while (getline(myfile, line))
-		{		
-			std::cout << line << '\n';
+		// ary[i][j] is then rewritten as
+		//ary[i*sizeY + j]
+		Cell **map = new Cell*[sizeY];
+		for (int i = 0; i < sizeY; ++i) {
+			map[i] = new Cell[sizeX];
+		}
 
-		}*/
-		myfile.close();
+		//Print and initialize map
+		std::cout << "Map input:\n";
+		for (int r = 0; r < sizeY; r++)
+		{
+			getline(myfile, line);
+			tokens = tokenize(line, reg);
+			it = tokens.begin();
+			for (int c = 0; c < sizeX; c++)
+			{
+				Cell cell = {};
+				cell.lng = c;
+				cell.lat = r;
+				cell.gradient = stod(it[c]);
+				map[r][c] = cell;
+				std::cout << "(" << cell.lat << ", " << cell.lng << "), " << cell.gradient << " ";
+			}
+			std::cout << std::endl;
+		}
+		myfile.close(); //done with file
+
+		//Get list for the path
+		double start[] = { 4,0 };
+		double end[] = { 0,4 };
+		std::list<double*> path = SearchAlgorithm::findPath(start, end, map, sizeX, sizeY);
+		for (auto const& step : path) {
+			std::cout << step[0] << ", " << step[1] << std::endl;
+		}
+
 	}
 
 	return 0;

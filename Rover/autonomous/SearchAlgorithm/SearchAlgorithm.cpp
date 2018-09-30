@@ -25,10 +25,10 @@ std::list<double*> SearchAlgorithm::findPath(double * source, double * dest)
 	//TODO: Find the x and y coordinates of the source and destination
 
 	//Temporary variables, we need to figure out how we want to find their values
-	int sourcex = 0;
-	int sourcey = 0;
-	int destx = 0;
-	int desty = 0;
+	int sourcex = source[0];
+	int sourcey = source[1];
+	int destx = dest[0];
+	int desty = dest[1];
 
 	//Create the source node and add it to the open list
 	std::priority_queue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
