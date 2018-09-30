@@ -5,7 +5,8 @@
 
 //Higher value means more avoidance from the algorithm
 const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
-const double SearchAlgorithm::GRADWEIGHT = 1.0; //Weight given to the difference in elevation between two nodes when calculating cost
+const double SearchAlgorithm::UPWEIGHT = 1.0; //Weight given to the difference in elevation when going up
+const double SearchAlgorithm::DOWNWEIGHT = 1.0; //Weight given to the difference in elevation when going down
 Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
 int SearchAlgorithm::maxy; //max y-value on the map
@@ -89,7 +90,7 @@ std::list<SearchAlgorithm::Node> SearchAlgorithm::getNeighbors(Node& current, in
 			//construct a new node for each neighbor and add it to the list
 			double newG = getGCost(current, x, y);
 			double newF = newG + getHeuristic(destx, desty, x, y);
-			Node neighbor(x, y, &current, newG, newF); //TODO might go out of scope
+			Node neighbor(x, y, &current, newG, newF);
 
 			out.push_front(neighbor);
 		}
@@ -101,10 +102,18 @@ std::list<SearchAlgorithm::Node> SearchAlgorithm::getNeighbors(Node& current, in
 double SearchAlgorithm::getGCost(SearchAlgorithm::Node current, int x, int y) {
 	//if the two nodes are adjacent, distance is 1, if they are diagonal, it is 1.4
 	double distance = (abs((current.x + current.y) - (x + y)) == 1) ? 1.0 : 1.4;
-	double gradientDiff = map[current.x][current.y].gradient - map[x][y].gradient; //TODO determine slope based on gradient
+	double gradientDiff = map[current.x][current.y].gradient - map[x][y].gradient;
+
+	double gradientVal = 0.0;
+	//Weight the gradient differently depending on if we are going up or down
+	if (gradientDiff < 0) { //we're going up
+		gradientVal = abs(gradientDiff) * UPWEIGHT;
+	} else {
+		gradientVal = gradientDiff * DOWNWEIGHT;
+	}
 
 	//return the cost so far plus the cost to move to the new node
-	return current.g + (DISTWEIGHT * distance + GRADWEIGHT * gradientDiff);
+	return current.g + (DISTWEIGHT * distance + gradientVal);
 }
 
 double SearchAlgorithm::getHeuristic(int destx, int desty, int x, int y) {

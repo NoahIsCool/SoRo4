@@ -56,7 +56,8 @@ private:
 
 	//Higher value means more avoidance from the algorithm
 	static const double DISTWEIGHT; //Weight given to the distance between two nodes when calculating cost
-	static const double GRADWEIGHT; //Weight given to the difference in elevation between two nodes when calculating cost
+	static const double UPWEIGHT; //Weight given to the difference in elevation when going up
+	static const double DOWNWEIGHT; //Weight given to the difference in elevation when going down
 
 	static Cell** map; //Matrix of Cell objects
 	static int maxx; //max x-value on the map
