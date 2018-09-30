@@ -1,5 +1,3 @@
 build-Rover*
-Rover/libs
-Rover/bin
-Rover_missionControl/bin
-Rover_missionControl/libs
+libs
+bin
