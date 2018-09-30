@@ -20,7 +20,6 @@ SUBDIRS += \
     masterArm \
     driveController \
     missionControl \
-    core
 
 CONFIG += ordered
 
