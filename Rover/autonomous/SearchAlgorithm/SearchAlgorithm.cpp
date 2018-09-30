@@ -31,12 +31,26 @@ std::list<double*> SearchAlgorithm::findPath(double * source, double * dest)
 	int destx = dest[0];
 	int desty = dest[1];
 
+	//Determine the difference in latitude between the first two rows
+	double latDiff = map[0][1].lat - map[0][0].lat; //Should be negative because 0 lat is equator
+
+	//Find y coordinates
+	sourcey = (source[0] - map[0][0].lat) / latDiff;
+	desty = (dest[0] - map[0][0].lat) / latDiff;
+
+	//Determine the difference in longitude between the first two columns
+	double lngDiff = map[1][0].lng - map[0][0].lng; //should be negative becasuse longitude proceeds east to west in NA
+
+	//Find x coordinates
+	sourcex = (source[1] - map[0][0].lng) / lngDiff;
+	destx = (dest[1] - map[0][0].lng) / lngDiff;
+
 	//Create the source node and add it to the open list
 	std::priority_queue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
 	std::set<Node, compareNodes> closed;
 
 	Node sourceNode(sourcex, sourcey, nullptr, 0.0, 0.0);
-	Node destNode(destx, desty, nullptr, 0.0, 0.0);
+	Node destNode(destx, desty, nullptr, 0.0, 0.0); //CHANGE: in
 	open.push(sourceNode);
 
 	//Loop while there are still elements in the open list
@@ -108,7 +122,8 @@ double SearchAlgorithm::getGCost(SearchAlgorithm::Node current, int x, int y) {
 	//Weight the gradient differently depending on if we are going up or down
 	if (gradientDiff < 0) { //we're going up
 		gradientVal = abs(gradientDiff) * UPWEIGHT;
-	} else {
+	}
+	else {
 		gradientVal = gradientDiff * DOWNWEIGHT;
 	}
 

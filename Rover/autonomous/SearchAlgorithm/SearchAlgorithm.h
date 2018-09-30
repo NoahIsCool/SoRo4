@@ -73,7 +73,7 @@ private:
 public:
 
 	/****
-	Performs a* pathfinding over the topographic map and returns the best path. The first method must be run first to 
+	Performs a* pathfinding over the topographic map and returns the best path. The first method must be run first to
 
 	double* source - latitude and longitude of the source in decimal degrees, expected in the format: latutude, longitude
 	double* dest - latitude and longitude of the destination in decimal degrees, expected in the format: latitude, longitude
