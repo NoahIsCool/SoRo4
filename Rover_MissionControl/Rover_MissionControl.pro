@@ -19,7 +19,7 @@ TEMPLATE = subdirs
 SUBDIRS += \
     masterArm \
     driveController \
-    missionControl
+    missionControl \
 
 CONFIG += ordered
 
