@@ -1,5 +1,7 @@
 ﻿#include "autonomous.h"
 
+//this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
+
 Socket mySocket;
 double speed = 60; //IDK what we want for speed right now or if we want to be updating it.
 
@@ -45,11 +47,17 @@ bool Autonomous::IsThereObsticleOrStuck()
 
 void Autonomous::avoidObsticle()
 {
-    //backs up a bit
+    //backs up for 5 seconds
+    mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
+    sleep(5000);
 
-    //turn like 15 degrees or so
+    //turns for a few seconds to hopefully avoid the obsticle
+    mySocket.sendUDP(0, 0, 0, -speed, speed, 0, 0, 0);
+    sleep(5000);
 
-    //drive forward a bit and we good(?)
+    //drive forward a bit and continue(?)
+    mySocket.sendUDP(0, 0, 0, speed, speed, 0, 0, speed);
+    sleep(5000);
 }
 
 void Autonomous::FindTennisBall()
