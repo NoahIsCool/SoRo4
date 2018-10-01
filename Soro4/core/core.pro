@@ -28,7 +28,8 @@ SOURCES += \
 
 HEADERS += \
         core.h \
-        core_global.h 
+        core_global.h \ 
+    soro_global.h
 
 #unix {
     target.path = $$PWD/
