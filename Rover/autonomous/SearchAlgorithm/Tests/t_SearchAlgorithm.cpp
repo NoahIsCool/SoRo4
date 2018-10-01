@@ -67,8 +67,9 @@ int main(int argc, char* argv[])
 				cell.lng = c;
 				cell.lat = r;
 				cell.gradient = stod(it[c]);
-				map[r][c] = cell;
-				std::cout << "(" << cell.lat << ", " << cell.lng << "), " << cell.gradient << " ";
+				map[c][r] = cell;  //CHNG r(lat), c(lng) to c(lng), r(lat)
+				std::cout << "(x:" << c << ", y:" << r << ")(lat:" << cell.lat << ", lng:" << cell.lng << "), " << 
+					cell.gradient << " "; //clearly separate x,y and lat,lng. They should be opposite
 			}
 			std::cout << std::endl;
 		}

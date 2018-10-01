@@ -77,15 +77,17 @@ std::list<double*> SearchAlgorithm::findPath(double * source, double * dest)
 
 	//create output list
 	std::list<double*> out;
-	Node interest = destNode;
+	Node * interest = &destNode;
 
 	//ascend the parent tree, adding the corresponding GPS coordinates until we reach the source
 	do {
-		Cell cell = map[interest.x][interest.y];
+		Cell cell = map[interest->x][interest->y];
 		double pair[2] = { cell.lat, cell.lng };
 		out.push_front(pair);
-		interest = *interest.parent;
-	} while (interest.parent != nullptr);
+		interest = interest->parent;
+	} while (interest != nullptr);
+
+	//CHNG interest interest might be assigned to a null pointer, so changed it to a pointer
 
 	//return output list
 	return out;
