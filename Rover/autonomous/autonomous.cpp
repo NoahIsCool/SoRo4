@@ -70,17 +70,28 @@ double Autonomous::getAngleToTurn()
 
 }
 
+std::vector<double> Autonomous::inputNextCoords()
+{
+
+}
+
 //Goes through all of the coordinates that we need to travel through
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
 int Autonomous::MainLoop()
 {
-    std::vector<std::vector<double>> ListOfCheckpointsListOfCoords = generatePath();
+    std::vector<std::vector<double>> ListOfCoordsToNextCheckpoint = generatePath();
 
-    for(int i = 0; i < sizeof(ListOfCheckpointsListsOfCoords); i++) //loops through each of the checkpoints
+    //this can probably be done better by someone who is better at cpp than me
+    std::vector<double> killVector(2);
+    killVector[0] = -1;
+    killVector[1] = -1;
+
+    while(inputNextCords() != killVector)
     {
-        for(int j = 0, j < sizeOf(ListOfCheckpointsListOfCoords[i]), j++) //loops through each of the coordinates to get to the next checkpoint
+        for(int j = 0, j < sizeOf(ListOfCheckpointsListOfCoords), j++) //loops through each of the coordinates to get to the next checkpoint
         {
-            while(ListOfCheckpointsListOfCoords[i][j] != CurrentGPSHeading)
+            ListOfCoordsToNextCheckpoint = GeneratePath();
+            while(ListOfCoordsToNextCheckpoint[i][j] != CurrentGPSHeading)
             {
                 if(IsThereObsticleOrStuck())
                 {
