@@ -6,9 +6,9 @@ SUBDIRS += \
     slaveArm \
     driveController \
     masterArm \
+    core \
     RoverMain \
-    Rover_MissionControl \
-    core
+    Rover_MissionControl
 
 CONFIG += ordered
 
