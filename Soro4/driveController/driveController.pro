@@ -10,7 +10,7 @@ QT       -= gui
 
 TARGET = driveController
 TEMPLATE = lib
-DESTDIR = ../../Rover_missionControl/libs
+DESTDIR = ../../libs
 
 DEFINES += DRIVECONTROLLER_LIBRARY
 
@@ -32,8 +32,7 @@ HEADERS += \
         drivecontroller.h \
         drivecontroller_global.h 
 
-unix {
-    #target.path = /usr/lib
-    target.path = bin/
+#unix {
+    target.path = $$PWD/
     INSTALLS += target
-}
+#}

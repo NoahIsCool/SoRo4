@@ -10,7 +10,7 @@ QT       -= gui
 
 TARGET = driveSystem
 TEMPLATE = lib
-DESTDIR = ../../Rover/libs
+DESTDIR = ../../libs
 
 DEFINES += DRIVESYSTEM_LIBRARY
 

@@ -1,6 +1,6 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2018-09-18T08:53:08
+# Project created by QtCreator 2018-09-18T09:02:56
 #
 #-------------------------------------------------
 
@@ -8,11 +8,11 @@ QT       += network
 
 QT       -= gui
 
-TARGET = autonomous
+TARGET = masterArm
 TEMPLATE = lib
-DESTDIR = ../../Rover/libs
+DESTDIR = ../../libs
 
-DEFINES += AUTONOMOUS_LIBRARY
+DEFINES += MASTERARM_LIBRARY
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -26,13 +26,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-        autonomous.cpp
+        masterarm.cpp
 
 HEADERS += \
-        autonomous.h \
-        autonomous_global.h 
+        masterarm.h \
+        masterarm_global.h 
 
 #unix {
-    target.path = $$PWD
+    target.path = $$PWD/
     INSTALLS += target
 #}
