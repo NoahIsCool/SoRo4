@@ -1,14 +1,15 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
+    core \
     autonomous \
     driveSystem \
     slaveArm \
     driveController \
     masterArm \
-    core \
+    videoServer \
     RoverMain \
-    Rover_MissionControl
+    Rover_MissionControl \
 
 CONFIG += ordered
 

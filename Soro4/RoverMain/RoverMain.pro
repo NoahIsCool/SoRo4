@@ -16,11 +16,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 INCLUDEPATH += $$PWD/..
+INCLUDEPATH += /usr/include/gstreamer-1.0 /usr/include/glib-2.0 /usr/lib/x86_64-linux-gnu/glib-2.0/include
+INCLUDEPATH += /usr/lib/arm-linux-gnueabihf/glib-2.0/include
 
 SOURCES += \
         main.cpp
 
-LIBS += -L../../libs -lautonomous -ldriveSystem -lslaveArm
+LIBS += -L../../libs -lautonomous -ldriveSystem -lslaveArm -lvideoServer -lcore
+LIBS += -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0
 
 QMAKE_LFLAGS += -Wl,--rpath=\\\$\$ORIGIN/../libs
 
