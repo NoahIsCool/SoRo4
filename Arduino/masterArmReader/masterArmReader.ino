@@ -47,7 +47,7 @@ void sendData(){
   for(int i = 4; i<11; i++){
     pinMode(buttons[i], INPUT);
     if(digitalRead(buttons[i] = 0) == HIGH){
-      data[i+3]=1; //set the value of the array element to 1 for pressed (the +3 is to account for the start commands and joints)
+      data[i+6]=1; //set the value of the array element to 1 for pressed (the +3 is to account for the start commands and joints)
     }
   }
 
