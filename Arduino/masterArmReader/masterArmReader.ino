@@ -62,11 +62,14 @@ void sendData(){
     }
   }
   //Cycle throught all elements of the message and send
+  sum = 0;
   for(int z = 0; z<11; z++){
     
     //Send the data array element by element (will be seen by reader as a series of integers)
     Serial.write(data[z]); 
+    sum = sum + data[z];
   }
+  Serial.write(sum/11); //NOT SURE IF I WANT TO AVERAGE THE START COMMAND AND ID OR NOT <----------------------------
 }
 
 
