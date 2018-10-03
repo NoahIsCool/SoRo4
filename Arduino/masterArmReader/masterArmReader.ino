@@ -21,13 +21,13 @@
  */
 
 //Serial Communication ID so the computer knows what device this is.
-int ID = 69;
+int ID = 122; //<----------------SET THIS TO SOMETHING THAT WORKS --------------------------------------
 
 
 
 //Port Numbers 
-int buttons[6] = {0,1,2,3,4,5}; //pitchUp, pitchDown, rollLeft (CCW from the rover's perspective), rollRight (CW from the rover's perspective), let go, grab (digital ports connected to buttons)
-int joints[2] = {0,1}; //shoulder, Elbow (the analog ports the potentiometers are connected to)
+int buttons[4] = {0,1,2,3}; //rollLeft (CCW from the rover's perspective), rollRight (CW from the rover's perspective), let go, grab (digital ports connected to buttons)
+int joints[4] = {0,1,2,3}; //yaw,shoulder, elbow, wrist pitch (the analog ports the potentiometers are connected to)
 
 void setup() {
   //Start talking to the computer
@@ -40,11 +40,11 @@ void loop() {
 
 void sendData(){
   //data is used as a "packet" for when we send it over serial (don't worry about the floating point math the int typecast automatically converts it after but it will throw a warning oh well)
-  int data[11] = {-127, ID, (int)analogRead(joints[0])*0.263671875,(int)analogRead(joints[1])*0.263671875,0,0,0,0,0,0 };
+  int data[11] = {-127, ID, (int)analogRead(joints[0])*0.2490234375,(int)analogRead(joints[1])*0.2490234375,(int)analogRead(joints[2])*0.2490234375,(int)analogRead(joints[3])*0.2490234375,0,0,0,0};
 
 
   //Figure out if the buttons are being pressed or not
-  for(int i = 0; i<6; i++){
+  for(int i = 4; i<11; i++){
     pinMode(buttons[i], INPUT);
     if(digitalRead(buttons[i] = 0) == HIGH){
       data[i+3]=1; //set the value of the array element to 1 for pressed (the +3 is to account for the start commands and joints)
