@@ -21,13 +21,13 @@
  */
 
 //Serial Communication ID so the computer knows what device this is.
-int ID = 122; //<----------------SET THIS TO SOMETHING THAT WORKS --------------------------------------
+int ID = 1; 
 
 
 
 //Port Numbers 
 int buttons[4] = {0,1,2,3}; //rollLeft (CCW from the rover's perspective), rollRight (CW from the rover's perspective), let go, grab (digital ports connected to buttons)
-int joints[4] = {0,1,2,3}; //yaw,shoulder, elbow, wrist pitch (the analog ports the potentiometers are connected to)
+int joints[4] = {0,1,2,3}; //yaw, shoulder, elbow, wrist pitch (the analog ports the potentiometers are connected to)
 
 void setup() {
   //Start talking to the computer
@@ -41,35 +41,50 @@ void loop() {
 }
 
 void sendData(){
-  //data is used as a "packet" for when we send it over serial (don't worry about the floating point math the int typecast automatically converts it after but it will throw a warning oh well)
-  //0.2490234375 is 255/1024 to convert the units of the potentiometer to fit in a byte
-  //On the other side you must multiply by 270/255 (1.0588235294) to convert it to degrees and 0.0184799567 to convert to radians (don't use radians you weirdo thats for math not humans)
-  int data[11] = {-127, ID, (int)analogRead(joints[0])*0.2490234375,(int)analogRead(joints[1])*0.2490234375,(int)analogRead(joints[2])*0.2490234375,(int)analogRead(joints[3])*0.2490234375,0,0,0,0};
-
+  /*
+  data is used as a "packet" for when we send it over serial (don't worry about the floating point math the int typecast automatically converts it after but it will throw a warning oh well)
+  0.263671875 is the value 270°/1024 to convert the potentiometer output to degrees (5v/1024 represents 270°)
+  NOTE: The converstion to a int restricts our accuracy to a minimum of ~4° of accuracy and to type on a keyboard we need 1.2°)
+  */
+  int data[11];
+  
+  data[0] = -127; //Start command to tell the computer we are sending data
+  data[1] = ID; //ID number to identify the arduino this is coming from.
+  data[2] = (int)analogRead(joints[0])*0.263671875; //Get the data from the Yaw Pot. (rotate arm horizontally)
+  data[3] = (int)analogRead(joints[1])*0.263671875; //Get the data from the Shoulder Pot. (the bottom joint)
+  data[4] = (int)analogRead(joints[2])*0.263671875; //Get the data from the Elbow Pot. (the second from the bottom joint)
+  data[5] = (int)analogRead(joints[3])*0.263671875; //Get the data from the Wrist Pitch Pot. (rotate the finger/hand pitch)
+  data[6] = 0; data[7] = 0; data[8] = 0; data[9] = 0; //Set all the button data to default to 0 (low)
+  
 
   //Figure out if the buttons are being pressed or not
   for(int i = 0; i<4; i++){
     
-    //Set the digital port i to pinmode of input so we can read data from it. (we don't ever need to set it to output I just did this for security)
+    //Set the digital port i to pinmode of input so we can read data from it.
     pinMode(buttons[i], INPUT);
     
     //If the button is pressed run this if statement
     if(digitalRead(buttons[i] = 0) == HIGH){
       
-      //set the value of the array element to 1 for pressed (the +6 is to account for the start commands and joints)
-      data[i+6]=1; 
+      //set the value of the array element to 1 (high) for pressed (the +6 is to account for the start commands and joints)
+      data[i+6]=1; //6 is the element that the buttons start at
       
     }
   }
+  
+  //Set this variable to 0 so we can average it at the end
+  int sum = 0;
+  
   //Cycle throught all elements of the message and send
-  sum = 0;
-  for(int z = 0; z<11; z++){
+  for(int z = 0; z<10; z++){
     
     //Send the data array element by element (will be seen by reader as a series of integers)
-    Serial.write(data[z]); 
+    Serial.write(data[z]);
+    
+    //Increase the sum by the data value so we can average it out at the end
     sum = sum + data[z];
   }
-  Serial.write(sum/11); //NOT SURE IF I WANT TO AVERAGE THE START COMMAND AND ID OR NOT <----------------------------
+  Serial.write(sum/10);
 }
 
 
