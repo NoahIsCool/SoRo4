@@ -5,8 +5,8 @@
 
 //Higher value means more avoidance from the algorithm
 const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
-const double SearchAlgorithm::UPWEIGHT = 1.0; //Weight given to the difference in elevation when going up
-const double SearchAlgorithm::DOWNWEIGHT = 1.0; //Weight given to the difference in elevation when going down
+const double SearchAlgorithm::UPWEIGHT = 1000.0; //Weight given to the difference in elevation when going up
+const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the difference in elevation when going down
 Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
 int SearchAlgorithm::maxy; //max y-value on the map
@@ -23,31 +23,25 @@ std::list<double*> SearchAlgorithm::findPath(double * source, double * dest, Cel
 
 std::list<double*> SearchAlgorithm::findPath(double * source, double * dest)
 {
-	//TODO: Find the x and y coordinates of the source and destination
-
-	//Temporary variables, we need to figure out how we want to find their values
-	int sourcex = 0;
-	int sourcey = 0;
-	int destx = 0;
-	int desty = 0;
+	//Determine the x and y values of the source and destination from their latitude and longitude
 
 	//Determine the difference in latitude between the first two rows
 	double latDiff = map[0][1].lat - map[0][0].lat; //Should be negative because 0 lat is equator
 
 	//Find y coordinates
-	sourcey = (source[0] - map[0][0].lat) / latDiff;
-	desty = (dest[0] - map[0][0].lat) / latDiff;
+	int sourcey = round((source[0] - map[0][0].lat) / latDiff);
+	int desty = round((dest[0] - map[0][0].lat) / latDiff);
 
 	//Determine the difference in longitude between the first two columns
 	double lngDiff = map[1][0].lng - map[0][0].lng; //should be negative becasuse longitude proceeds east to west in NA
 
 	//Find x coordinates
-	sourcex = (source[1] - map[0][0].lng) / lngDiff;
-	destx = (dest[1] - map[0][0].lng) / lngDiff;
+	int sourcex = round((source[1] - map[0][0].lng) / lngDiff);
+	int destx = round((dest[1] - map[0][0].lng) / lngDiff);
 
 	//Create the source node and add it to the open list
 	std::priority_queue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
-	std::set<Node, compareNodes> closed;
+	std::set<Node, compareNodes2> closed;
 
 	Node sourceNode(sourcex, sourcey, nullptr, 0.0, 0.0);
 	Node destNode(destx, desty, &sourceNode, 0.0, 0.0); //CHNG 10/3: changed 'nullptr' to '&sourceNode'. This will change no-path output
@@ -66,9 +60,8 @@ std::list<double*> SearchAlgorithm::findPath(double * source, double * dest)
 		}
 
 		//if the current node is not in the closed list, add it, and add its neighbors to the open list
-		if (closed.find(*current) == closed.end()) {
-			closed.insert(*current);
-
+		std::pair<std::set<Node, compareNodes2>::iterator, bool> inserted = closed.insert(*current);
+		if (inserted.second) {
 			for (Node neighbor : getNeighbors(*current, destx, desty)) {
 				open.push(neighbor);
 			}
@@ -82,8 +75,13 @@ std::list<double*> SearchAlgorithm::findPath(double * source, double * dest)
 	//ascend the parent tree, adding the corresponding GPS coordinates until we reach the source
 	do {
 		Cell cell = map[interest->x][interest->y];
-		double pair[2] = { cell.lat, cell.lng };
+
+		double * pair = new double[2]; //CHNG 10/5: dynamically allocated array to avoid the overwriting problem
+		pair[0] = cell.lat;
+		pair[1] = cell.lng;
+
 		out.push_front(pair);
+
 		interest = interest->parent;
 	} while (interest != nullptr);
 
@@ -99,7 +97,7 @@ std::list<SearchAlgorithm::Node> SearchAlgorithm::getNeighbors(Node& current, in
 	//for each neighbor, excluding the current node and any neighbors that go out of map bounds
 	for (int x = current.x - 1; x <= current.x + 1; x++) { //CHNG 'x < current.x + 1' to 'x <= current.x + 1'
 		for (int y = current.y - 1; y <= current.y + 1; y++) { //CHNG 'y < current.y + 1' to 'x <= current.y + 1'
-			if (x < 0 || y < 0 || x > maxx || y > maxy || (x == current.x && y == current.y)) {
+			if (x < 0 || y < 0 || x >= maxx || y >= maxy || (x == current.x && y == current.y)) {
 				continue;
 			}
 

@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 		double end[] = { 0,4 };
 		std::list<double*> path = SearchAlgorithm::findPath(start, end, map, sizeX, sizeY);
 		for (double* const& step : path) { //CHNG 'auto' to 'double*
-			std::cout << step[0] << ", " << step[1] << std::endl;
+			std::cout << "lat: " << step[0] << ", lng: " << step[1] << std::endl;
 		}
 
 	}

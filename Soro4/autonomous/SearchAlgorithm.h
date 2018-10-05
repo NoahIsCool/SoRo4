@@ -70,6 +70,20 @@ private:
 		}
 	};
 
+	/*****
+	Comparator class for set of Nodes. Compares nodes based on their x and y values.
+	*/
+	struct compareNodes2 {
+		bool operator() (const Node& n1, const Node& n2) const {
+			if (n1.x == n2.x) {
+				return n1.y < n2.y;
+			}
+			else {
+				return n1.x < n2.x;
+			}
+		}
+	};
+
 	//Higher value means more avoidance from the algorithm
 	static const double DISTWEIGHT; //Weight given to the distance between two nodes when calculating cost
 	static const double UPWEIGHT; //Weight given to the difference in elevation when going up
