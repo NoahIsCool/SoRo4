@@ -34,8 +34,6 @@
 #include "configreader.h"
 #include "videoserver_global.h"
 
-#define LOG_TAG "VideoServer"
-
 /*
     This is a "simple" wrapper for gstreamer to stream as many videos as you want. Well kinda,
     Only supports one host right now. But you can stream several camera feeds. The only thing
