@@ -13,7 +13,7 @@ Autonomous::Autonomous()
 }
 
 //return the speeds that the wheels need to move at to get to the next coordinate
-std::Vector<double> Autonomous::getPIDValues(double amountOff, double baseSpeed)
+std::Vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double baseSpeed)
 {
     std::Vector<double> PIDValues(2);
 
@@ -79,8 +79,6 @@ std::vector<double> Autonomous::inputNextCoords()
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
 int Autonomous::MainLoop()
 {
-    std::vector<std::vector<double>> ListOfCoordsToNextCheckpoint = generatePath();
-
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
     std::vector<double> killVector(2);
@@ -94,7 +92,7 @@ int Autonomous::MainLoop()
         ListOfCoordsToNextCheckpoint = GeneratePath(path to nextCords); //generates the path to the given set of coords
         for(int j = 0; j < sizeOf(ListOfCheckpointsListOfCoords); j++) //loops through each of the coordinates to get to the next checkpoint
         {
-            while(ListOfCoordsToNextCheckpoint[i][j] != CurrentGPSHeading) //travels to the next set of coords
+            while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the roover to reach
             {
                 if(IsThereObsticleOrStuck())
                 {
@@ -105,7 +103,7 @@ int Autonomous::MainLoop()
                     //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
                     angleToTurn = getAngleToTurn();
 
-                    std::vector<double> speeds = getPIDValues(angleToTurn, speed);
+                    std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
                     mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
 
                     sleep(500); //lets it drive for 500ms before continuing on
