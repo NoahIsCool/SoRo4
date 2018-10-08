@@ -1,4 +1,7 @@
 ﻿#include "autonomous.h"
+#include <list>
+#include <queue>
+#include <set>
 
 //Higher value means more avoidance from the algorithm
 const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
