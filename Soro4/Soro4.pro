@@ -10,6 +10,7 @@ SUBDIRS += \
     videoServer \
     RoverMain \
     Rover_MissionControl \
+    videoStreamer
 
 CONFIG += ordered
 
