@@ -4,6 +4,7 @@
 #include <QDebug>
 
 #include "autonomous_global.h"
+#include "core/soro_global.h"
 #include <list>
 
 class AUTONOMOUSSHARED_EXPORT Autonomous
