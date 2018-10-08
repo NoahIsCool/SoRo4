@@ -82,16 +82,19 @@ int Autonomous::MainLoop()
     std::vector<std::vector<double>> ListOfCoordsToNextCheckpoint = generatePath();
 
     //this can probably be done better by someone who is better at cpp than me
+    //this is just so we can tell the robot to stop driving
     std::vector<double> killVector(2);
     killVector[0] = -1;
     killVector[1] = -1;
 
-    while(inputNextCords() != killVector)
+    std::vector<double> nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
+
+    while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-        for(int j = 0, j < sizeOf(ListOfCheckpointsListOfCoords), j++) //loops through each of the coordinates to get to the next checkpoint
+        ListOfCoordsToNextCheckpoint = GeneratePath(path to nextCords); //generates the path to the given set of coords
+        for(int j = 0; j < sizeOf(ListOfCheckpointsListOfCoords); j++) //loops through each of the coordinates to get to the next checkpoint
         {
-            ListOfCoordsToNextCheckpoint = GeneratePath();
-            while(ListOfCoordsToNextCheckpoint[i][j] != CurrentGPSHeading)
+            while(ListOfCoordsToNextCheckpoint[i][j] != CurrentGPSHeading) //travels to the next set of coords
             {
                 if(IsThereObsticleOrStuck())
                 {
@@ -109,8 +112,9 @@ int Autonomous::MainLoop()
                 }
             }
         }
-        //once arrives
+        //once arrives to the checkpoint
         FindTennisBall();
+        nextCords = inputNextCords(); //gets the next set of coords
     }
     cout << "We win!" << endl;
     return 0;
