@@ -6,7 +6,7 @@
 *
 */
 
-#include "SearchAlgorithm.h"
+#include "../autonomous.h"
 #include <iostream>
 #include <fstream>
 #include <string>
