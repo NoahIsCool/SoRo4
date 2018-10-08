@@ -16,7 +16,11 @@ public:
     explicit GamepadMonitor(QObject *parent = nullptr);
     ~GamepadMonitor();
 
+signals:
+    void errorEncountered(QString errorMessage); // emitted if setup of this or its subobject(s) fails
+
 private:
+    QString errorString = "No errors to report";
     QGamepad *m_gamepad;
     comms *myComms;
     QTimer *udpTimer;
@@ -27,7 +31,6 @@ private:
     qint8 rightSide = 0;
     qint8 gimbleUD = 0;
     qint8 gimbleRL = 0;
-
     void printVals();
 
 public slots:
@@ -42,7 +45,8 @@ public slots:
     void onButtonDown(bool pressed);
     void onButtonLeft(bool pressed);
     void onButtonRight(bool pressed);
-    void sendUDP();
+
+    void sendUDP(); // connects to a QTimer timeout, sends drive control message to rover
 };
 
 #endif // GAMEPADMONITOR_H

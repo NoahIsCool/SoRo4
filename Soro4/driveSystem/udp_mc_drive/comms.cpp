@@ -2,19 +2,14 @@
 
 comms::comms(const char* config_file, QObject *parent) : QObject(parent)
 {
-    valid = true;
-    recieve_ip = nullptr;
-    recieve_port = 0;
-    send_ip = nullptr;
-    send_port = 0;
-
-    // read config file for ip parameters
+    // try to read config file for ip parameters
     if(!readConfig(config_file))
     {
         valid = false;
+        emit errorEncountered(errorString);
         return;
     }
-    // create udp socket
+    // create udp socket and try to bind
     udpSocket = new QUdpSocket(this);
     if(udpSocket->bind(QHostAddress(recieve_ip), recieve_port))
     {
@@ -23,8 +18,10 @@ comms::comms(const char* config_file, QObject *parent) : QObject(parent)
     }
     else
     {
-        qDebug() << "Error binding to port:" << udpSocket->errorString();
+        errorString = "Can't bind to " + recieve_ip + ":" + QString::number(recieve_port) + " - " + udpSocket->errorString();
+        //qDebug() << errorString;
         valid = false;
+        emit errorEncountered(errorString);
         return;
     }
 }
@@ -62,14 +59,16 @@ bool comms::readConfig(const char* filename)
     // check that file exists
     if(!config_file.exists())
     {
-        qDebug() << "Config file not found";
+        errorString = "Config file not found";
+        //qDebug() << errorString;
         return false;
     }
 
     // open file, if possible
     if(!config_file.open(QIODevice::ReadOnly))
     {
-        qDebug() << "Config file can't be opened";
+        errorString = "Config file can't be opened";
+        //qDebug() << errorString;
         return false;
     }
 
@@ -105,7 +104,8 @@ bool comms::readConfig(const char* filename)
 
     if(recieve_ip == nullptr || recieve_port == 0 || send_ip == nullptr || send_port == 0)
     {
-        qDebug() << "Your config file did not give enough info.";
+        errorString = "Config missing info.";
+        //qDebug() << errorString;
         return false;
     }
 

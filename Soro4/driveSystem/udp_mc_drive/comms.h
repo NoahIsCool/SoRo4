@@ -11,19 +11,23 @@ class comms : public QObject
 public:
     explicit comms(const char* config_file, QObject *parent = nullptr);
     void sendMessage(QByteArray message);
-    bool isValid() { return valid; } // validity detemined in constructor, is immutable
+    bool isValid() { return valid; }
+    QString getError() { return errorString; }
 
 signals:
         void messageReady(QByteArray message); // emitted whenever a message is recieved
+        void errorEncountered(QString errorMessage); // emitted if setup is a failure
 
 private:
-    QString send_ip;
-    quint16 send_port;
-    QString recieve_ip;
-    quint16 recieve_port;
+    QString send_ip = nullptr;
+    quint16 send_port = 0;
+    QString recieve_ip = nullptr;
+    quint16 recieve_port = 0;
     QUdpSocket* udpSocket;
     bool readConfig(const char* filename); // returns true on success, false on failure
-    bool valid;
+    bool valid = true; // validity detemined in constructor, is immutable
+
+    QString errorString = "No errors to report";
 
 private slots:
     void readMessage();
