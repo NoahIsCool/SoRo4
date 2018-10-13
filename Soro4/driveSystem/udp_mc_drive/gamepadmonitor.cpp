@@ -12,7 +12,9 @@ GamepadMonitor::GamepadMonitor( QObject *parent)
     // make sure gamepads are connected
     auto gamepads = QGamepadManager::instance()->connectedGamepads();
     if (gamepads.isEmpty()) {
-        qDebug() << "No gamepads detected!";
+        errorString = "No gamepads detected";
+        qDebug() << errorString;
+        emit errorEncountered(errorString);
         return;
     }
 
@@ -20,7 +22,9 @@ GamepadMonitor::GamepadMonitor( QObject *parent)
     myComms = new comms("udp_mc_drive.conf");
     if(!myComms->isValid())
     {
-        qDebug() << "Error initializing communicaions. Close and try again.";
+        errorString = "Communications - " + myComms->getError();
+        qDebug() << errorString;
+        emit errorEncountered(errorString);
         return;
     }
 
@@ -55,13 +59,13 @@ void GamepadMonitor::onLYAxis(double value){
         // value (from controller) will be between -1 and 1
         // if your joystick characteristic equation is f(x) (has to have points (0,0) and (1,1) i.e. x^2),
         // then to include the deadzone you do: f( (x-deadzone) / (1-deadzone) )
-        if (value > 0.1 ) {
-            double x = (value-0.1)/0.9;
-            leftSide = static_cast<qint8>(-round(x * x * 90.0));
+        if (value > 0.01) {
+            double x = (value-0.01)/0.99;
+            leftSide = static_cast<qint8>(-round(x * 90.0));
         }
-        else if (value < -0.1) {
-            double x = (value+0.1)/0.9;
-            leftSide = static_cast<qint8>(round(x * x * 90.0));
+        else if (value < -0.01) {
+            double x = (value+0.01)/0.99;
+            leftSide = static_cast<qint8>(round(x * 90.0));
         }
         else {
             leftSide = 0;
@@ -76,12 +80,12 @@ void GamepadMonitor::onRYAxis(double value) {
         // value (from controller) will be between -1 and 1
         // if your joystick characteristic equation is f(x) (has to have points (0,0) and (1,1) i.e. x^2),
         // then to include the deadzone you do: f( (x-deadzone) / (1-deadzone) )
-        if (value > 0.1 ) {
-            double x = (value-0.1)/0.9;
+        if (value > 0.01 ) {
+            double x = (value-0.01)/0.99;
             gimbleUD = static_cast<qint8>(-round(x * x * 5.0));
         }
-        else if (value < -0.1) {
-            double x = (value+0.1)/0.9;
+        else if (value < -0.01) {
+            double x = (value+0.01)/0.99;
             gimbleUD = static_cast<qint8>(round(x * x * 5.0));
         }
         else {
@@ -93,13 +97,13 @@ void GamepadMonitor::onRYAxis(double value) {
         // value (from controller) will be between -1 and 1
         // if your joystick characteristic equation is f(x) (has to have points (0,0) and (1,1) i.e. x^2),
         // then to include the deadzone you do: f( (x-deadzone) / (1-deadzone) )
-        if (value > 0.1 ) {
-            double x = (value-0.1)/0.9;
-            rightSide = static_cast<qint8>(-round(x * x * 90.0));
+        if (value > 0.01 ) {
+            double x = (value-0.01)/0.99;
+            rightSide = static_cast<qint8>(-round(x * 90.0));
         }
-        else if (value < -0.1) {
-            double x = (value+0.1)/0.9;
-            rightSide = static_cast<qint8>(round(x * x * 90.0));
+        else if (value < -0.01) {
+            double x = (value+0.01)/0.99;
+            rightSide = static_cast<qint8>(round(x * 90.0));
         }
         else {
             rightSide = 0;
@@ -114,12 +118,12 @@ void GamepadMonitor::onRXAxis(double value) {
         // value (from controller) will be between -1 and 1
         // if your joystick characteristic equation is f(x) (has to have points (0,0) and (1,1) i.e. x^2),
         // then to include the deadzone you do: f( (x-deadzone) / (1-deadzone) )
-        if (value > 0.1 ) {
-            double x = (value-0.1)/0.9;
+        if (value > 0.01 ) {
+            double x = (value-0.01)/0.99;
             gimbleRL = static_cast<qint8>(-round(x * x * 5.0));
         }
-        else if (value < -0.1) {
-            double x = (value+0.1)/0.9;
+        else if (value < -0.01) {
+            double x = (value+0.01)/0.99;
             gimbleRL = static_cast<qint8>(round(x * x * 5.0));
         }
         else {
