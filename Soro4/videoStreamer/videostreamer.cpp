@@ -22,7 +22,7 @@ VideoClient::VideoClient(std::string configFile/*,bool input*/){
     //terminalInput = input;
     ConfigReader reader(configFile);
     if(!reader.exists()){
-            LOG_W(LOG_TAG,"no config file found using defaults");
+            std::cout << "no config file found using defaults" << std::endl;
             server = "192.168.1.183";
 
     }else{
@@ -30,13 +30,13 @@ VideoClient::VideoClient(std::string configFile/*,bool input*/){
     }
     connected = false;
     running = true;
-    LOG_I(LOG_TAG,"server address is " + server);
+    std::cout << "server address is " << server << std::endl;
     control = new Socket(CONTROL_CLIENT_PORT);
     //heartbeat = new Socket(HEARTBEAT_CLIENT_PORT);
 }
 
 void VideoClient::run(){
-    LOG_I(LOG_TAG,"connecting...");
+    std::cout << "connecting..." << std::endl;
     Message init;
     init.type = INIT;
     init.length = 0;
@@ -130,7 +130,7 @@ void VideoClient::onMessage(Message message){
         responce.type = (MessageType)STATUS;
         responce.length = 0;
         connected = true;
-        LOG_I(LOG_TAG,"Connected to server",DEBUG);
+        std::cout << "Connected to server" << std::endl;
     break;
     }
     case STATUS:{
