@@ -24,7 +24,8 @@
 #include <useful.h>
 
 #include "configreader.h"
-#include "videoStreamer_global.h"
+#include "videostreamer_global.h"
+#include <core/soro_global.h>
 
 /*
     Probably isnt the best way to do this, but you need a config file that has only one

@@ -30,16 +30,16 @@ LIBS += -L../../libs -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -lcore
 
 SOURCES += \
         videostreamer.cpp \
-    configreader.cpp \
-    socket.cpp \
-    crc.cpp
+        configreader.cpp \
+        socket.cpp \
+        crc.cpp
 
 HEADERS += \
         videostreamer.h \
         videostreamer_global.h \ 
-    configreader.h \
-    socket.h \
-    crc.h
+        configreader.h \
+        socket.h \
+        crc.h
 
 #unix {
     target.path = $$PWD

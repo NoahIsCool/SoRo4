@@ -7,7 +7,7 @@
 #include <QDebug>
 #include <core/soro_global.h>
 
-#include "videoStreamer_global.h"
+#include "videostreamer_global.h"
 
 struct StringPair{
     std::string tag;
