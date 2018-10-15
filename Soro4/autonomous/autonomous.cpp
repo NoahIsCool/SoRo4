@@ -7,6 +7,7 @@
 
 Socket mySocket;
 double speed = 60; //IDK what we want for speed right now or if we want to be updating it.
+double angle = 0; //Updated through updateAngle
 
 //Higher value means more avoidance from the algorithm
 const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
@@ -180,7 +181,12 @@ std::vector<std::vector<double>> Autonomous::GeneratePath()
 }
 
 //impliment much later
-bool Autonomous::IsThereObsticleOrStuck()
+bool Autonomous::isThereObsticle()
+{
+
+}
+
+bool Autonomous::isStuck()
 {
 
 }
@@ -210,6 +216,11 @@ double Autonomous::getAngleToTurn()
 
 }
 
+void Autonomous::updateAngle()
+{
+
+}
+
 std::vector<double> Autonomous::inputNextCoords()
 {
 
@@ -234,7 +245,7 @@ int Autonomous::MainLoop()
         {
             while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the roover to reach
             {
-                if(IsThereObsticleOrStuck())
+                if(isThereObsticle() || isStuck())
                 {
                     avoidObsticle();
                 }
