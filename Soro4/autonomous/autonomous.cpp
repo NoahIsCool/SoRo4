@@ -2,6 +2,7 @@
 #include <list>
 #include <queue>
 #include <set>
+#include <unistd.h>
 
 //this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
 
@@ -189,15 +190,15 @@ void Autonomous::avoidObsticle()
 {
     //backs up for 5 seconds
     mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
-    sleep(5000);
+    usleep(5000);
 
     //turns for a few seconds to hopefully avoid the obsticle
     mySocket.sendUDP(0, 0, 0, -speed, speed, 0, 0, 0);
-    sleep(5000);
+    usleep(5000);
 
     //drive forward a bit and continue(?)
     mySocket.sendUDP(0, 0, 0, speed, speed, 0, 0, speed);
-    sleep(5000);
+    usleep(5000);
 }
 
 void Autonomous::FindTennisBall()
@@ -229,7 +230,7 @@ int Autonomous::MainLoop()
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-        ListOfCoordsToNextCheckpoint = GeneratePath(path to nextCords); //generates the path to the given set of coords
+        ListOfCoordsToNextCheckpoint = generatePath(path to nextCords); //TODO generates the path to the given set of coords
         for(int j = 0; j < sizeOf(ListOfCheckpointsListOfCoords); j++) //loops through each of the coordinates to get to the next checkpoint
         {
             while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the roover to reach
@@ -246,7 +247,7 @@ int Autonomous::MainLoop()
                     std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
                     mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
 
-                    sleep(500); //lets it drive for 500ms before continuing on
+                    usleep(500); //lets it drive for 500ms before continuing on
                 }
             }
         }
