@@ -17,7 +17,7 @@ Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
 int SearchAlgorithm::maxy; //max y-value on the map
 
-std::list<double*> SearchAlgorithm::findPath(double * source, double * dest, Cell ** map, int maxx, int maxy)
+std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest, Cell ** map, int maxx, int maxy)
 {
 	//Change the static class members to their provided values
 	SearchAlgorithm::map = map;
@@ -27,7 +27,7 @@ std::list<double*> SearchAlgorithm::findPath(double * source, double * dest, Cel
 	return findPath(source, dest);
 }
 
-std::list<double*> SearchAlgorithm::findPath(double * source, double * dest)
+std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 {
 	//Determine the x and y values of the source and destination from their latitude and longitude
 
@@ -35,15 +35,15 @@ std::list<double*> SearchAlgorithm::findPath(double * source, double * dest)
 	double latDiff = map[0][1].lat - map[0][0].lat; //Should be negative because 0 lat is equator
 
 	//Find y coordinates
-	int sourcey = round((source[0] - map[0][0].lat) / latDiff);
-	int desty = round((dest[0] - map[0][0].lat) / latDiff);
+	int sourcey = round((source.lat - map[0][0].lat) / latDiff);
+	int desty = round((dest.lat - map[0][0].lat) / latDiff);
 
 	//Determine the difference in longitude between the first two columns
 	double lngDiff = map[1][0].lng - map[0][0].lng; //should be negative becasuse longitude proceeds east to west in NA
 
 	//Find x coordinates
-	int sourcex = round((source[1] - map[0][0].lng) / lngDiff);
-	int destx = round((dest[1] - map[0][0].lng) / lngDiff);
+	int sourcex = round((source.lng - map[0][0].lng) / lngDiff);
+	int destx = round((dest.lng - map[0][0].lng) / lngDiff);
 
 	//Create the source node and add it to the open list
 	std::priority_queue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
@@ -77,16 +77,16 @@ std::list<double*> SearchAlgorithm::findPath(double * source, double * dest)
 	}
 
 	//create output list
-	std::list<double*> out;
+	std::list<Cell> out;
 	Node * interest = new Node(destNode);
 
 	//ascend the parent tree, adding the corresponding GPS coordinates until we reach the source
 	do {
 		Cell cell = map[interest->x][interest->y];
 
-		double * pair = new double[2]; //CHNG 10/5: dynamically allocated array to avoid the overwriting problem
-		pair[0] = cell.lat;
-		pair[1] = cell.lng;
+		Cell pair = new Cell(); //CHNG 10/5: dynamically allocated array to avoid the overwriting problem
+		pair.lat = cell.lat;
+		pair.lng = cell.lng;
 
 		out.push_front(pair);
 
@@ -230,28 +230,29 @@ int Autonomous::MainLoop()
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-        std::vector<Cell> path = generatePath(nextCords); //TODO generates the path to the given set of coords
-        for(int j = 0; j < path.size(); j++) //loops through each of the coordinates to get to the next checkpoint
+        std::list<Cell> path = generatePath(nextCords); //TODO generates the path to the given set of coords
+		std::list<Cell>::iterator it = path.begin();
+
+         //loops through each of the coordinates to get to the next checkpoint        
+        while(*it != nextCords) //travels to the next set of coords. 
         {
-			//TODO CurrentGPSHeading needs to exist
-            while(path[i] != nextCords) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the roover to reach
+            if(ObstacleOrStuck())
             {
-                if(ObstacleOrStuck())
-                {
-                    avoidObsticle();
-                } 
-				else //drives trying to get to the next checkpoint
-                {
-                    //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-                    double angleToTurn = getAngleToTurn();
+                avoidObsticle();
+            } 
+			else //drives trying to get to the next checkpoint
+            {
+                //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
+                double angleToTurn = getAngleToTurn();
 
-                    std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
-                    mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
+                std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
+                mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
+                usleep(500); //lets it drive for 500ms before continuing on
 
-                    usleep(500); //lets it drive for 500ms before continuing on
-                }
+				it++;
             }
         }
+        
         //once arrives to the checkpoint
         FindTennisBall();
         nextCords = inputNextCords(); //gets the next set of coords
