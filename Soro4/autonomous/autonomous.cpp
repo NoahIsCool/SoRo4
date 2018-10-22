@@ -3,11 +3,11 @@
 #include <queue>
 #include <set>
 
+#define PI 3.14159265
+
 //this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
 
-Socket mySocket;
-double speed = 60; //IDK what we want for speed right now or if we want to be updating it.
-double angle = 0; //Updated through updateAngle
+
 
 //Higher value means more avoidance from the algorithm
 const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
@@ -218,7 +218,21 @@ double Autonomous::getAngleToTurn()
 
 void Autonomous::updateAngle()
 {
+    double longitude = GPSobject.longitude;
+    double latitude = GPSobject.latitude;
 
+    while(threadsRunning)
+    {
+        longitude = GPSobject.longitude;
+        latitude = GPSobject.latitude;
+
+        angle = std::atan((lastLongitude - longitude) / (latitude - lastLatitude)) * 180 / PI;
+
+        lastLatitude = latitude;
+        lastLongitude = longitude;
+
+        sleep(500); //this sleep may need to be increased or decreased depending on how often we want the rover to update its angle
+    }
 }
 
 std::vector<double> Autonomous::inputNextCoords()
@@ -236,8 +250,12 @@ int Autonomous::MainLoop()
     killVector[0] = -1;
     killVector[1] = -1;
 
+    lastLatitude = GPSobject.latitude;
+    lastLongitude = GPSobject.longitude;
+
     std::vector<double> nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
+    std::thread angleThread(updateAngle);
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
         ListOfCoordsToNextCheckpoint = GeneratePath(path to nextCords); //generates the path to the given set of coords
@@ -265,6 +283,8 @@ int Autonomous::MainLoop()
         FindTennisBall();
         nextCords = inputNextCords(); //gets the next set of coords
     }
+    threadsRunning = false;
+    updateAngle.join();
     cout << "We win!" << endl;
     return 0;
 }
