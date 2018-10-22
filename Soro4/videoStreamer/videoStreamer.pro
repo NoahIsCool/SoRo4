@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       -= gui
+QT += widgets
 
 TARGET = videoStreamer
 TEMPLATE = lib

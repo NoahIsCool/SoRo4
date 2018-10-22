@@ -17,8 +17,9 @@
 
 using namespace videoStreamer;
 
-VideoClient::VideoClient(std::string configFile/*,bool input*/){
+VideoClient::VideoClient(std::string configFile,QWidget *window){
     gst_init(NULL,NULL);
+    videoWidget = window;
     //terminalInput = input;
     ConfigReader reader(configFile);
     if(!reader.exists()){
@@ -32,7 +33,6 @@ VideoClient::VideoClient(std::string configFile/*,bool input*/){
     running = true;
     std::cout << "server address is " << server << std::endl;
     control = new Socket(CONTROL_CLIENT_PORT);
-    //heartbeat = new Socket(HEARTBEAT_CLIENT_PORT);
 }
 
 void VideoClient::run(){
@@ -64,25 +64,6 @@ void VideoClient::run(){
     //now launches this into the background and returns.
     messageThread = new std::thread([this](){
         while(running){
-            /*while(!connected){
-                std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-                std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<double, std::milli> span = t2 - t1;
-                control->write(&init,server,CONTROL_PORT);
-                while(span.count() < 1000){
-                    if(control->available()){
-                        Message message;
-                        std::string sender;
-                        int port;
-                        control->getMessage(&message,sender,port);
-                        onMessage(message);
-                    }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                    t2 = std::chrono::high_resolution_clock::now();
-                    span = t2 - t1;
-                }
-            }*/
-
             std::chrono::high_resolution_clock::time_point lagT1 = std::chrono::high_resolution_clock::now();
             Message message;
             std::string sender;
@@ -190,104 +171,6 @@ void VideoClient::onMessage(Message message){
     control->write(&responce,server,CONTROL_PORT);
 }
 
-/*
-    So I had this in here because it was supposed to be a standalone program. But I changed that so
-    it can be used on any project. Anyways, I left in the code as an example but a better one is in the main file
-*/
-/*void VideoClient::onCommand(std::string command){
-    Message message;
-    std::vector<std::string> commandsplit = useful::split(command,' ');
-    if(commandsplit[0] == "start"){
-        bool found = false;
-        message.type = (MessageType)START;
-        message.length = 1;
-        for(int i = 0; i < devices.size(); i++){
-            if(commandsplit[1] == devices[i].name){
-                message.data[CAMERA_INDEX] = i;
-                found = true;
-            }
-        }
-        if(!found){
-            std::cout << "could not find " << commandsplit[1] << std::endl;
-            return;
-        }
-    }else if(commandsplit[0] == "stop"){
-        bool found = false;
-        message.type = (MessageType)STOP;
-        message.length = 1;
-        for(int i = 0; i < devices.size(); i++){
-            if(commandsplit[1] == devices[i].name){
-                std::cout << "stopping " << devices[i].name << " stream" << std::endl;
-                message.data[CAMERA_INDEX] = i;
-                stopDevice(i);
-                found = true;
-            }
-        }
-        if(!found){
-            std::cout << "could not find " << commandsplit[1] << std::endl;
-            return;
-        }
-    }else if(commandsplit[0] == "set"){
-            message.type = (MessageType)SET;
-            message.length = 2;
-        if(commandsplit[1] == "resolution"){
-            if(commandsplit[2] == "1080"){
-                message.data[0] = videoStreamer::RESOLUTION;
-                message.data[1] = HD;
-                std::cout << "setting resolution to 1080p" << std::endl;
-            }else if(commandsplit[2] == "720"){
-                message.data[0] = videoStreamer::RESOLUTION;
-                message.data[1] = HD720;
-                std::cout << "setting resolution to 720p" << std::endl;
-            }else if(commandsplit[2] == "480"){
-                message.data[0] = videoStreamer::RESOLUTION;
-                message.data[1] = SD;
-                std::cout << "setting resolution to 480p" << std::endl;
-            }else{
-                std::cout << "not a resolution" << std::endl;
-                return;
-            }
-        }else if(commandsplit[1] == "framerate"){
-            if(commandsplit[2] == "10"){
-                message.data[0] = FRAMERATE;
-                message.data[1] = F10;
-                framerate = 10;
-                std::cout << "setting framerate to 10fps" << std::endl;
-            }else if(commandsplit[2] == "20"){
-                message.data[0] = FRAMERATE;
-                message.data[1] = F20;
-                framerate = 20;
-                std::cout << "setting framerate to 20fps" << std::endl;
-            }else if(commandsplit[2] == "30"){
-                message.data[0] = FRAMERATE;
-                message.data[1] = F30;
-                framerate = 30;
-                std::cout << "setting framerate to 30fps" << std::endl;
-            }else{
-                std::cout << "not a valid frame rate" << std::endl;
-                return;
-            }
-        }else{
-            std::cout << "nope, not an option" << std::endl;
-            return;
-        }
-    }else if(commandsplit[0] == "status"){
-        message.type = (MessageType)STATUS;
-        message.length = 0;
-        std::cout << "requesting status" << std::endl;
-    }else if(commandsplit[0] == "exit"){
-        message.type = (MessageType)QUIT;
-        message.length = 0;
-        control->write(&message,server,CONTROL_PORT);
-        exit(0);
-    }else{
-        std::cout << "not recognized brah" << std::endl;
-        return;
-    }
-
-    control->write(&message,server,CONTROL_PORT);
-}*/
-
 void VideoClient::startDevice(int deviceIndex){
     ClientDevice &device = devices[deviceIndex];
     if(device.deviceType == AUDIO){
@@ -300,8 +183,7 @@ void VideoClient::startDevice(int deviceIndex){
         return;
     }
 
-    /*std::string binStr = "udpsrc port=" + std::to_string(device.port) + " caps = \"application/x-rtp, media=(string)video, framerate=30/1, encoding-name=(string)H264, payload=(int)96\" ! rtph264depay ! vaapidecodebin threads=8 ! textoverlay text=\"lag: 0ms\" valignment=top halignment=left shaded-background=true ! vaapisink"; //autovideosink
-    device.pipeline = gst_parse_launch(binStr.c_str(),NULL);*/
+    //std::string binStr = "udpsrc port=" + std::to_string(device.port) + " caps = \"application/x-rtp, media=(string)video, framerate=30/1, encoding-name=(string)H264, payload=(int)96\" ! rtph264depay ! vaapidecodebin threads=8 ! textoverlay text=\"lag: 0ms\" valignment=top halignment=left shaded-background=true ! vaapisink"; //autovideosink
     device.source = gst_element_factory_make("udpsrc",NULL);
     g_object_set(G_OBJECT(device.source),"port",device.port,NULL);
     device.caps = gst_caps_new_simple("application/x-rtp",
@@ -318,6 +200,13 @@ void VideoClient::startDevice(int deviceIndex){
     device.overlay = gst_element_factory_make("textoverlay",NULL);
     g_object_set(device.overlay,"text","lag: 0ms","valignment",2,"halignment",2,"shaded-background",true,NULL);
     device.sink = gst_element_factory_make("vaapisink",NULL);
+
+    //for using video window
+    device.sink = gst_element_factory_make("xvimagesink", "sink");
+    gst_element_set_state(device.sink, GST_STATE_READY);
+
+    QApplication::syncX();
+    gst_x_overlay_set_xwindow_id(GST_X_OVERLAY(device.sink), videoWidget->winId());
 
     if(!device.source || !device.depay || !device.decodeBin || !device.overlay || !device.sink){
         std::cout << "failed to create elements" << std::endl;
@@ -470,45 +359,6 @@ void VideoClient::update(int deviceIndex,int handler,std::string message){
 bool VideoClient::isConnected(){
     return connected;
 }
-
-/*
-    I used to have the heartbeat within this class but decided it would be better to have the controlling
-    project take care of this. However, I left in the code if you wanted to see how I would handle it.
-*/
-/*void VideoClient::onHeartbeat(){
-    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-    Message beat;
-    beat.type = HEARTBEAT;
-    beat.length = 0;
-    heartbeat->write(&beat,server,HEARTBEAT_PORT);
-    while(connected){
-        std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> span = t2 - t1;
-        if(span.count() > 5000){
-            connected = false;
-            std::cout << "total time: " << span.count() << std::endl;
-            LOG_W(LOG_TAG,"timeout");
-            return;
-        }
-
-        if(heartbeat->available()){
-            Message back;
-            std::string sender;
-            int port;
-            if(heartbeat->getMessage(&back,sender,port)){
-                heartbeat->write(&beat,server,HEARTBEAT_PORT);
-            }else{
-                std::cout << "nacking heartbeat" << std::endl;
-                Message nack;
-                nack.type = NACK;
-                nack.length = 0;
-                heartbeat->write(&nack,server,HEARTBEAT_PORT);
-            }
-            t1 = std::chrono::high_resolution_clock::now();
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-}*/
 
 void VideoClient::kill(){
     Message message;
