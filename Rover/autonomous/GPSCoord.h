@@ -27,8 +27,10 @@ public:
 	double convertGPS(std::string gpsInput);			// read GPS and convert to Decimal Degrees coordinate format
 	double convertGPS(int deg, int min, double sec);	// read int GPS and convert to Decimal Degrees coordinate format
 
-	// Caculate the distance and bearings from current position to destination
-	double calculateDistance(GPSCoord currentPos, GPSCoord destination);
-	double calculateBearings(GPSCoord currentPos, GPSCoord destination);
+	double calcDistance(double lat1, double long1, double lat2, double long2);
+	double calcHeading(double lat1, double long1, double lat2, double long2);
+
+	double calculateDistance(GPSCoord destination);
+	double calculateBearings(GPSCoord destination);
 };
 #endif

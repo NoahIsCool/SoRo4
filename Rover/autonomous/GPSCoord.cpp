@@ -60,46 +60,66 @@ void GPSCoord::setLong(double longitudeCoord) {
 // possibly change the parameters in int to double??
 double GPSCoord::convertGPS(int deg, int min, double sec) {
 	double gpsCoord = 0.00;
-	gpsCoord = (double)deg + ((min + (sec / 60.0)) / 60.0);
+	gpsCoord = (double) deg + ((min + (sec / 60.0)) / 60.0);
 
 	return gpsCoord;
 }
 
 // read GPS and convert to Decimal Degrees coordinate format
+// Note: check for other possible string combinations 
+// This combination is for 00deg 00" 00.00'
 double GPSCoord::convertGPS(std::string gpsInput) {
 	double gpsCoord = 0.00;
 
 	// Find non-integers index - degree, min, sec symbols
 	int degreeIndex = -1;
 	int nonIntegerCounter = 0;
-	int nonIntegerArray[4]; // possible symbols: degree symbol, minute ( " ), period ( . ), second ( ' )
+	int nonIntegerIndex[4]; // possible symbols: degree symbol, minute ( ' ), period ( . ), second ( " )
 
 	// Check and store non-integer indexes
 	for (int i = 0; i < gpsInput.length(); i++){
 		// ASCII 48 is "0" & 57 is "9"
 		for (int j = 48; j < 58; j++){
 			if ( gpsInput[i] != j){
-				nonIntegerArray[nonIntegerCounter] = i;
+				nonIntegerIndex[nonIntegerCounter] = i;
 				nonIntegerCounter++;
 			}
 		}
 	}
 	
-	// the length of string for seconds 
-	int secStrLength = (gpsInput.length() - 1) - (nonIntegerArray[1] + 1);
-	
-	// getting the numbers 
-	std::string degreeStr = gpsInput.substr(-1, nonIntegerArray[0] - 1);
-	std::string minStr = gpsInput.substr(nonIntegerArray[0], 2);
-	std::string secStr = gpsInput.substr(nonIntegerArray[1], secStrLength);
-	
+	// the length of minute and second digits, 
+	// ex: 00deg 00' 00.0000" = 14 chars - 2 digits min, 2 digits seconds BEFORE decimal point
+	int minStrLength = nonIntegerIndex[1] - nonIntegerIndex[0] - 1;
+	int secStrLength = nonIntegerIndex[2] - nonIntegerIndex[1] - 1;
+
+	// variables to store each value after converting it from string
 	int degreeInt, minInt;
 	double secDouble;
 
+	// getting the numbers from string 
 	// convert all the strings into integers and double accordingly
+
+	// degrees
+	std::string degreeStr = gpsInput.substr(-1, nonIntegerIndex[0]);
 	degreeInt = std::stoi(degreeStr);
+	// minutes
+	std::string minStr = gpsInput.substr(nonIntegerIndex[0], minStrLength);
 	minInt = std::stoi(minStr);
-	secDouble = std::stod(secStr);
+	// seconds
+	std::string secStr = "";
+	if (nonIntegerCounter == 3) {
+		secStr = gpsInput.substr(nonIntegerIndex[1], secStrLength); // seconds - digits BEFORE decimal point
+		secDouble = std::stod(secStr); // 00 seconds
+	}
+	else {
+		// the length of second's decimal digits, 
+		// ex: 00deg 00' 00.0000" = 14 chars --> 4 digits
+		int secDecStrLength = gpsInput.length() - nonIntegerIndex[2] - 1;
+		secStr = gpsInput.substr(nonIntegerIndex[1], secStrLength); // digits BEFORE decimal point
+		std::string secDecStr = gpsInput.substr(nonIntegerIndex[2], secDecStrLength); // digits AFTER decimal point
+
+		secDouble = std::stod(secStr) + (std::stod(secDecStr) / 100.0); // 00.00 seconds
+	}
 
 	// convert into Decimal Degrees Coordinate format (i.e. 50.1234 degree)
 	gpsCoord = convertGPS(degreeInt, minInt, secDouble);
@@ -125,24 +145,25 @@ The angles used are expressed in radians, converting between degrees and radians
 multiplying the angle by pi and dividing by 180.
 
 */
-double GPSCoord::calculateDistance(GPSCoord currentPos, GPSCoord destination) {
-	double distance; // the distance the rover will need to travel
 
-	// current position, dest -destination
-	// Lat - latitude , Long - Longitude
-	double currentLat, currentLong, destLat, destLong;
+double GPSCoord::calculateDistance(GPSCoord destination) {
+		double distance; // the distance the rover will need to travel
 
-	// convert all degree to radian -> degree * PI / 180
-	currentLat = currentPos.getLat() * PI / 180;
-	currentLong = currentPos.getLong() * PI / 180;
+		// current position, dest -destination
+		// Lat - latitude , Long - Longitude
+		double currentLat, currentLong, destLat, destLong;
 
-	destLat = currentPos.getLat() * PI / 180;
-	destLong = currentPos.getLong() * PI / 180;
+		// convert all degree to radian -> degree * PI / 180
+		currentLat = this->latitude * PI / 180;
+		currentLong = this->longitude * PI / 180;
 
-	distance = earthDiameterMeters * acos( sin(currentLat) * sin(destLat) + 
-		cos(currentLat) * cos(destLat) * cos(currentLong - destLong) );
+		destLat = destination.getLat() * PI / 180;
+		destLong = destination.getLong() * PI / 180;
 
-	return distance;
+		distance = earthDiameterMeters * acos(sin(currentLat) * sin(destLat) +
+			cos(currentLat) * cos(destLat) * cos(currentLong - destLong));
+
+		return distance;
 }
 
 // Caculate the bearings from current position to destination
@@ -157,10 +178,10 @@ deltaLon = abs( lonA - lonB )
 bearing :  theta = atan2( deltaLon ,  deltaTheta )
 
 Note: 1) ln = natural log      2) if deltaLon > 180 degree  then   deltaLon = deltaLon (mod 180).
-	  3) operation a mod n     4) function atan2(y, x)      5) the angles are in radians
+3) operation a mod n     4) function atan2(y, x)      5) the angles are in radians
 */
 
-double GPSCoord::calculateBearings(GPSCoord currentPos, GPSCoord destination) {
+double GPSCoord::calculateBearings(GPSCoord destination) {
 	// all angles are in radian except specified
 	double bearings, bearingsInDegrees, deltaTheta, deltaLong;
 
@@ -169,26 +190,24 @@ double GPSCoord::calculateBearings(GPSCoord currentPos, GPSCoord destination) {
 	double currentLat, currentLong, destLat, destLong;
 
 	// convert all degree to radian -> degree * PI / 180
-	currentLat = currentPos.getLat() * PI / 180;
-	currentLong = currentPos.getLong() * PI / 180;
+	currentLat = this->latitude * PI / 180;
+	currentLong = this->longitude * PI / 180;
 
-	destLat = currentPos.getLat() * PI / 180;
-	destLong = currentPos.getLong() * PI / 180;
-	
+	destLat = destination.getLat() * PI / 180;
+	destLong = destination.getLong() * PI / 180;
+
 	// log - natural log 
 	deltaTheta = log(tan(destLat / 2 + PI / 4) / tan(currentLat / 2 + PI / 4));
 
-	// if deltaLon > 180°  then   deltaLon = deltaLon (mod 180).
-	if (deltaLong = (abs(currentLong - destLong) * 180 / PI) > 180) {
-		// CHECK VALUE.. casting to int might NOT give an accurate result
-		deltaLong = (int) abs(currentLong - destLong) % 180;
-	}
-	else {
-		deltaLong = abs(currentLong - destLong);
-	}
-		
-	bearings = atan2(deltaLong, deltaTheta);	// the result is in radian
-	bearingsInDegrees = bearings * 180 / PI;	// convert result to degree
+	// let deltaLong have negative result
+	deltaLong = currentLong - destLong;
+
+	// Calculate bearings in radian
+	bearings = atan2(deltaLong, deltaTheta);
+	// converting bearing's angle from radian to degree
+	bearingsInDegrees = bearings * 180 / PI;
+	// use floating point modulus to get the correct angle - 360 North
+	bearingsInDegrees = 360 - fmod((bearingsInDegrees + 360), 360);
 
 	return bearings;
 }
