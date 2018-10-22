@@ -154,7 +154,7 @@ Autonomous::Autonomous()
 }
 
 //return the speeds that the wheels need to move at to get to the next coordinate
-std::Vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double baseSpeed)
+std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double baseSpeed)
 {
     std::Vector<double> PIDValues(2);
 
@@ -175,18 +175,18 @@ std::Vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double ba
 }
 
 //not exactly sure what this will return
-std::vector<std::vector<double>> Autonomous::GeneratePath()
+std::vector<Cell> Autonomous::GeneratePath()
 {
 
 }
 
 //impliment much later
-bool Autonomous::IsThereObsticleOrStuck()
+bool Autonomous::ObstacleOrStuck()
 {
 
 }
 
-void Autonomous::avoidObsticle()
+void Autonomous::avoidObstacle()
 {
     //backs up for 5 seconds
     mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
@@ -211,7 +211,7 @@ double Autonomous::getAngleToTurn()
 
 }
 
-std::vector<double> Autonomous::inputNextCoords()
+Cell Autonomous::inputNextCoords()
 {
 
 }
@@ -222,27 +222,28 @@ int Autonomous::MainLoop()
 {
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
-    std::vector<double> killVector(2);
-    killVector[0] = -1;
-    killVector[1] = -1;
+    Cell killVector();
+    killVector.lat = -1;
+    killVector.lng = -1;
 
-    std::vector<double> nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
+    Cell nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-        ListOfCoordsToNextCheckpoint = generatePath(path to nextCords); //TODO generates the path to the given set of coords
-        for(int j = 0; j < sizeOf(ListOfCheckpointsListOfCoords); j++) //loops through each of the coordinates to get to the next checkpoint
+        std::vector<Cell> path = generatePath(nextCords); //TODO generates the path to the given set of coords
+        for(int j = 0; j < path.size(); j++) //loops through each of the coordinates to get to the next checkpoint
         {
-            while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the roover to reach
+			//TODO CurrentGPSHeading needs to exist
+            while(path[i] != nextCords) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the roover to reach
             {
-                if(IsThereObsticleOrStuck())
+                if(ObstacleOrStuck())
                 {
                     avoidObsticle();
-                }
-                else //drives trying to get to the next checkpoint
+                } 
+				else //drives trying to get to the next checkpoint
                 {
                     //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-                    angleToTurn = getAngleToTurn();
+                    double angleToTurn = getAngleToTurn();
 
                     std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
                     mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);

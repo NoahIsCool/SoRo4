@@ -4,14 +4,13 @@
 #include <QDebug>
 
 #include "autonomous_global.h"
-#include "core/soro_global.h"
+#include "core/core.h"
 #include <list>
 
 class AUTONOMOUSSHARED_EXPORT Autonomous
 {
-
-public:
-    Autonomous();
+	public:
+    	Autonomous();
 };
 
 class SearchAlgorithm {
