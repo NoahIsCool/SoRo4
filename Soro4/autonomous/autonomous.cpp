@@ -7,8 +7,6 @@
 
 //this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
 
-
-
 //Higher value means more avoidance from the algorithm
 const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
 const double SearchAlgorithm::UPWEIGHT = 1000.0; //Weight given to the difference in elevation when going up
@@ -191,6 +189,8 @@ bool Autonomous::isStuck()
 
 }
 
+
+//Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obsticle
 void Autonomous::avoidObsticle()
 {
     //backs up for 5 seconds
@@ -206,6 +206,7 @@ void Autonomous::avoidObsticle()
     sleep(5000);
 }
 
+//Someone needs to port the working python code to track the tennis ball into here
 void Autonomous::FindTennisBall()
 {
 
@@ -216,6 +217,8 @@ double Autonomous::getAngleToTurn()
 
 }
 
+//This is meant to be run as a thread the whole time the autonomous program is running.
+//NOTE: I do not know what the GPSobject is or what the fields for latitude or longitude are so they may need to be changed
 void Autonomous::updateAngle()
 {
     double longitude = GPSobject.longitude;
@@ -235,6 +238,7 @@ void Autonomous::updateAngle()
     }
 }
 
+//This needs to be implemented as a GUI function where we can input the next set of coordinates that the people tell us the tennis ball is
 std::vector<double> Autonomous::inputNextCoords()
 {
 
