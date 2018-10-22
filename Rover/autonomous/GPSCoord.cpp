@@ -209,5 +209,5 @@ double GPSCoord::calculateBearings(GPSCoord destination) {
 	// use floating point modulus to get the correct angle - 360 North
 	bearingsInDegrees = 360 - fmod((bearingsInDegrees + 360), 360);
 
-	return bearings;
+	return bearingsInDegrees;
 }
