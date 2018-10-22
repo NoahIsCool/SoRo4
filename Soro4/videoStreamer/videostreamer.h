@@ -23,6 +23,8 @@
 #include <vector>
 #include <useful.h>
 
+#include <qwidget.h>
+
 #include "configreader.h"
 #include "videostreamer_global.h"
 #include <core/soro_global.h>
@@ -48,7 +50,7 @@ public:
     terminal displays. *eye rolls* So I had to make it so you can control it from a gui
     that isnt appart of this system. It may be a little weird control but I think it works
     */
-    VideoClient(std::string configFile);
+    VideoClient(std::string configFile,QWidget *parent);
     //I thought the best way would be to run this method in another thread because it is blocking.
     void run();
     //if you do not want to use the terminal input, this method returns weather or not there are videos you can stream from.
@@ -91,6 +93,8 @@ private:
     bool running;
     int framerate = 30;
     bool terminalInput = true;
+
+    QWidget *videoWidget;
 
     const bool DEBUG = true;
 };
