@@ -134,8 +134,8 @@ public:
 
 	return - a list of GPS coordinate pairs 50 meters apart forming a path from the source to the destination
 	*/
-	static std::list<Cell> findPath(double* source, double* dest, Cell** map, int maxx, int maxy);
-	static std::list<Cell> findPath(double* source, double* dest);
+	static std::list<Cell> findPath(Cell source, Cell dest, Cell** map, int maxx, int maxy);
+	static std::list<Cell> findPath(Cell source, Cell dest);
 };
 
 #endif // AUTONOMOUS_H
