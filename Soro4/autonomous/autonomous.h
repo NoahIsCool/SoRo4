@@ -12,7 +12,15 @@ class AUTONOMOUSSHARED_EXPORT Autonomous
 
 public:
     Autonomous();
-};
+
+private:
+    void mainLoop();
+
+    double speed = 60; //IDK what we want for speed right now or if we want to be updating it.
+    volatile double angle = 0; //Updated through updateAngle
+    double lastLongitude = 0;
+    double lastLatitude = 0;
+    bool threadsRunning = true;
 
 class SearchAlgorithm {
 private:
