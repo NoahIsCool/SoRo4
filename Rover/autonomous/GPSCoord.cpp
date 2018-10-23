@@ -163,7 +163,7 @@ double GPSCoord::calculateDistance(GPSCoord destination) {
 		distance = earthDiameterMeters * acos(sin(currentLat) * sin(destLat) +
 			cos(currentLat) * cos(destLat) * cos(currentLong - destLong));
 
-		return distance;
+		return distance * 1000; // in meters
 }
 
 // Caculate the bearings from current position to destination
