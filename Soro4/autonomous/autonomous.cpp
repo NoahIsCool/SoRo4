@@ -3,10 +3,9 @@
 #include <queue>
 #include <set>
 
-//this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
+#define PI 3.14159265
 
-Socket mySocket;
-double speed = 60; //IDK what we want for speed right now or if we want to be updating it.
+//this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
 
 //Higher value means more avoidance from the algorithm
 const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
@@ -180,11 +179,18 @@ std::vector<std::vector<double>> Autonomous::GeneratePath()
 }
 
 //impliment much later
-bool Autonomous::IsThereObsticleOrStuck()
+bool Autonomous::isThereObsticle()
 {
 
 }
 
+bool Autonomous::isStuck()
+{
+
+}
+
+
+//Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obsticle
 void Autonomous::avoidObsticle()
 {
     //backs up for 5 seconds
@@ -200,6 +206,7 @@ void Autonomous::avoidObsticle()
     sleep(5000);
 }
 
+//Someone needs to port the working python code to track the tennis ball into here
 void Autonomous::FindTennisBall()
 {
 
@@ -210,6 +217,28 @@ double Autonomous::getAngleToTurn()
 
 }
 
+//This is meant to be run as a thread the whole time the autonomous program is running.
+//NOTE: I do not know what the GPSobject is or what the fields for latitude or longitude are so they may need to be changed
+void Autonomous::updateAngle()
+{
+    double longitude = GPSobject.longitude;
+    double latitude = GPSobject.latitude;
+
+    while(threadsRunning)
+    {
+        longitude = GPSobject.longitude;
+        latitude = GPSobject.latitude;
+
+        angle = std::atan((lastLongitude - longitude) / (latitude - lastLatitude)) * 180 / PI;
+
+        lastLatitude = latitude;
+        lastLongitude = longitude;
+
+        sleep(500); //this sleep may need to be increased or decreased depending on how often we want the rover to update its angle
+    }
+}
+
+//This needs to be implemented as a GUI function where we can input the next set of coordinates that the people tell us the tennis ball is
 std::vector<double> Autonomous::inputNextCoords()
 {
 
@@ -225,8 +254,12 @@ int Autonomous::MainLoop()
     killVector[0] = -1;
     killVector[1] = -1;
 
+    lastLatitude = GPSobject.latitude;
+    lastLongitude = GPSobject.longitude;
+
     std::vector<double> nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
+    std::thread angleThread(updateAngle);
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
         ListOfCoordsToNextCheckpoint = GeneratePath(path to nextCords); //generates the path to the given set of coords
@@ -234,7 +267,7 @@ int Autonomous::MainLoop()
         {
             while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the roover to reach
             {
-                if(IsThereObsticleOrStuck())
+                if(isThereObsticle() || isStuck())
                 {
                     avoidObsticle();
                 }
@@ -254,6 +287,8 @@ int Autonomous::MainLoop()
         FindTennisBall();
         nextCords = inputNextCords(); //gets the next set of coords
     }
+    threadsRunning = false;
+    updateAngle.join();
     cout << "We win!" << endl;
     return 0;
 }
