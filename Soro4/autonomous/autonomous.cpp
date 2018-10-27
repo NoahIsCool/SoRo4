@@ -148,13 +148,13 @@ Autonomous::Autonomous()
 {
     qInfo() << "library link test";
 
-    MainLoop();
+    mainLoop();
 }
 
 //return the speeds that the wheels need to move at to get to the next coordinate
-std::Vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double baseSpeed)
+std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double baseSpeed)
 {
-    std::Vector<double> PIDValues(2);
+    std::vector<double> PIDValues(2);
 
     if(baseSpeed > 0)
     {
