@@ -184,9 +184,24 @@ bool Autonomous::isThereObstacle()
 
 }
 
+int timesStuck = 0;
+//this updates a variable if the robot's latitude and longitude is EXACTLY the same as the last reading (may need to add a tollerance to that)
+//if the robot is stuck 6 times in a row (so for ~3 seconds) then the method returns true. Otherwise returns false
 bool Autonomous::isStuck()
 {
-
+    if(lastLatitude == pos_llh.lat && lastLongitude == pos_llh.lon)
+    {
+        timesStuck++;
+        if(timesStuck >= 6)
+        {
+            return true;
+        }
+    }
+    else
+    {
+        timesStuck = 0;
+    }
+    return false;
 }
 
 
@@ -221,13 +236,13 @@ double Autonomous::getAngleToTurn()
 //NOTE: I do not know what the GPSobject is or what the fields for latitude or longitude are so they may need to be changed
 void Autonomous::updateAngle()
 {
-    double longitude = GPSobject.longitude;
-    double latitude = GPSobject.latitude;
+    double longitude = pos_llh.lon;
+    double latitude = pos_llh.lat;
 
     while(threadsRunning)
     {
-        longitude = GPSobject.longitude;
-        latitude = GPSobject.latitude;
+        longitude = pos_llh.lon;
+        latitude = pos_llh.lat;
 
         angle = std::atan((lastLongitude - longitude) / (latitude - lastLatitude)) * 180 / PI;
 
@@ -254,11 +269,12 @@ int Autonomous::MainLoop()
     killVector[0] = -1;
     killVector[1] = -1;
 
-    lastLatitude = GPSobject.latitude;
-    lastLongitude = GPSobject.longitude;
+    lastLatitude = pos_llh.lat;
+    lastLongitude = pos_llh.lon;
 
     std::vector<double> nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
+    threadsRunning = true;
     std::thread angleThread(updateAngle);
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
