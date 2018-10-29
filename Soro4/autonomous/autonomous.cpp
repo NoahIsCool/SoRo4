@@ -184,27 +184,6 @@ bool Autonomous::isThereObstacle()
 
 }
 
-int timesStuck = 0;
-//this updates a variable if the robot's latitude and longitude is EXACTLY the same as the last reading (may need to add a tollerance to that)
-//if the robot is stuck 6 times in a row (so for ~3 seconds) then the method returns true. Otherwise returns false
-bool Autonomous::isStuck()
-{
-    if(lastLatitude == pos_llh.lat && lastLongitude == pos_llh.lon)
-    {
-        timesStuck++;
-        if(timesStuck >= 6)
-        {
-            return true;
-        }
-    }
-    else
-    {
-        timesStuck = 0;
-    }
-    return false;
-}
-
-
 //Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obstacle
 void Autonomous::avoidObstacle()
 {
@@ -233,8 +212,10 @@ double Autonomous::getAngleToTurn()
 }
 
 //This is meant to be run as a thread the whole time the autonomous program is running.
-//NOTE: I do not know what the GPSobject is or what the fields for latitude or longitude are so they may need to be changed
-void Autonomous::updateAngle()
+//This finds the angle that the rover is at and if the rover is stuck. This will be inaccurate if the rover does a pivot turn
+//The way that it finds if the rover is stuck is if it is in the EXACT same position 6 times in a row (3 seconds)
+//TODO add the accelerometer information here (probably(?))
+void Autonomous::updateStatus()
 {
     double longitude = pos_llh.lon;
     double latitude = pos_llh.lat;
@@ -244,12 +225,27 @@ void Autonomous::updateAngle()
         longitude = pos_llh.lon;
         latitude = pos_llh.lat;
 
-        angle = std::atan((lastLongitude - longitude) / (latitude - lastLatitude)) * 180 / PI;
+        //if the robot hasn't moved
+        if(lastLatitude == latitude && lastLongitude == longitude)
+        {
+            timesStuck++;
+            if(timesStuck >= 6)
+            {
+                isStuck = true;
+            }
+        }
 
-        lastLatitude = latitude;
-        lastLongitude = longitude;
+        else
+        {
+            isStuck = false;
+            timesStuck = 0;
+            angle = std::atan((lastLongitude - longitude) / (latitude - lastLatitude)) * 180 / PI;
 
-        sleep(500); //this sleep may need to be increased or decreased depending on how often we want the rover to update its angle
+            lastLatitude = latitude;
+            lastLongitude = longitude;
+
+            usleep(500000); //this sleep may need to be increased or decreased depending on how often we want the rover to update its angle
+        }
     }
 }
 
@@ -269,13 +265,16 @@ int Autonomous::MainLoop()
     killVector[0] = -1;
     killVector[1] = -1;
 
+    timesStuck = 0;
+    isStuck = false;
+
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
 
     std::vector<double> nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
     threadsRunning = true;
-    std::thread angleThread(updateAngle);
+    std::thread angleThread(updateStatus);
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
         ListOfCoordsToNextCheckpoint = GeneratePath(path to nextCords); //generates the path to the given set of coords
@@ -283,7 +282,7 @@ int Autonomous::MainLoop()
         {
             while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
-                if(isThereObstacle() || isStuck())
+                if(isThereObstacle() || isStuck)
                 {
                     avoidObstacle();
                 }
@@ -295,7 +294,7 @@ int Autonomous::MainLoop()
                     std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
                     mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
 
-                    sleep(500); //lets it drive for 500ms before continuing on
+                    usleep(500000); //lets it drive for 500ms before continuing on
                 }
             }
         }

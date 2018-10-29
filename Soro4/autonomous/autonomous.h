@@ -22,6 +22,8 @@ private:
     double lastLongitude = 0;
     double lastLatitude = 0;
     bool threadsRunning = true;
+    int timesStuck; // finds how many times the rover has been stuck in place
+    bool isStuck; //checks if the rover is considered stuck
 
 class SearchAlgorithm {
 private:
