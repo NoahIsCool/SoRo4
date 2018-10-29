@@ -173,10 +173,15 @@ std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double ba
     return PIDValues;
 }
 
-//not exactly sure what this will return
-std::vector<Cell> Autonomous::GeneratePath()
+//Returns a list of cells from the rover's current location to the specified destination
+std::list<Cell> Autonomous::GeneratePath(Cell dest)
 {
+	Cell source;
+	source.lat = GPSObject.latitude;
+	source.lng = GPSObject.longitude;
+	source.gradient = 0.0;
 
+	return findPath(source, dest);
 }
 
 //impliment much later
@@ -186,7 +191,7 @@ bool Autonomous::ObstacleOrStuck()
 }
 
 //Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obsticle
-void Autonomous::avoidObsticle()
+void Autonomous::avoidObstacle()
 {
     //backs up for 5 seconds
     mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
@@ -207,7 +212,7 @@ void Autonomous::FindTennisBall()
 
 }
 
-double Autonomous::getAngleToTurn()
+double Autonomous::getAngleToTurn(Cell next)
 {
 
 }
@@ -229,7 +234,7 @@ void Autonomous::updateAngle()
         lastLatitude = latitude;
         lastLongitude = longitude;
 
-        sleep(500); //this sleep may need to be increased or decreased depending on how often we want the rover to update its angle
+        usleep(500); //this sleep may need to be increased or decreased depending on how often we want the rover to update its angle
     }
 }
 
@@ -243,6 +248,9 @@ Cell Autonomous::inputNextCoords()
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
 int Autonomous::MainLoop()
 {
+	//placeholder
+	parseMap();
+
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
     Cell killVector();
@@ -250,10 +258,13 @@ int Autonomous::MainLoop()
     killVector.lng = -1;
 
     Cell nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
-    lastLatitude = GPSobject.latitude;
+    
+	//placeholders
+	lastLatitude = GPSobject.latitude;
     lastLongitude = GPSobject.longitude;
 
     std::thread angleThread(updateAngle);
+
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
         std::list<Cell> path = generatePath(nextCords); //TODO generates the path to the given set of coords
@@ -262,14 +273,14 @@ int Autonomous::MainLoop()
          //loops through each of the coordinates to get to the next checkpoint        
         while(*it != nextCords) //travels to the next set of coords. 
         {
-            if(isThereObsticle() || isStuck())
+            if(ObstacleOrStuck())
             {
-                avoidObsticle();
+                avoidObstacle();
             }
 			else //drives trying to get to the next checkpoint
             {
                 //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-                double angleToTurn = getAngleToTurn();
+                double angleToTurn = getAngleToTurn(*it);
 
                 std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
                 mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
@@ -283,8 +294,10 @@ int Autonomous::MainLoop()
         FindTennisBall();
         nextCords = inputNextCords(); //gets the next set of coords
     }
+
     threadsRunning = false;
     updateAngle.join();
+
     cout << "We win!" << endl;
     return 0;
 }
