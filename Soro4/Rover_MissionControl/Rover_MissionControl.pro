@@ -18,7 +18,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp
 
-LIBS += -L../../libs -ldriveController -lmasterArm
+LIBS += -L../../libs -ldriveController -lmasterArm -lcore
 
 QMAKE_LFLAGS += -Wl,--rpath=\\\$\$ORIGIN/../libs
 

@@ -1,4 +1,4 @@
-﻿#ifndef AUTONOMOUS_H
+#ifndef AUTONOMOUS_H
 #define AUTONOMOUS_H
 
 #include <QDebug>
@@ -6,6 +6,7 @@
 #include "autonomous_global.h"
 #include "core/core.h"
 #include <list>
+#include <math.h>
 
 class AUTONOMOUSSHARED_EXPORT Autonomous
 {
@@ -17,10 +18,12 @@ private:
     void inputNextCoords();
 
     double speed = 60; //IDK what we want for speed right now or if we want to be updating it.
-    volatile double angle = 0; //Updated through updateAngle
+    static volatile double angle; //Updated through updateAngle
     double lastLongitude = 0;
     double lastLatitude = 0;
     bool threadsRunning = true;
+    int timesStuck; // finds how many times the rover has been stuck in place
+    bool isStuck; //checks if the rover is considered stuck
 };
 
 class SearchAlgorithm {
