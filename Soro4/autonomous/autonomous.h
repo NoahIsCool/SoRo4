@@ -5,7 +5,9 @@
 
 #include "autonomous_global.h"
 #include "core/core.h"
+
 #include <list>
+#include <math.h>
 
 class AUTONOMOUSSHARED_EXPORT Autonomous
 {
@@ -21,6 +23,8 @@ private:
     double lastLongitude = 0;
     double lastLatitude = 0;
     bool threadsRunning = true;
+};
+
 };
 
 class SearchAlgorithm {

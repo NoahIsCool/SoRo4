@@ -4,6 +4,8 @@
 #
 #-------------------------------------------------
 
+QT       += network
+
 QT       -= gui
 
 TARGET = core
@@ -27,6 +29,7 @@ SOURCES += \
 
 HEADERS += \
         core.h \
+	comms.h \
 
 #unix {
     target.path = $$PWD/

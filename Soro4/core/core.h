@@ -1,7 +1,7 @@
 #ifndef CORE_H
 #define CORE_H
 
-/****
+/*
 Struct representing a cell of the topographic map used for autonomous pathfinding.
 */
 struct Cell {
