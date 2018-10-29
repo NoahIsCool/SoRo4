@@ -15,6 +15,7 @@ const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the differe
 Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
 int SearchAlgorithm::maxy; //max y-value on the map
+volatile double angle = 0.0; //current angle of travel from the horizontal. Sign is reversed from what is expected
 
 std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest, Cell ** map, int maxx, int maxy)
 {
@@ -212,9 +213,13 @@ void Autonomous::FindTennisBall()
 
 }
 
+//returns the difference between the current angle to the horizontal and the desired angle to reach the next cell
 double Autonomous::getAngleToTurn(Cell next)
 {
-
+    double latitude = pos_llh.lat;
+    double longitude = pos_llh.lon;
+    double target = std::atan((next.lng - longitude) / (next.lat - latidude)) * 180 / PI; //NOTE: angle sign is opposite of standard
+    return target - angle;
 }
 
 //This is meant to be run as a thread the whole time the autonomous program is running.
@@ -245,7 +250,7 @@ void Autonomous::updateStatus()
         {
             isStuck = false;
             timesStuck = 0;
-            angle = std::atan((lastLongitude - longitude) / (latitude - lastLatitude)) * 180 / PI;
+            angle = std::atan((longitude - lastLongitude) / (latitude - lastLatitude)) * 180 / PI; //NOTE: sign is opposite of usual
 
             lastLatitude = latitude;
             lastLongitude = longitude;
@@ -300,7 +305,7 @@ int Autonomous::MainLoop()
                 else //drives trying to get to the next checkpoint
                 {
                     //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-                    angleToTurn = getAngleToTurn();
+                    double angleToTurn = getAngleToTurn();
 
                     std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
                     mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
