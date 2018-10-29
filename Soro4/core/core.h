@@ -8,6 +8,10 @@ struct Cell {
 	double lat;		//latitude of the cell
 	double lng;		//longitude of the cell
 	double gradient;	//average shade of the cell
+
+	bool operator==(Cell c) {
+		return (lat == c.lat) && (lng == c.lng);
+	}
 };
 
 #endif // CORE_H

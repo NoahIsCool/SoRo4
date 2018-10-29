@@ -1,26 +1,13 @@
-﻿#ifndef AUTONOMOUS_H
-#define AUTONOMOUS_H
-
-#include <QDebug>
-
-#include "autonomous_global.h"
-#include "core/core.h"
+#pragma once
 #include <list>
 
-class AUTONOMOUSSHARED_EXPORT Autonomous
-{
-public:
-    Autonomous();
-
-private:
-    void mainLoop();
-    void inputNextCoords();
-
-    double speed = 60; //IDK what we want for speed right now or if we want to be updating it.
-    volatile double angle = 0; //Updated through updateAngle
-    double lastLongitude = 0;
-    double lastLatitude = 0;
-    bool threadsRunning = true;
+/****
+Placeholder struct, the interpretation team will provide final
+*/
+struct Cell {
+	double lat;		//latitude of the cell
+	double lng;		//longitude of the cell
+	double gradient;	//average shade of the cell
 };
 
 class SearchAlgorithm {
@@ -43,14 +30,6 @@ private:
 		//The score used to select the next node from the open list
 		double f;
 
-		Node() {
-			x = 0;
-			y = 0;
-			parent = nullptr;
-			g = 0.0;
-			f = 0.0;
-		}
-
 		//Node constructor. Present simply for convinience, it just assigns the node variables
 		Node(int x, int y, Node* parent, double g, double f) {
 			(*this).x = x;
@@ -58,32 +37,6 @@ private:
 			(*this).parent = parent;
 			(*this).g = g;
 			(*this).f = f;
-		}
-
-		//Copy constructor utilizing overloaded = operator
-		Node(const Node &copy) { //CHNG 10/3: added
-			(*this) = copy;
-		}
-
-		//Cleans up the whole list
-		~Node() {
-			delete parent;
-		}
-
-		//Overloaded = operator for Node object. Copies the entire list instead of just the value of the pointer.
-		void operator= (const Node& copy) {
-			x = copy.x;
-			y = copy.y;
-
-			if (copy.parent != nullptr) {
-				parent = new Node(*copy.parent);
-			}
-			else {
-				parent = nullptr;
-			}
-
-			g = copy.g;
-			f = copy.f;
 		}
 
 		//Overloaded == operator for node. Compares nodes based on coordinate
@@ -98,20 +51,6 @@ private:
 	struct compareNodes {
 		bool operator() (const Node& n1, const Node& n2) const {
 			return n1.f > n2.f;
-		}
-	};
-
-	/*****
-	Comparator class for set of Nodes. Compares nodes based on their x and y values.
-	*/
-	struct compareNodes2 {
-		bool operator() (const Node& n1, const Node& n2) const {
-			if (n1.x == n2.x) {
-				return n1.y < n2.y;
-			}
-			else {
-				return n1.x < n2.x;
-			}
 		}
 	};
 
@@ -144,8 +83,6 @@ public:
 
 	return - a list of GPS coordinate pairs 50 meters apart forming a path from the source to the destination
 	*/
-	static std::list<Cell> findPath(Cell source, Cell dest, Cell** map, int maxx, int maxy);
-	static std::list<Cell> findPath(Cell source, Cell dest);
+	static std::list<double*> findPath(double* source, double* dest, Cell** map, int maxx, int maxy);
+	static std::list<double*> findPath(double* source, double* dest);
 };
-
-#endif // AUTONOMOUS_H
