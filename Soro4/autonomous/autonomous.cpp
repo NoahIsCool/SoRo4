@@ -15,6 +15,7 @@ const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the differe
 Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
 int SearchAlgorithm::maxy; //max y-value on the map
+volatile double angle = 0.0; //current angle of travel from the horizontal. Sign is reversed from what is expected
 
 std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest, Cell ** map, int maxx, int maxy)
 {
@@ -214,7 +215,10 @@ void Autonomous::FindTennisBall()
 
 double Autonomous::getAngleToTurn(Cell next)
 {
-
+    double latitude = pos_llh.lat;
+    double longitude = pos_llh.lon;
+    double target = std::atan((next.lng - longitude) / (next.lat - latidude)) * 180 / PI; //NOTE: angle sign is opposite of standard
+    return target - angle;
 }
 
 //This is meant to be run as a thread the whole time the autonomous program is running.
