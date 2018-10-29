@@ -16,14 +16,20 @@ public:
 
 private:
     void mainLoop();
-    void inputNextCoords();
+    std::vector<double> getWheelSpeedsValues(double amountOff, double baseSpeed);
+    std::vector<Cell> GeneratePath();
+    bool ObstacleOrStuck();
+    void avoidObsticle();
+    void FindTennisBall();
+    double getAngleToTurn();
+    void updateAngle();
+    Cell inputNextCoords();
 
     double speed = 60; //IDK what we want for speed right now or if we want to be updating it.
     volatile double angle = 0; //Updated through updateAngle
     double lastLongitude = 0;
     double lastLatitude = 0;
     bool threadsRunning = true;
-};
 
 };
 

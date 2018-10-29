@@ -83,11 +83,11 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 	do {
 		Cell cell = map[interest->x][interest->y];
 
-		Cell pair = new Cell(); //CHNG 10/5: dynamically allocated array to avoid the overwriting problem
-		pair.lat = cell.lat;
-		pair.lng = cell.lng;
+        Cell *pair = new Cell(); //CHNG 10/5: dynamically allocated array to avoid the overwriting problem
+        pair->lat = cell.lat;
+        pair->lng = cell.lng;
 
-		out.push_front(pair);
+        out.push_front(*pair);
 
 		interest = interest->parent;
 	} while (interest != nullptr);
@@ -160,14 +160,14 @@ std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double ba
     if(baseSpeed > 0)
     {
         //this formula is still almost certainly going to need to be adjusted
-        PIDValues[0] = speed + speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountoff, 4);
-        PIDValues[1] = speed - speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountoff, 4);
+        PIDValues[0] = speed + speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
+        PIDValues[1] = speed - speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
     }
 
     else
     {
-        PIDValues[0] = speed - speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountoff, 4);
-        PIDValues[1] = speed + speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountoff, 4);
+        PIDValues[0] = speed - speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
+        PIDValues[1] = speed + speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
     }
 
     return PIDValues;
@@ -241,7 +241,7 @@ Cell Autonomous::inputNextCoords()
 
 //Goes through all of the coordinates that we need to travel through
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
-int Autonomous::MainLoop()
+void Autonomous::mainLoop()
 {
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
@@ -281,12 +281,11 @@ int Autonomous::MainLoop()
         
         //once arrives to the checkpoint
         FindTennisBall();
-        nextCords = inputNextCords(); //gets the next set of coords
+        nextCords = inputNextCoords(); //gets the next set of coords
     }
     threadsRunning = false;
     updateAngle.join();
-    cout << "We win!" << endl;
-    return 0;
+    std::cout << "We win!" << endl;
 }
 
 
