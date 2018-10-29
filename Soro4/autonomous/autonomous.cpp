@@ -185,14 +185,14 @@ bool Autonomous::ObstacleOrStuck()
 
 }
 
-//Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obsticle
-void Autonomous::avoidObsticle()
+//Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obstacle
+void Autonomous::avoidObstacle()
 {
     //backs up for 5 seconds
     mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
     usleep(5000);
 
-    //turns for a few seconds to hopefully avoid the obsticle
+    //turns for a few seconds to hopefully avoid the obstacle
     mySocket.sendUDP(0, 0, 0, -speed, speed, 0, 0, 0);
     usleep(5000);
 
@@ -262,9 +262,9 @@ int Autonomous::MainLoop()
          //loops through each of the coordinates to get to the next checkpoint        
         while(*it != nextCords) //travels to the next set of coords. 
         {
-            if(isThereObsticle() || isStuck())
+            if(isThereObstacle() || isStuck())
             {
-                avoidObsticle();
+                avoidObstacle();
             }
 			else //drives trying to get to the next checkpoint
             {
