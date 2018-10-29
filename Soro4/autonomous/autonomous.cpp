@@ -213,6 +213,7 @@ void Autonomous::FindTennisBall()
 
 }
 
+//returns the difference between the current angle to the horizontal and the desired angle to reach the next cell
 double Autonomous::getAngleToTurn(Cell next)
 {
     double latitude = pos_llh.lat;
@@ -249,7 +250,7 @@ void Autonomous::updateStatus()
         {
             isStuck = false;
             timesStuck = 0;
-            angle = std::atan((lastLongitude - longitude) / (latitude - lastLatitude)) * 180 / PI;
+            angle = std::atan((longitude - lastLongitude) / (latitude - lastLatitude)) * 180 / PI; //NOTE: sign is opposite of usual
 
             lastLatitude = latitude;
             lastLongitude = longitude;
@@ -304,7 +305,7 @@ int Autonomous::MainLoop()
                 else //drives trying to get to the next checkpoint
                 {
                     //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-                    angleToTurn = getAngleToTurn();
+                    double angleToTurn = getAngleToTurn();
 
                     std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
                     mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
