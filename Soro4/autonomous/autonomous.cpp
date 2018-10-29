@@ -185,12 +185,12 @@ std::list<Cell> Autonomous::GeneratePath(Cell dest)
 }
 
 //impliment much later
-bool Autonomous::ObstacleOrStuck()
+bool Autonomous::isThereObstacle()
 {
 
 }
 
-//Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obsticle
+//Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obstacle
 void Autonomous::avoidObstacle()
 {
     //backs up for 5 seconds
@@ -218,23 +218,39 @@ double Autonomous::getAngleToTurn(Cell next)
 }
 
 //This is meant to be run as a thread the whole time the autonomous program is running.
-//NOTE: I do not know what the GPSobject is or what the fields for latitude or longitude are so they may need to be changed
-void Autonomous::updateAngle()
+//This finds the angle that the rover is at and if the rover is stuck. This will be inaccurate if the rover does a pivot turn
+//The way that it finds if the rover is stuck is if it is in the EXACT same position 6 times in a row (3 seconds)
+//TODO add the accelerometer information here (probably(?))
+void Autonomous::updateStatus()
 {
-    double longitude = GPSobject.longitude;
-    double latitude = GPSobject.latitude;
+    double longitude = pos_llh.lon;
+    double latitude = pos_llh.lat;
 
     while(threadsRunning)
     {
-        longitude = GPSobject.longitude;
-        latitude = GPSobject.latitude;
+        longitude = pos_llh.lon;
+        latitude = pos_llh.lat;
 
-        angle = std::atan((lastLongitude - longitude) / (latitude - lastLatitude)) * 180 / PI;
+        //if the robot hasn't moved
+        if(lastLatitude == latitude && lastLongitude == longitude)
+        {
+            timesStuck++;
+            if(timesStuck >= 6)
+            {
+                isStuck = true;
+            }
+        }
 
-        lastLatitude = latitude;
-        lastLongitude = longitude;
+        else
+        {
+            isStuck = false;
+            timesStuck = 0;
+            angle = std::atan((lastLongitude - longitude) / (latitude - lastLatitude)) * 180 / PI;
 
-        usleep(500); //this sleep may need to be increased or decreased depending on how often we want the rover to update its angle
+            lastLatitude = latitude;
+            lastLongitude = longitude;
+            usleep(500000); //this sleep may need to be increased or decreased depending on how often we want the rover to update its angle
+        }
     }
 }
 
@@ -253,18 +269,20 @@ int Autonomous::MainLoop()
 
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
-    Cell killVector();
-    killVector.lat = -1;
-    killVector.lng = -1;
+    std::vector<double> killVector(2);
+    killVector[0] = -1;
+    killVector[1] = -1;
 
-    Cell nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
-    
-	//placeholders
-	lastLatitude = GPSobject.latitude;
-    lastLongitude = GPSobject.longitude;
+    timesStuck = 0;
+    isStuck = false;
 
-    std::thread angleThread(updateAngle);
+    lastLatitude = pos_llh.lat;
+    lastLongitude = pos_llh.lon;
 
+    std::vector<double> nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
+
+    threadsRunning = true;
+    std::thread angleThread(updateStatus);
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
         std::list<Cell> path = generatePath(nextCords); //TODO generates the path to the given set of coords
@@ -273,20 +291,23 @@ int Autonomous::MainLoop()
          //loops through each of the coordinates to get to the next checkpoint        
         while(*it != nextCords) //travels to the next set of coords. 
         {
-            if(ObstacleOrStuck())
+            while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
-                avoidObstacle();
-            }
-			else //drives trying to get to the next checkpoint
-            {
-                //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-                double angleToTurn = getAngleToTurn(*it);
+                if(isThereObstacle() || isStuck)
+                {
+                    avoidObstacle();
+                }
+                else //drives trying to get to the next checkpoint
+                {
+                    //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
+                    angleToTurn = getAngleToTurn();
 
-                std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
-                mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
-                usleep(500); //lets it drive for 500ms before continuing on
+                    std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
+                    mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
 
-				it++;
+                    usleep(500000); //lets it drive for 500ms before continuing on
+                    it++;
+                }
             }
         }
         
