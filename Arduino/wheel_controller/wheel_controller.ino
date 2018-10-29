@@ -140,7 +140,7 @@ void updateServos(){
        gimbal_pan.write(93 + pan);
        gimbal_tilt.write(tilt);
    }
-   if((overdirve & 2) && ( overdirive & 4)){
+   if((overdrive & 2) && ( overdrive & 4)){
    	wheel[0].write(90 +leftWheels);
 	wheel[3].write(90 + rightWheels);
 	wheel[2].write(90 + leftWheels);
