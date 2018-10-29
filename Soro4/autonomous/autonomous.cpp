@@ -198,7 +198,7 @@ void Autonomous::avoidObstacle()
     mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
     usleep(5000);
 
-    //turns for a few seconds to hopefully avoid the obsticle
+    //turns for a few seconds to hopefully avoid the obstacle
     mySocket.sendUDP(0, 0, 0, -speed, speed, 0, 0, 0);
     usleep(5000);
 
