@@ -173,10 +173,15 @@ std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double ba
     return PIDValues;
 }
 
-//not exactly sure what this will return
-std::vector<Cell> Autonomous::GeneratePath()
+//Returns a list of cells from the rover's current location to the specified destination
+std::list<Cell> Autonomous::GeneratePath(Cell dest)
 {
+	Cell source;
+	source.lat = GPSObject.latitude;
+	source.lng = GPSObject.longitude;
+	source.gradient = 0.0;
 
+	return findPath(source, dest);
 }
 
 //impliment much later
