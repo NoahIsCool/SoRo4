@@ -179,7 +179,7 @@ std::vector<std::vector<double>> Autonomous::GeneratePath()
 }
 
 //impliment much later
-bool Autonomous::isThereObsticle()
+bool Autonomous::isThereObstacle()
 {
 
 }
@@ -190,8 +190,8 @@ bool Autonomous::isStuck()
 }
 
 
-//Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obsticle
-void Autonomous::avoidObsticle()
+//Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obstacle
+void Autonomous::avoidObstacle()
 {
     //backs up for 5 seconds
     mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
@@ -265,11 +265,11 @@ int Autonomous::MainLoop()
         ListOfCoordsToNextCheckpoint = GeneratePath(path to nextCords); //generates the path to the given set of coords
         for(int j = 0; j < sizeOf(ListOfCheckpointsListOfCoords); j++) //loops through each of the coordinates to get to the next checkpoint
         {
-            while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the roover to reach
+            while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
-                if(isThereObsticle() || isStuck())
+                if(isThereObstacle() || isStuck())
                 {
-                    avoidObsticle();
+                    avoidObstacle();
                 }
                 else //drives trying to get to the next checkpoint
                 {
