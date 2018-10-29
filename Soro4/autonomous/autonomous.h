@@ -1,4 +1,4 @@
-﻿#ifndef AUTONOMOUS_H
+#ifndef AUTONOMOUS_H
 #define AUTONOMOUS_H
 
 #include <QDebug>
