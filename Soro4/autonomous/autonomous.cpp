@@ -2,6 +2,7 @@
 #include <list>
 #include <queue>
 #include <set>
+#include <unistd.h>
 
 #define PI 3.14159265
 
@@ -15,7 +16,7 @@ Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
 int SearchAlgorithm::maxy; //max y-value on the map
 
-std::list<double*> SearchAlgorithm::findPath(double * source, double * dest, Cell ** map, int maxx, int maxy)
+std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest, Cell ** map, int maxx, int maxy)
 {
 	//Change the static class members to their provided values
 	SearchAlgorithm::map = map;
@@ -25,7 +26,7 @@ std::list<double*> SearchAlgorithm::findPath(double * source, double * dest, Cel
 	return findPath(source, dest);
 }
 
-std::list<double*> SearchAlgorithm::findPath(double * source, double * dest)
+std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 {
 	//Determine the x and y values of the source and destination from their latitude and longitude
 
@@ -33,15 +34,15 @@ std::list<double*> SearchAlgorithm::findPath(double * source, double * dest)
 	double latDiff = map[0][1].lat - map[0][0].lat; //Should be negative because 0 lat is equator
 
 	//Find y coordinates
-	int sourcey = round((source[0] - map[0][0].lat) / latDiff);
-	int desty = round((dest[0] - map[0][0].lat) / latDiff);
+	int sourcey = round((source.lat - map[0][0].lat) / latDiff);
+	int desty = round((dest.lat - map[0][0].lat) / latDiff);
 
 	//Determine the difference in longitude between the first two columns
 	double lngDiff = map[1][0].lng - map[0][0].lng; //should be negative becasuse longitude proceeds east to west in NA
 
 	//Find x coordinates
-	int sourcex = round((source[1] - map[0][0].lng) / lngDiff);
-	int destx = round((dest[1] - map[0][0].lng) / lngDiff);
+	int sourcex = round((source.lng - map[0][0].lng) / lngDiff);
+	int destx = round((dest.lng - map[0][0].lng) / lngDiff);
 
 	//Create the source node and add it to the open list
 	std::priority_queue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
@@ -75,16 +76,16 @@ std::list<double*> SearchAlgorithm::findPath(double * source, double * dest)
 	}
 
 	//create output list
-	std::list<double*> out;
+	std::list<Cell> out;
 	Node * interest = new Node(destNode);
 
 	//ascend the parent tree, adding the corresponding GPS coordinates until we reach the source
 	do {
 		Cell cell = map[interest->x][interest->y];
 
-		double * pair = new double[2]; //CHNG 10/5: dynamically allocated array to avoid the overwriting problem
-		pair[0] = cell.lat;
-		pair[1] = cell.lng;
+		Cell pair = new Cell(); //CHNG 10/5: dynamically allocated array to avoid the overwriting problem
+		pair.lat = cell.lat;
+		pair.lng = cell.lng;
 
 		out.push_front(pair);
 
@@ -152,7 +153,7 @@ Autonomous::Autonomous()
 }
 
 //return the speeds that the wheels need to move at to get to the next coordinate
-std::Vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double baseSpeed)
+std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double baseSpeed)
 {
     std::Vector<double> PIDValues(2);
 
@@ -173,37 +174,31 @@ std::Vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double ba
 }
 
 //not exactly sure what this will return
-std::vector<std::vector<double>> Autonomous::GeneratePath()
+std::vector<Cell> Autonomous::GeneratePath()
 {
 
 }
 
 //impliment much later
-bool Autonomous::isThereObsticle()
+bool Autonomous::ObstacleOrStuck()
 {
 
 }
-
-bool Autonomous::isStuck()
-{
-
-}
-
 
 //Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obsticle
 void Autonomous::avoidObsticle()
 {
     //backs up for 5 seconds
     mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
-    sleep(5000);
+    usleep(5000);
 
     //turns for a few seconds to hopefully avoid the obsticle
     mySocket.sendUDP(0, 0, 0, -speed, speed, 0, 0, 0);
-    sleep(5000);
+    usleep(5000);
 
     //drive forward a bit and continue(?)
     mySocket.sendUDP(0, 0, 0, speed, speed, 0, 0, speed);
-    sleep(5000);
+    usleep(5000);
 }
 
 //Someone needs to port the working python code to track the tennis ball into here
@@ -239,7 +234,7 @@ void Autonomous::updateAngle()
 }
 
 //This needs to be implemented as a GUI function where we can input the next set of coordinates that the people tell us the tennis ball is
-std::vector<double> Autonomous::inputNextCoords()
+Cell Autonomous::inputNextCoords()
 {
 
 }
@@ -250,39 +245,40 @@ int Autonomous::MainLoop()
 {
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
-    std::vector<double> killVector(2);
-    killVector[0] = -1;
-    killVector[1] = -1;
+    Cell killVector();
+    killVector.lat = -1;
+    killVector.lng = -1;
 
+    Cell nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
     lastLatitude = GPSobject.latitude;
     lastLongitude = GPSobject.longitude;
-
-    std::vector<double> nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
     std::thread angleThread(updateAngle);
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-        ListOfCoordsToNextCheckpoint = GeneratePath(path to nextCords); //generates the path to the given set of coords
-        for(int j = 0; j < sizeOf(ListOfCheckpointsListOfCoords); j++) //loops through each of the coordinates to get to the next checkpoint
+        std::list<Cell> path = generatePath(nextCords); //TODO generates the path to the given set of coords
+		std::list<Cell>::iterator it = path.begin();
+
+         //loops through each of the coordinates to get to the next checkpoint        
+        while(*it != nextCords) //travels to the next set of coords. 
         {
-            while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the roover to reach
+            if(isThereObsticle() || isStuck())
             {
-                if(isThereObsticle() || isStuck())
-                {
-                    avoidObsticle();
-                }
-                else //drives trying to get to the next checkpoint
-                {
-                    //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-                    angleToTurn = getAngleToTurn();
+                avoidObsticle();
+            }
+			else //drives trying to get to the next checkpoint
+            {
+                //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
+                double angleToTurn = getAngleToTurn();
 
-                    std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
-                    mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
+                std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
+                mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
+                usleep(500); //lets it drive for 500ms before continuing on
 
-                    sleep(500); //lets it drive for 500ms before continuing on
-                }
+				it++;
             }
         }
+        
         //once arrives to the checkpoint
         FindTennisBall();
         nextCords = inputNextCords(); //gets the next set of coords
