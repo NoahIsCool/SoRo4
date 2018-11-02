@@ -15,6 +15,7 @@ const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the differe
 Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
 int SearchAlgorithm::maxy; //max y-value on the map
+volatile double angle = 0.0; //current angle of travel from the horizontal. Sign is reversed from what is expected
 
 std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest, Cell ** map, int maxx, int maxy)
 {
@@ -173,21 +174,25 @@ std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double ba
     return PIDValues;
 }
 
-//not exactly sure what this will return
-//FIXME: was a vector. should it be a list or a vector?
-std::list<Cell> Autonomous::GeneratePath()
+//Returns a list of cells from the rover's current location to the specified destination
+std::list<Cell> Autonomous::GeneratePath(Cell dest)
 {
+	Cell source;
+    source.lat = pos_llh.latitude;
+    source.lng = pos_llh.longitude;
+	source.gradient = 0.0;
 
+    return searcher.findPath(source, dest);
 }
 
 //impliment much later
-bool Autonomous::ObstacleOrStuck()
+bool Autonomous::isThereObstacle()
 {
 
 }
 
-//Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obsticle
-void Autonomous::avoidObsticle()
+//Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obstacle
+void Autonomous::avoidObstacle()
 {
     //backs up for 5 seconds
     //mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
@@ -232,35 +237,49 @@ void Autonomous::avoidObsticle()
     usleep(5000);
 }
 
-//Someone needs to port the working python code to track the tennis ball into here
-void Autonomous::FindTennisBall()
+//returns the difference between the current angle to the horizontal and the desired angle to reach the next cell
+double Autonomous::getAngleToTurn(Cell next)
 {
-
-}
-
-double Autonomous::getAngleToTurn()
-{
-
+    double latitude = pos_llh.lat;
+    double longitude = pos_llh.lon;
+    double target = std::atan((next.lng - longitude) / (next.lat - latidude)) * 180 / PI; //NOTE: angle sign is opposite of standard
+    return target - angle;
 }
 
 //This is meant to be run as a thread the whole time the autonomous program is running.
-//NOTE: I do not know what the GPSobject is or what the fields for latitude or longitude are so they may need to be changed
-void Autonomous::updateAngle()
+//This finds the angle that the rover is at and if the rover is stuck. This will be inaccurate if the rover does a pivot turn
+//The way that it finds if the rover is stuck is if it is in the EXACT same position 6 times in a row (3 seconds)
+//TODO add the accelerometer information here (probably(?))
+void Autonomous::updateStatus()
 {
-    double longitude = GPSobject.longitude;
-    double latitude = GPSobject.latitude;
+    double longitude = pos_llh.lon;
+    double latitude = pos_llh.lat;
 
     while(threadsRunning)
     {
-        longitude = GPSobject.longitude;
-        latitude = GPSobject.latitude;
+        longitude = pos_llh.lon;
+        latitude = pos_llh.lat;
 
-        angle = std::atan((lastLongitude - longitude) / (latitude - lastLatitude)) * 180 / PI;
+        //if the robot hasn't moved
+        if(lastLatitude == latitude && lastLongitude == longitude)
+        {
+            timesStuck++;
+            if(timesStuck >= 6)
+            {
+                isStuck = true;
+            }
+        }
 
-        lastLatitude = latitude;
-        lastLongitude = longitude;
+        else
+        {
+            isStuck = false;
+            timesStuck = 0;
+            angle = std::atan((longitude - lastLongitude) / (latitude - lastLatitude)) * 180 / PI; //NOTE: sign is opposite of usual
 
-        sleep(500); //this sleep may need to be increased or decreased depending on how often we want the rover to update its angle
+            lastLatitude = latitude;
+            lastLongitude = longitude;
+            usleep(500000); //this sleep may need to be increased or decreased depending on how often we want the rover to update its angle
+        }
     }
 }
 
@@ -274,34 +293,41 @@ Cell Autonomous::inputNextCoords()
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
 void Autonomous::mainLoop()
 {
+	//placeholder
+    //FIXME: get this from rob
+    //searcher.parseMap();
+
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
+    std::thread angleThread(&Autonomous::updateAngle,this);
     Cell killVector;
     killVector.lat = -1;
     killVector.lng = -1;
 
-    Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
-    lastLatitude = GPSobject.latitude;
-    lastLongitude = GPSobject.longitude;
+    timesStuck = 0;
+    isStuck = false;
 
-    std::thread angleThread(&Autonomous::updateAngle,this);
+    lastLatitude = pos_llh.lat;
+    lastLongitude = pos_llh.lon;
+
+    //FIXME: shouldnt this be some struct we made?
+    Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
+
+    threadsRunning = true;
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
         //FIXME: should it have a parameter or not?
-        std::list<Cell> path = GeneratePath();//generatePath(nextCords); //TODO generates the path to the given set of coords
+        std::list<Cell> path = GeneratePath(nextCords); //TODO generates the path to the given set of coords
 		std::list<Cell>::iterator it = path.begin();
 
          //loops through each of the coordinates to get to the next checkpoint        
         while(*it != nextCords) //travels to the next set of coords. 
         {
-            if(isThereObsticle() || isStuck())
-            {
-                avoidObsticle();
-            }
-			else //drives trying to get to the next checkpoint
+            //FIXME: what are these and where do they come from?
+            while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
                 //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-                double angleToTurn = getAngleToTurn();
+                double angleToTurn = getAngleToTurn(CurrentGPSHeading);
 
                 std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
                 //FIXME: change all speeds to ints not doubles. Dont need that accurate
@@ -323,9 +349,11 @@ void Autonomous::mainLoop()
         }
         
         //once arrives to the checkpoint
-        FindTennisBall();
+        //FIXME: gunna need a whole class for this
+        //FindTennisBall();
         nextCords = inputNextCoords(); //gets the next set of coords
     }
+
     threadsRunning = false;
     angleThread.join();
     std::cout << "We win!" << std::endl;
