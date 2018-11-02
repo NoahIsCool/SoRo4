@@ -145,7 +145,7 @@ double SearchAlgorithm::getHeuristic(int destx, int desty, int x, int y) {
 	return (abs(destx - x) + abs(desty - y));
 }
 
-Autonomous::Autonomous()
+Autonomous::Autonomous() : mySocket("testConfig.conf")
 {
     qInfo() << "library link test";
 
@@ -174,7 +174,8 @@ std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double ba
 }
 
 //not exactly sure what this will return
-std::vector<Cell> Autonomous::GeneratePath()
+//FIXME: was a vector. should it be a list or a vector?
+std::list<Cell> Autonomous::GeneratePath()
 {
 
 }
@@ -189,15 +190,45 @@ bool Autonomous::ObstacleOrStuck()
 void Autonomous::avoidObsticle()
 {
     //backs up for 5 seconds
-    mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
+    //mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
+    QByteArray array;
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)-speed);
+    array.append((char)-speed);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)-speed);
+    mySocket.sendMessage(array);
     usleep(5000);
 
     //turns for a few seconds to hopefully avoid the obsticle
-    mySocket.sendUDP(0, 0, 0, -speed, speed, 0, 0, 0);
+    //mySocket.sendUDP(0, 0, 0, -speed, speed, 0, 0, 0);
+    array.clear();
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)-speed);
+    array.append((char)-speed);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)0);
+    mySocket.sendMessage(array);
     usleep(5000);
 
     //drive forward a bit and continue(?)
-    mySocket.sendUDP(0, 0, 0, speed, speed, 0, 0, speed);
+    //mySocket.sendUDP(0, 0, 0, speed, speed, 0, 0, speed);
+    array.clear();
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)speed);
+    array.append((char)speed);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)speed);
+    mySocket.sendMessage(array);
     usleep(5000);
 }
 
@@ -245,18 +276,19 @@ void Autonomous::mainLoop()
 {
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
-    Cell killVector();
+    Cell killVector;
     killVector.lat = -1;
     killVector.lng = -1;
 
-    Cell nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
+    Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
     lastLatitude = GPSobject.latitude;
     lastLongitude = GPSobject.longitude;
 
-    std::thread angleThread(updateAngle);
+    std::thread angleThread(&Autonomous::updateAngle,this);
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-        std::list<Cell> path = generatePath(nextCords); //TODO generates the path to the given set of coords
+        //FIXME: should it have a parameter or not?
+        std::list<Cell> path = GeneratePath();//generatePath(nextCords); //TODO generates the path to the given set of coords
 		std::list<Cell>::iterator it = path.begin();
 
          //loops through each of the coordinates to get to the next checkpoint        
@@ -272,7 +304,18 @@ void Autonomous::mainLoop()
                 double angleToTurn = getAngleToTurn();
 
                 std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
-                mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
+                //FIXME: change all speeds to ints not doubles. Dont need that accurate
+                //mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
+                QByteArray array;
+                array.append((char)0);
+                array.append((char)0);
+                array.append((char)0);
+                array.append((char)speeds[0]);
+                array.append((char)speeds[1]);
+                array.append((char)0);
+                array.append((char)0);
+                array.append((char)(speeds[0] + speeds [1]) / 2);
+                mySocket.sendMessage(array);
                 usleep(500); //lets it drive for 500ms before continuing on
 
 				it++;
@@ -284,8 +327,8 @@ void Autonomous::mainLoop()
         nextCords = inputNextCoords(); //gets the next set of coords
     }
     threadsRunning = false;
-    updateAngle.join();
-    std::cout << "We win!" << endl;
+    angleThread.join();
+    std::cout << "We win!" << std::endl;
 }
 
 
