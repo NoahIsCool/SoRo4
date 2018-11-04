@@ -358,7 +358,7 @@ void Autonomous::mainLoop()
             //FIXME: what are these and where do they come from?
             while(currentCoords != *it) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
-				if(isThereObstacle() || isStuck())
+				if(isThereObstacle())
 				{
 					avoidObstacle();
 				}
