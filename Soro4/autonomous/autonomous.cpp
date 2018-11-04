@@ -319,6 +319,7 @@ void Autonomous::mainLoop()
 
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
+    threadsRunning = true;
     std::thread angleThread(&Autonomous::updateAngle,this);
     Cell killVector;
     killVector.lat = -1;
@@ -334,7 +335,6 @@ void Autonomous::mainLoop()
     //FIXME: shouldnt this be some struct we made?
     Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
-    threadsRunning = true;
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
         //FIXME: should it have a parameter or not?
