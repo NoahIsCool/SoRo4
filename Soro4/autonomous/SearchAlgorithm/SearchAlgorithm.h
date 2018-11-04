@@ -1,16 +1,14 @@
-﻿#ifndef AUTONOMOUS_H
-#define AUTONOMOUS_H
-
-#include <QDebug>
-
-#include "autonomous_global.h"
-#include "core/core.h"
-#include "core/comms.h"
-
+#pragma once
 #include <list>
-#include <math.h>
-#include <thread>
-#include <iostream>
+
+/****
+Placeholder struct, the interpretation team will provide final
+*/
+struct Cell {
+	double lat;		//latitude of the cell
+	double lng;		//longitude of the cell
+	double gradient;	//average shade of the cell
+};
 
 class SearchAlgorithm {
 private:
@@ -32,14 +30,6 @@ private:
 		//The score used to select the next node from the open list
 		double f;
 
-		Node() {
-			x = 0;
-			y = 0;
-			parent = nullptr;
-			g = 0.0;
-			f = 0.0;
-		}
-
 		//Node constructor. Present simply for convinience, it just assigns the node variables
 		Node(int x, int y, Node* parent, double g, double f) {
 			(*this).x = x;
@@ -47,32 +37,6 @@ private:
 			(*this).parent = parent;
 			(*this).g = g;
 			(*this).f = f;
-		}
-
-		//Copy constructor utilizing overloaded = operator
-		Node(const Node &copy) { //CHNG 10/3: added
-			(*this) = copy;
-		}
-
-		//Cleans up the whole list
-		~Node() {
-			delete parent;
-		}
-
-		//Overloaded = operator for Node object. Copies the entire list instead of just the value of the pointer.
-		void operator= (const Node& copy) {
-			x = copy.x;
-			y = copy.y;
-
-			if (copy.parent != nullptr) {
-				parent = new Node(*copy.parent);
-			}
-			else {
-				parent = nullptr;
-			}
-
-			g = copy.g;
-			f = copy.f;
 		}
 
 		//Overloaded == operator for node. Compares nodes based on coordinate
@@ -90,20 +54,6 @@ private:
 		}
 	};
 
-	/*****
-	Comparator class for set of Nodes. Compares nodes based on their x and y values.
-	*/
-	struct compareNodes2 {
-		bool operator() (const Node& n1, const Node& n2) const {
-			if (n1.x == n2.x) {
-				return n1.y < n2.y;
-			}
-			else {
-				return n1.x < n2.x;
-			}
-		}
-	};
-
 	//Higher value means more avoidance from the algorithm
 	static const double DISTWEIGHT; //Weight given to the distance between two nodes when calculating cost
 	static const double UPWEIGHT; //Weight given to the difference in elevation when going up
@@ -112,7 +62,6 @@ private:
 	static Cell** map; //Matrix of Cell objects
 	static int maxx; //max x-value on the map
 	static int maxy; //max y-value on the map
-	static bool initialized; //are the map and max values initialized?
 
 	//Returns a list of Nodes adjacent or diagonal from the chosen node
 	static std::list<Node> getNeighbors(Node& current, int destx, int desty);
@@ -134,40 +83,6 @@ public:
 
 	return - a list of GPS coordinate pairs 50 meters apart forming a path from the source to the destination
 	*/
-	void initializeMap(Cell** map, int maxx, int maxy);
-	static std::list<Cell> findPath(Cell source, Cell dest);
+	static std::list<double*> findPath(double* source, double* dest, Cell** map, int maxx, int maxy);
+	static std::list<double*> findPath(double* source, double* dest);
 };
-
-
-class AUTONOMOUSSHARED_EXPORT Autonomous
-{
-public:
-    Autonomous();
-
-private:
-    void mainLoop();
-    std::vector<double> getWheelSpeedsValues(double amountOff, double baseSpeed);
-     //FIXME: was std::vector. Should it be a list or a vector?
-    std::list<Cell> GeneratePath(Cell dest);
-    //FIXME: is taking over for obstacleOrStuck?
-    bool isThereObstacle();
-    bool ObstacleOrStuck();
-    void avoidObstacle();
-    double getAngleToTurn(Cell next);
-    void updateAngle();
-    Cell inputNextCoords();
-    void updateStatus();
-    std::vector<double> getWheelSpeedValues(double angleToTurn, double speed);
-
-    double speed = 60; //IDK what we want for speed right now or if we want to be updating it.
-    static volatile double angle; //Updated through updateAngle
-    double lastLongitude = 0;
-    double lastLatitude = 0;
-    bool threadsRunning = true;
-    comms mySocket;
-    int timesStuck; // finds how many times the rover has been stuck in place
-    bool isStuck; //checks if the rover is considered stuck
-    SearchAlgorithm searcher;
-};
-
-#endif // AUTONOMOUS_H

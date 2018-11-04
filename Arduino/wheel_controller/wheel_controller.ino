@@ -17,7 +17,8 @@ const char DEVICE_ID = 0;
 
 Servo wheel[6];
 Servo gimbal_pan, gimbal_tilt;
-
+Servo disk;
+const int diskID = 16;// TBD
 char myHash = 0;
 char serialHash = 0;
 char pan = 0;
@@ -45,7 +46,7 @@ void setup() {
   // 8 is an evil number, avoid at all cost
   gimbal_pan.attach(10);
   gimbal_tilt.attach(9);
-  
+  disk.attach(diskID);
   Serial.begin(9600);
   delay(10);
 }
@@ -127,23 +128,49 @@ void loop() {
 }
 
 void updateServos(){
-  
-   if(overdrive) {
+   if((overdrive & 1)){
+      disk.write(0);
+   }else{
+      disk.write(180);
+   }
+   if(overdrive & 8){
+       gimbal_pan.write(90);
+       gimbal_tilt.write(90);
+   }else{
+       gimbal_pan.write(93 + pan);
+       gimbal_tilt.write(tilt);
+   }
+   if((overdrive & 2) && ( overdrive & 4)){
+   	wheel[0].write(90 +leftWheels);
+	wheel[3].write(90 + rightWheels);
+	wheel[2].write(90 + leftWheels);
+	wheel[5].write(90 + rightWheels);
+   }
+   if(overdrive & 2){
+	wheel[0].write(90 + leftWheels);
+	wheel[3].write(90 + rightWheels);
+	return;
+   }
+   if(overdrive & 4){
+       wheel[2].write(90 - leftWheels);
+       wheel[5].write(90 - legtWheels);
+       return;
+   }
+
+ /*  if(overdrive) {
       wheel[0].write(90 + leftWheels);
       wheel[1].write(90 + leftWheels);
       wheel[2].write(90 - leftWheels);
       wheel[3].write(90 + rightWheels);
       wheel[4].write(90 - rightWheels);
       wheel[5].write(90 - rightWheels);
-   } else {
-      wheel[0].write(90 + (leftWheels * 1/2));
-      wheel[1].write(90 + (leftWheels * 1/2));
-      wheel[2].write(90 - (leftWheels * 1/2));
-      wheel[3].write(90 + (rightWheels * 1/2));
-      wheel[4].write(90 - (rightWheels * 1/2));
-      wheel[5].write(90 - (rightWheels * 1/2));  
+   }*/ else {
+      wheel[0].write(90 + (leftWheels));// * 1/2));
+      wheel[1].write(90 + (leftWheels));
+      wheel[2].write(90 - (leftWheels));
+      wheel[3].write(90 + (rightWheels));
+      wheel[4].write(90 - (rightWheels));
+      wheel[5].write(90 - (rightWheels));  
    }
    
-   gimbal_pan.write(93 + pan);
-   gimbal_tilt.write(tilt);
 }
