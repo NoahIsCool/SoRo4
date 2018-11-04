@@ -168,6 +168,9 @@ double SearchAlgorithm::getHeuristic(int destx, int desty, int x, int y) {
 
 Autonomous::Autonomous() : mySocket("testConfig.conf")
 {
+    // this should make the comms object print out any errors it encounters to the terminal
+    connect(&mySocket, SIGNAL(errorEncountered(QString)), this, SLOT([=](QString error){qDebug() << error;}));
+
     qInfo() << "library link test";
 
     mainLoop();
@@ -217,25 +220,25 @@ void Autonomous::avoidObstacle()
     //backs up for 5 seconds
     //mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
     QByteArray array;
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)-speed);
-    array.append((char)-speed);
+    array.append((char)-127);
     array.append((char)0);
     array.append((char)0);
     array.append((char)-speed);
+    array.append((char)-speed);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)(-2*speed/5));
     mySocket.sendMessage(array);
     usleep(5000);
 
     //turns for a few seconds to hopefully avoid the obsticle
     //mySocket.sendUDP(0, 0, 0, -speed, speed, 0, 0, 0);
     array.clear();
-    array.append((char)0);
+    array.append((char)-127);
     array.append((char)0);
     array.append((char)0);
     array.append((char)-speed);
-    array.append((char)-speed);
+    array.append((char)speed);
     array.append((char)0);
     array.append((char)0);
     array.append((char)0);
@@ -245,14 +248,14 @@ void Autonomous::avoidObstacle()
     //drive forward a bit and continue(?)
     //mySocket.sendUDP(0, 0, 0, speed, speed, 0, 0, speed);
     array.clear();
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)speed);
-    array.append((char)speed);
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)speed);
+    array.append((char)-127); // start message
+    array.append((char)0); // drive device ID is 0
+    array.append((char)0); // no modifiers
+    array.append((char)speed); // left wheels
+    array.append((char)speed); // right wheels
+    array.append((char)0); // gimble vertical
+    array.append((char)0); // gimble horizontal
+    array.append((char)(2*speed/5)); // hash - average of the previous 5 bytes
     mySocket.sendMessage(array);
     usleep(5000);
 }
@@ -371,14 +374,14 @@ void Autonomous::mainLoop()
 					//FIXME: change all speeds to ints not doubles. Dont need that accurate
 					//mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
 					QByteArray array;
-					array.append((char)0);
-					array.append((char)0);
-					array.append((char)0);
-					array.append((char)speeds[0]);
-					array.append((char)speeds[1]);
-					array.append((char)0);
-					array.append((char)0);
-					array.append((char)(speeds[0] + speeds [1]) / 2);
+                    array.append((char)-127); // begin message
+                    array.append((char)0); // device id of wheels - 0
+                    array.append((char)0); // no modifiers
+                    array.append((char)speeds[0]); // left wheels
+                    array.append((char)speeds[1]); // right wheels
+                    array.append((char)0); // gimble vertical
+                    array.append((char)0); // gimble horizontal
+                    array.append((char)(speeds[0] + speeds [1]) / 5);
 					mySocket.sendMessage(array);
 					usleep(500); //lets it drive for 500ms before continuing on
 				}
