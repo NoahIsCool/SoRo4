@@ -30,6 +30,14 @@ void SearchAlgorithm::initializeMap(Cell ** map, int maxx, int maxy)
 
 std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 {
+	//if the map is not initialized, print out a list containing only source and dest
+	if (!initialized) {
+		std::list<Cell> out;
+		out.push_front(dest);
+		out.push_front(source);
+		return out;
+	}
+
 	//Determine the x and y values of the source and destination from their latitude and longitude
 
 	//Determine the difference in latitude between the first two rows
@@ -51,7 +59,7 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 	std::set<Node, compareNodes2> closed;
 
 	Node sourceNode(sourcex, sourcey, nullptr, 0.0, 0.0);
-	Node destNode(destx, desty, nullptr, 0.0, 0.0); //CHNG 10/3: changed 'nullptr' to '&sourceNode'. This will change no-path output
+	Node destNode(destx, desty, &sourceNode, 0.0, 0.0); //CHNG 10/3: changed 'nullptr' to '&sourceNode'. This will change no-path output
 	open.push(sourceNode);
 
 	//Loop while there are still elements in the open list
