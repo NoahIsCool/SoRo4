@@ -54,6 +54,14 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 	int sourcex = round((source.lng - map[0][0].lng) / lngDiff);
 	int destx = round((dest.lng - map[0][0].lng) / lngDiff);
 
+	//if any of the coordinates are out of bounds of the map, return the error cell
+	if ((sourcey > maxy) || (sourcey < 0) || (desty > maxy) || (desty < 0) || (sourcex > maxx) || (sourcex < 0) || (destx > maxx) || (destx < 0)) {
+		Cell error(-1.0, -1.0, 0.0);
+		std::list<Cell> out;
+		out.push_front(error);
+		return out;
+	}
+
 	//Create the source node and add it to the open list
 	std::priority_queue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
 	std::set<Node, compareNodes2> closed;
