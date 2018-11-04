@@ -1,8 +1,4 @@
 ﻿#include "autonomous.h"
-#include <list>
-#include <queue>
-#include <set>
-#include <unistd.h>
 
 #define PI 3.14159265
 
@@ -178,8 +174,8 @@ std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double ba
 std::list<Cell> Autonomous::GeneratePath(Cell dest)
 {
 	Cell source;
-    source.lat = pos_llh.latitude;
-    source.lng = pos_llh.longitude;
+    source.lat = pos_llh.lat;
+    source.lng = pos_llh.lon;
 	source.gradient = 0.0;
 
     return searcher.findPath(source, dest);
@@ -242,7 +238,7 @@ double Autonomous::getAngleToTurn(Cell next)
 {
     double latitude = pos_llh.lat;
     double longitude = pos_llh.lon;
-    double target = std::atan((next.lng - longitude) / (next.lat - latidude)) * 180 / PI; //NOTE: angle sign is opposite of standard
+    double target = std::atan((next.lng - longitude) / (next.lat - latitude)) * 180 / PI; //NOTE: angle sign is opposite of standard
     return target - angle;
 }
 
@@ -316,20 +312,23 @@ void Autonomous::mainLoop()
     threadsRunning = true;
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-        //FIXME: should it have a parameter or not?
         std::list<Cell> path = GeneratePath(nextCords); //TODO generates the path to the given set of coords
 		std::list<Cell>::iterator it = path.begin();
 
          //loops through each of the coordinates to get to the next checkpoint        
         while(*it != nextCords) //travels to the next set of coords. 
         {
-            //FIXME: what are these and where do they come from?
-            while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
+            Cell currentGPS;
+            currentGPS.lat = pos_llh.lat;
+            currentGPS.lng = pos_llh.lon;
+            while(currentGPS != *it) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
                 //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-                double angleToTurn = getAngleToTurn(CurrentGPSHeading);
+                double angleToTurn = getAngleToTurn(*it);
 
                 std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
+                std::vector<int> newSpeeds(speeds.size(),0);
+
                 //FIXME: change all speeds to ints not doubles. Dont need that accurate
                 //mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
                 QByteArray array;
@@ -343,9 +342,9 @@ void Autonomous::mainLoop()
                 array.append((char)(speeds[0] + speeds [1]) / 2);
                 mySocket.sendMessage(array);
                 usleep(500); //lets it drive for 500ms before continuing on
-
-				it++;
             }
+
+            it++;
         }
         
         //once arrives to the checkpoint
@@ -358,5 +357,3 @@ void Autonomous::mainLoop()
     angleThread.join();
     std::cout << "We win!" << std::endl;
 }
-
-

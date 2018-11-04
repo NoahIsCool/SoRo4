@@ -1,4 +1,5 @@
-#include "gps.hpp"
+﻿//#include "gps.hpp"
+#include "gps.h"
 
 #include <cstdlib>
 #include <cstdio>
@@ -8,6 +9,7 @@
 #include <sys/socket.h>
 #include <thread>
 #include <vector>
+#include <pthread.h>
 
 #include "sbp.h"
 #include "system.h"

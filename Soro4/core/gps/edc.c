@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2010 Swift Navigation Inc.
  * Contact: Fergus Noble <fergus@swift-nav.com>
  *
@@ -10,7 +10,7 @@
  * WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include "libsbp/edc.h"
+#include "gps/edc.h"
 
 /** \defgroup edc Error Detection and Correction
  * Error detection and correction functions.

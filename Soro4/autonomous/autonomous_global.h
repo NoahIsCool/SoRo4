@@ -1,4 +1,4 @@
-#ifndef AUTONOMOUS_GLOBAL_H
+﻿#ifndef AUTONOMOUS_GLOBAL_H
 #define AUTONOMOUS_GLOBAL_H
 
 #include <QtCore/qglobal.h>

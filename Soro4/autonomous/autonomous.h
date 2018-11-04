@@ -6,11 +6,15 @@
 #include "autonomous_global.h"
 #include "core/core.h"
 #include "core/comms.h"
+#include "core/gps/gps.h"
 
 #include <list>
 #include <math.h>
 #include <thread>
 #include <iostream>
+#include <queue>
+#include <set>
+#include <unistd.h>
 
 class SearchAlgorithm {
 private:
