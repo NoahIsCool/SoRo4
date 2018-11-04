@@ -171,7 +171,7 @@ Autonomous::Autonomous() : mySocket("testConfig.conf")
 }
 
 //return the speeds that the wheels need to move at to get to the next coordinate
-std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double baseSpeed)
+std::vector<double> Autonomous::getWheelSpeedValues(double amountOff, double baseSpeed)
 {
     std::vector<double> PIDValues(2);
 
@@ -310,18 +310,6 @@ Cell Autonomous::inputNextCoords()
     return cell;
 }
 
-void Autonomous::updateAngle(){
-
-}
-
-std::vector<double> Autonomous::getWheelSpeedValues(double angleToTurn, double speed){
-    std::vector<double> wheelSpeeds;
-
-
-
-    return wheelSpeeds;
-}
-
 //Goes through all of the coordinates that we need to travel through
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
 void Autonomous::mainLoop()
@@ -333,7 +321,7 @@ void Autonomous::mainLoop()
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
     threadsRunning = true;
-    std::thread angleThread(&Autonomous::updateAngle,this);
+    std::thread statusThread(&Autonomous::updateStatus,this);
     Cell killVector;
     killVector.lat = -1;
     killVector.lng = -1;
@@ -344,6 +332,8 @@ void Autonomous::mainLoop()
 
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
+
+    BallTracker tennisTracker = new BallTracker(); //automatically starts a thread to track the tennisball
 
     //FIXME: shouldnt this be some struct we made?
     Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
@@ -370,7 +360,10 @@ void Autonomous::mainLoop()
             //FIXME: what are these and where do they come from?
             while(currentCoords != *it) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
-				if(isThereObstacle())
+                //if the tennisTracker has found the ball then let it take over
+                if(tennisTracker.hasFound())
+                    continue;
+                else if(isThereObstacle() || isStuck)
 				{
 					avoidObstacle();
 				}
@@ -392,7 +385,7 @@ void Autonomous::mainLoop()
                     array.append((char)0); // gimble horizontal
                     array.append((char)(speeds[0] + speeds [1]) / 5);
 					mySocket.sendMessage(array);
-					usleep(500); //lets it drive for 500ms before continuing on
+                    usleep(500000); //lets it drive for 500ms before continuing on
 				}
 
 				currentCoords.lat = pos_llh.lat;
