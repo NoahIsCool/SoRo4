@@ -1,3 +1,8 @@
+﻿#ifdef __cplusplus
+extern "C" {
+#endif
+
+#pragma once
 #include <pthread.h>
 #include "sbp.h"
 #include "system.h"
@@ -81,20 +86,7 @@ void sbp_baseline_ned_callback(u16 sender_id, u8 len, u8 msg[], void *context);
 void sbp_vel_ned_callback(u16 sender_id, u8 len, u8 msg[], void *context);
 void sbp_dops_callback(u16 sender_id, u8 len, u8 msg[], void *context);
 void sbp_gps_time_callback(u16 sender_id, u8 len, u8 msg[], void *context);
-        
-          
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#ifdef __cplusplus
+} // extern "C"
+#endif
