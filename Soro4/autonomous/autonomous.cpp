@@ -15,20 +15,29 @@ const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the differe
 Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
 int SearchAlgorithm::maxy; //max y-value on the map
+bool SearchAlgorithm::initialized = false; //are the map and max values initialized?
+
 volatile double angle = 0.0; //current angle of travel from the horizontal. Sign is reversed from what is expected
 
-std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest, Cell ** map, int maxx, int maxy)
+void SearchAlgorithm::initializeMap(Cell ** map, int maxx, int maxy)
 {
 	//Change the static class members to their provided values
 	SearchAlgorithm::map = map;
 	SearchAlgorithm::maxx = maxx;
 	SearchAlgorithm::maxy = maxy;
-
-	return findPath(source, dest);
+	initialized = true;
 }
 
 std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 {
+	//if the map is not initialized, print out a list containing only source and dest
+	if (!initialized) {
+		std::list<Cell> out;
+		out.push_front(dest);
+		out.push_front(source);
+		return out;
+	}
+
 	//Determine the x and y values of the source and destination from their latitude and longitude
 
 	//Determine the difference in latitude between the first two rows
@@ -45,12 +54,23 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 	int sourcex = round((source.lng - map[0][0].lng) / lngDiff);
 	int destx = round((dest.lng - map[0][0].lng) / lngDiff);
 
+	//if any of the coordinates are out of bounds of the map, return the error cell
+	if ((sourcey > maxy) || (sourcey < 0) || (desty > maxy) || (desty < 0) || (sourcex > maxx) || (sourcex < 0) || (destx > maxx) || (destx < 0)) {
+		Cell error;
+		error.lat = -1.0;
+		error.lng = -1.0;
+		error.gradient = 0.0;
+		std::list<Cell> out;
+		out.push_front(error);
+		return out;
+	}
+
 	//Create the source node and add it to the open list
 	std::priority_queue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
 	std::set<Node, compareNodes2> closed;
 
 	Node sourceNode(sourcex, sourcey, nullptr, 0.0, 0.0);
-	Node destNode(destx, desty, nullptr, 0.0, 0.0); //CHNG 10/3: changed 'nullptr' to '&sourceNode'. This will change no-path output
+	Node destNode(destx, desty, &sourceNode, 0.0, 0.0); //CHNG 10/3: changed 'nullptr' to '&sourceNode'. This will change no-path output
 	open.push(sourceNode);
 
 	//Loop while there are still elements in the open list
@@ -274,9 +294,10 @@ int Autonomous::MainLoop()
 
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
-    std::vector<double> killVector(2);
-    killVector[0] = -1;
-    killVector[1] = -1;
+    Cell killVector;
+    killVector.lat = -1.0;
+    killVector.lng = -1.0;
+	killVector.gradient = 0.0;
 
     timesStuck = 0;
     isStuck = false;
@@ -284,7 +305,7 @@ int Autonomous::MainLoop()
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
 
-    std::vector<double> nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
+    Cell nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
     threadsRunning = true;
     std::thread angleThread(updateStatus);
@@ -292,6 +313,12 @@ int Autonomous::MainLoop()
     {
         std::list<Cell> path = generatePath(nextCords); //TODO generates the path to the given set of coords
 		std::list<Cell>::iterator it = path.begin();
+
+		//if the first value is the kill vector, there was an error generating the path, prompt for input and restart the loop
+		if (*it == killVector) {
+	        nextCords = inputNextCords(); //gets the next set of coords
+			continue;
+		}
 
          //loops through each of the coordinates to get to the next checkpoint        
         while(*it != nextCords) //travels to the next set of coords. 
