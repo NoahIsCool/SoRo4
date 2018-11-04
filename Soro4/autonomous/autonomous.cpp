@@ -314,6 +314,12 @@ int Autonomous::MainLoop()
         std::list<Cell> path = generatePath(nextCords); //TODO generates the path to the given set of coords
 		std::list<Cell>::iterator it = path.begin();
 
+		//if the first value is the kill vector, there was an error generating the path, prompt for input and restart the loop
+		if (*it == killVector) {
+	        nextCords = inputNextCords(); //gets the next set of coords
+			continue;
+		}
+
          //loops through each of the coordinates to get to the next checkpoint        
         while(*it != nextCords) //travels to the next set of coords. 
         {
