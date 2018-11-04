@@ -9,6 +9,8 @@ BallTracker::BallTracker()
         std::trackingThread(&BallTracker::ballTracking, this);
     }
 
+    //use opencv for all of this.
+    //What we want but in python is here: https://github.com/NoahIsCool/SoRo3/blob/master/Autonomous/BallTracker.py
     void BallTracker::ballTracking()
     {
         //needs to connect to the camera here

@@ -8,7 +8,7 @@ public:
     BallTracker();
 
 private:
-    bool found;
+    bool hasFound;
 };
 
 #endif // BALLTRACKER_H
