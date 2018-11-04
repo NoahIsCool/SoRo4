@@ -350,29 +350,44 @@ void Autonomous::mainLoop()
          //loops through each of the coordinates to get to the next checkpoint        
         while(*it != nextCords) //travels to the next set of coords. 
         {
+			Cell currentCoords;
+			currentCoords.lat = pos_llh.lat;
+			currentCoords.lng = pos_llh.lon;
+			currentCoords.gradient = 0.0;
+
             //FIXME: what are these and where do they come from?
-            while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
+            while(currentCoords != *it) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
-                //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-                double angleToTurn = getAngleToTurn(CurrentGPSHeading);
+				if(isThereObstacle())
+				{
+					avoidObstacle();
+				}
+				else
+				{
+					//find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
+					double angleToTurn = getAngleToTurn(CurrentGPSHeading);
 
-                std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
-                //FIXME: change all speeds to ints not doubles. Dont need that accurate
-                //mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
-                QByteArray array;
-                array.append((char)0);
-                array.append((char)0);
-                array.append((char)0);
-                array.append((char)speeds[0]);
-                array.append((char)speeds[1]);
-                array.append((char)0);
-                array.append((char)0);
-                array.append((char)(speeds[0] + speeds [1]) / 2);
-                mySocket.sendMessage(array);
-                usleep(500); //lets it drive for 500ms before continuing on
+					std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
+					//FIXME: change all speeds to ints not doubles. Dont need that accurate
+					//mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
+					QByteArray array;
+					array.append((char)0);
+					array.append((char)0);
+					array.append((char)0);
+					array.append((char)speeds[0]);
+					array.append((char)speeds[1]);
+					array.append((char)0);
+					array.append((char)0);
+					array.append((char)(speeds[0] + speeds [1]) / 2);
+					mySocket.sendMessage(array);
+					usleep(500); //lets it drive for 500ms before continuing on
+				}
 
-				it++;
-            }
+				currentCoords.lat = pos_llh.lat;
+				currentCoords.lng = pos_llh.lon;
+				currentCoords.gradient = 0.0;
+			}
+			it++;
         }
         
         //once arrives to the checkpoint
