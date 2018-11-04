@@ -362,7 +362,7 @@ void Autonomous::mainLoop()
             {
                 //if the tennisTracker has found the ball then let it take over
                 if(tennisTracker.hasFound())
-                    continue;
+                    break;
                 else if(isThereObstacle() || isStuck)
 				{
 					avoidObstacle();
@@ -370,11 +370,10 @@ void Autonomous::mainLoop()
 				else
 				{
 					//find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-					double angleToTurn = getAngleToTurn(CurrentGPSHeading);
+                    double angleToTurn = getAngleToTurn(*it);
 
-					std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
-					//FIXME: change all speeds to ints not doubles. Dont need that accurate
-					//mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
+                    std::vector<int> speeds = (int)round(getWheelSpeedValues(angleToTurn, speed));
+
 					QByteArray array;
                     array.append((char)-127); // begin message
                     array.append((char)0); // device id of wheels - 0
@@ -394,10 +393,10 @@ void Autonomous::mainLoop()
 			}
 			it++;
         }
-        
-        //once arrives to the checkpoint
-        //FIXME: gunna need a whole class for this
-        //FindTennisBall();
+
+        //wait for the tennisTracker to finish finding the tennis ball
+        //OR if the tennis ball has not been found by the time that the rover got to the given checkpoints then we will pretend like we found the tennis ball and move on as if we had
+
         nextCords = inputNextCoords(); //gets the next set of coords
     }
 
