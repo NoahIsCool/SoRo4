@@ -15,16 +15,17 @@ const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the differe
 Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
 int SearchAlgorithm::maxy; //max y-value on the map
+bool SearchAlgorithm::initialized = false; //are the map and max values initialized?
+
 volatile double angle = 0.0; //current angle of travel from the horizontal. Sign is reversed from what is expected
 
-std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest, Cell ** map, int maxx, int maxy)
+void SearchAlgorithm::initializeMap(Cell ** map, int maxx, int maxy)
 {
 	//Change the static class members to their provided values
 	SearchAlgorithm::map = map;
 	SearchAlgorithm::maxx = maxx;
 	SearchAlgorithm::maxy = maxy;
-
-	return findPath(source, dest);
+	initialized = true;
 }
 
 std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)

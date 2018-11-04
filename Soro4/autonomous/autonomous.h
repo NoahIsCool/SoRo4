@@ -126,6 +126,7 @@ private:
 	static Cell** map; //Matrix of Cell objects
 	static int maxx; //max x-value on the map
 	static int maxy; //max y-value on the map
+	static bool initialized; //are the map and max values initialized?
 
 	//Returns a list of Nodes adjacent or diagonal from the chosen node
 	static std::list<Node> getNeighbors(Node& current, int destx, int desty);
@@ -147,7 +148,7 @@ public:
 
 	return - a list of GPS coordinate pairs 50 meters apart forming a path from the source to the destination
 	*/
-	static std::list<Cell> findPath(Cell source, Cell dest, Cell** map, int maxx, int maxy);
+	void initializeMap(Cell** map, int maxx, int maxy);
 	static std::list<Cell> findPath(Cell source, Cell dest);
 };
 
