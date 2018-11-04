@@ -104,11 +104,11 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 	do {
 		Cell cell = map[interest->x][interest->y];
 
-		Cell pair = new Cell(); //CHNG 10/5: dynamically allocated array to avoid the overwriting problem
-		pair.lat = cell.lat;
-		pair.lng = cell.lng;
+        Cell *pair = new Cell(); //CHNG 10/5: dynamically allocated array to avoid the overwriting problem
+        pair->lat = cell.lat;
+        pair->lng = cell.lng;
 
-		out.push_front(pair);
+        out.push_front(*pair);
 
 		interest = interest->parent;
 	} while (interest != nullptr);
@@ -166,7 +166,7 @@ double SearchAlgorithm::getHeuristic(int destx, int desty, int x, int y) {
 	return (abs(destx - x) + abs(desty - y));
 }
 
-Autonomous::Autonomous()
+Autonomous::Autonomous() : mySocket("testConfig.conf")
 {
     qInfo() << "library link test";
 
@@ -181,14 +181,14 @@ std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double ba
     if(baseSpeed > 0)
     {
         //this formula is still almost certainly going to need to be adjusted
-        PIDValues[0] = speed + speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountoff, 4);
-        PIDValues[1] = speed - speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountoff, 4);
+        PIDValues[0] = speed + speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
+        PIDValues[1] = speed - speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
     }
 
     else
     {
-        PIDValues[0] = speed - speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountoff, 4);
-        PIDValues[1] = speed + speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountoff, 4);
+        PIDValues[0] = speed - speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
+        PIDValues[1] = speed + speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
     }
 
     return PIDValues;
@@ -198,11 +198,11 @@ std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double ba
 std::list<Cell> Autonomous::GeneratePath(Cell dest)
 {
 	Cell source;
-	source.lat = GPSObject.latitude;
-	source.lng = GPSObject.longitude;
+    source.lat = pos_llh.latitude;
+    source.lng = pos_llh.longitude;
 	source.gradient = 0.0;
 
-	return findPath(source, dest);
+    return searcher.findPath(source, dest);
 }
 
 //impliment much later
@@ -215,31 +215,55 @@ bool Autonomous::isThereObstacle()
 void Autonomous::avoidObstacle()
 {
     //backs up for 5 seconds
-    mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
+    //mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
+    QByteArray array;
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)-speed);
+    array.append((char)-speed);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)-speed);
+    mySocket.sendMessage(array);
     usleep(5000);
 
-    //turns for a few seconds to hopefully avoid the obstacle
-    mySocket.sendUDP(0, 0, 0, -speed, speed, 0, 0, 0);
+    //turns for a few seconds to hopefully avoid the obsticle
+    //mySocket.sendUDP(0, 0, 0, -speed, speed, 0, 0, 0);
+    array.clear();
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)-speed);
+    array.append((char)-speed);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)0);
+    mySocket.sendMessage(array);
     usleep(5000);
 
     //drive forward a bit and continue(?)
-    mySocket.sendUDP(0, 0, 0, speed, speed, 0, 0, speed);
+    //mySocket.sendUDP(0, 0, 0, speed, speed, 0, 0, speed);
+    array.clear();
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)speed);
+    array.append((char)speed);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)speed);
+    mySocket.sendMessage(array);
     usleep(5000);
-}
-
-//Someone needs to port the working python code to track the tennis ball into here
-void Autonomous::FindTennisBall()
-{
-
 }
 
 //returns the difference between the current angle to the horizontal and the desired angle to reach the next cell
 double Autonomous::getAngleToTurn(Cell next)
 {
-    double latitude = pos_llh.lat;
-    double longitude = pos_llh.lon;
-    double target = std::atan((next.lng - longitude) / (next.lat - latidude)) * 180 / PI; //NOTE: angle sign is opposite of standard
-    return target - angle;
+    double latitude = pos_llh.lat;
+    double longitude = pos_llh.lon;
+    double target = std::atan((next.lng - longitude) / (next.lat - latidude)) * 180 / PI; //NOTE: angle sign is opposite of standard
+    return target - angle;
 }
 
 //This is meant to be run as a thread the whole time the autonomous program is running.
@@ -287,17 +311,19 @@ Cell Autonomous::inputNextCoords()
 
 //Goes through all of the coordinates that we need to travel through
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
-int Autonomous::MainLoop()
+void Autonomous::mainLoop()
 {
 	//placeholder
-	parseMap();
+    //FIXME: get this from rob
+    //searcher.parseMap();
 
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
+    std::thread angleThread(&Autonomous::updateAngle,this);
     Cell killVector;
-    killVector.lat = -1.0;
-    killVector.lng = -1.0;
-	killVector.gradient = 0.0;
+    killVector.lat = -1;
+    killVector.lng = -1;
+    killVector.gradient = 0.0;
 
     timesStuck = 0;
     isStuck = false;
@@ -305,13 +331,14 @@ int Autonomous::MainLoop()
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
 
-    Cell nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
+    //FIXME: shouldnt this be some struct we made?
+    Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
     threadsRunning = true;
-    std::thread angleThread(updateStatus);
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-        std::list<Cell> path = generatePath(nextCords); //TODO generates the path to the given set of coords
+        //FIXME: should it have a parameter or not?
+        std::list<Cell> path = GeneratePath(nextCords); //TODO generates the path to the given set of coords
 		std::list<Cell>::iterator it = path.begin();
 
 		//if the first value is the kill vector, there was an error generating the path, prompt for input and restart the loop
@@ -323,36 +350,40 @@ int Autonomous::MainLoop()
          //loops through each of the coordinates to get to the next checkpoint        
         while(*it != nextCords) //travels to the next set of coords. 
         {
+            //FIXME: what are these and where do they come from?
             while(ListOfCoordsToNextCheckpoint[i] != CurrentGPSHeading) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
-                if(isThereObstacle() || isStuck)
-                {
-                    avoidObstacle();
-                }
-                else //drives trying to get to the next checkpoint
-                {
-                    //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-                    double angleToTurn = getAngleToTurn();
+                //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
+                double angleToTurn = getAngleToTurn(CurrentGPSHeading);
 
-                    std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
-                    mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
+                std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
+                //FIXME: change all speeds to ints not doubles. Dont need that accurate
+                //mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
+                QByteArray array;
+                array.append((char)0);
+                array.append((char)0);
+                array.append((char)0);
+                array.append((char)speeds[0]);
+                array.append((char)speeds[1]);
+                array.append((char)0);
+                array.append((char)0);
+                array.append((char)(speeds[0] + speeds [1]) / 2);
+                mySocket.sendMessage(array);
+                usleep(500); //lets it drive for 500ms before continuing on
 
-                    usleep(500000); //lets it drive for 500ms before continuing on
-                    it++;
-                }
+				it++;
             }
         }
         
         //once arrives to the checkpoint
-        FindTennisBall();
-        nextCords = inputNextCords(); //gets the next set of coords
+        //FIXME: gunna need a whole class for this
+        //FindTennisBall();
+        nextCords = inputNextCoords(); //gets the next set of coords
     }
 
     threadsRunning = false;
-    updateAngle.join();
-
-    cout << "We win!" << endl;
-    return 0;
+    angleThread.join();
+    std::cout << "We win!" << std::endl;
 }
 
 

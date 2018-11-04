@@ -1,30 +1,16 @@
-#ifndef AUTONOMOUS_H
+﻿#ifndef AUTONOMOUS_H
 #define AUTONOMOUS_H
 
 #include <QDebug>
 
 #include "autonomous_global.h"
 #include "core/core.h"
+#include "core/comms.h"
+
 #include <list>
 #include <math.h>
-
-class AUTONOMOUSSHARED_EXPORT Autonomous
-{
-public:
-    Autonomous();
-
-private:
-    void mainLoop();
-    void inputNextCoords();
-
-    double speed = 60; //IDK what we want for speed right now or if we want to be updating it.
-    static volatile double angle; //Updated through updateAngle
-    double lastLongitude = 0;
-    double lastLatitude = 0;
-    bool threadsRunning = true;
-    int timesStuck; // finds how many times the rover has been stuck in place
-    bool isStuck; //checks if the rover is considered stuck
-};
+#include <thread>
+#include <iostream>
 
 class SearchAlgorithm {
 private:
@@ -150,6 +136,38 @@ public:
 	*/
 	void initializeMap(Cell** map, int maxx, int maxy);
 	static std::list<Cell> findPath(Cell source, Cell dest);
+};
+
+
+class AUTONOMOUSSHARED_EXPORT Autonomous
+{
+public:
+    Autonomous();
+
+private:
+    void mainLoop();
+    std::vector<double> getWheelSpeedsValues(double amountOff, double baseSpeed);
+     //FIXME: was std::vector. Should it be a list or a vector?
+    std::list<Cell> GeneratePath(Cell dest);
+    //FIXME: is taking over for obstacleOrStuck?
+    bool isThereObstacle();
+    bool ObstacleOrStuck();
+    void avoidObstacle();
+    double getAngleToTurn(Cell next);
+    void updateAngle();
+    Cell inputNextCoords();
+    void updateStatus();
+    std::vector<double> getWheelSpeedValues(double angleToTurn, double speed);
+
+    double speed = 60; //IDK what we want for speed right now or if we want to be updating it.
+    static volatile double angle; //Updated through updateAngle
+    double lastLongitude = 0;
+    double lastLatitude = 0;
+    bool threadsRunning = true;
+    comms mySocket;
+    int timesStuck; // finds how many times the rover has been stuck in place
+    bool isStuck; //checks if the rover is considered stuck
+    SearchAlgorithm searcher;
 };
 
 #endif // AUTONOMOUS_H

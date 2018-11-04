@@ -1,4 +1,4 @@
-#ifndef CORE_H
+﻿#ifndef CORE_H
 #define CORE_H
 
 /*
@@ -12,6 +12,10 @@ struct Cell {
 	bool operator==(Cell c) {
 		return (lat == c.lat) && (lng == c.lng);
 	}
+
+    bool operator!=(Cell c){
+        return (lat != c.lat) && (lng != c.lng);
+    }
 };
 
 #endif // CORE_H
