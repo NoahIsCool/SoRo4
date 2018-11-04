@@ -56,7 +56,10 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 
 	//if any of the coordinates are out of bounds of the map, return the error cell
 	if ((sourcey > maxy) || (sourcey < 0) || (desty > maxy) || (desty < 0) || (sourcex > maxx) || (sourcex < 0) || (destx > maxx) || (destx < 0)) {
-		Cell error(-1.0, -1.0, 0.0);
+		Cell error;
+		error.lat = -1.0;
+		error.lng = -1.0;
+		error.gradient = 0.0;
 		std::list<Cell> out;
 		out.push_front(error);
 		return out;
@@ -291,9 +294,10 @@ int Autonomous::MainLoop()
 
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
-    std::vector<double> killVector(2);
-    killVector[0] = -1;
-    killVector[1] = -1;
+    Cell killVector;
+    killVector.lat = -1.0;
+    killVector.lng = -1.0;
+	killVector.gradient = 0.0;
 
     timesStuck = 0;
     isStuck = false;
@@ -301,7 +305,7 @@ int Autonomous::MainLoop()
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
 
-    std::vector<double> nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
+    Cell nextCords = inputNextCords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
     threadsRunning = true;
     std::thread angleThread(updateStatus);
