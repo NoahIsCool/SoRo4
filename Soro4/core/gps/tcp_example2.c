@@ -1,13 +1,13 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include <libsbp/sbp.h>
-#include <libsbp/system.h>
-#include <libsbp/navigation.h>
+#include "gps/sbp.h"
+#include "gps/system.h"
+#include "gps/navigation.h"
 
 char *tcp_ip_addr = NULL;
 char *tcp_ip_port = NULL;

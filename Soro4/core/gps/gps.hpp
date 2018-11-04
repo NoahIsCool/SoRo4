@@ -1,4 +1,4 @@
-
+﻿#pragma once
 
 
         /****** VARIABLES RELATED TO GPS STUFF *******/

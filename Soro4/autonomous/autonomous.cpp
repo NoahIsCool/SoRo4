@@ -1,8 +1,4 @@
 ﻿#include "autonomous.h"
-#include <list>
-#include <queue>
-#include <set>
-#include <unistd.h>
 
 #define PI 3.14159265
 
@@ -16,8 +12,6 @@ Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
 int SearchAlgorithm::maxy; //max y-value on the map
 bool SearchAlgorithm::initialized = false; //are the map and max values initialized?
-
-volatile double angle = 0.0; //current angle of travel from the horizontal. Sign is reversed from what is expected
 
 void SearchAlgorithm::initializeMap(Cell ** map, int maxx, int maxy)
 {
@@ -201,8 +195,8 @@ std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double ba
 std::list<Cell> Autonomous::GeneratePath(Cell dest)
 {
 	Cell source;
-    source.lat = pos_llh.latitude;
-    source.lng = pos_llh.longitude;
+    source.lat = pos_llh.lat;
+    source.lng = pos_llh.lon;
 	source.gradient = 0.0;
 
     return searcher.findPath(source, dest);
@@ -265,7 +259,7 @@ double Autonomous::getAngleToTurn(Cell next)
 {
     double latitude = pos_llh.lat;
     double longitude = pos_llh.lon;
-    double target = std::atan((next.lng - longitude) / (next.lat - latidude)) * 180 / PI; //NOTE: angle sign is opposite of standard
+    double target = std::atan((next.lng - longitude) / (next.lat - latitude)) * 180 / PI; //NOTE: angle sign is opposite of standard
     return target - angle;
 }
 
@@ -309,7 +303,23 @@ void Autonomous::updateStatus()
 //This needs to be implemented as a GUI function where we can input the next set of coordinates that the people tell us the tennis ball is
 Cell Autonomous::inputNextCoords()
 {
+    Cell cell;
+    cell.lat = -1;
+    cell.lng = -1;
+    cell.gradient = -1;
+    return cell;
+}
 
+void Autonomous::updateAngle(){
+
+}
+
+std::vector<double> Autonomous::getWheelSpeedValues(double angleToTurn, double speed){
+    std::vector<double> wheelSpeeds;
+
+
+
+    return wheelSpeeds;
 }
 
 //Goes through all of the coordinates that we need to travel through
@@ -340,7 +350,6 @@ void Autonomous::mainLoop()
     threadsRunning = true;
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-        //FIXME: should it have a parameter or not?
         std::list<Cell> path = GeneratePath(nextCords); //TODO generates the path to the given set of coords
 		std::list<Cell>::iterator it = path.begin();
 
@@ -403,5 +412,3 @@ void Autonomous::mainLoop()
     angleThread.join();
     std::cout << "We win!" << std::endl;
 }
-
-

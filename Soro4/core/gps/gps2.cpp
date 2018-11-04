@@ -1,4 +1,4 @@
-#include "gps2.hpp"
+﻿#include "gps2.hpp"
 
 
 
@@ -10,7 +10,6 @@ GPS::GPS(char **ip, char **port)
     // set descriptor, and call the setup function    
     socket_desc = -1;
     setup_socket();
-    
     
     sbp_state_init(&s);
     

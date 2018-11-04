@@ -7,11 +7,15 @@
 #include "autonomous_global.h"
 #include "core/core.h"
 #include "core/comms.h"
+#include "core/gps/gps.h"
 
 #include <list>
 #include <math.h>
 #include <thread>
 #include <iostream>
+#include <queue>
+#include <set>
+#include <unistd.h>
 
 class SearchAlgorithm {
 private:
@@ -161,7 +165,7 @@ private:
     std::vector<double> getWheelSpeedValues(double angleToTurn, double speed);
 
     double speed = 60; //IDK what we want for speed right now or if we want to be updating it.
-    static volatile double angle; //Updated through updateAngle
+    volatile double angle; //Updated through updateAngle
     double lastLongitude = 0;
     double lastLatitude = 0;
     bool threadsRunning = true;
