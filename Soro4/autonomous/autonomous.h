@@ -2,6 +2,7 @@
 #define AUTONOMOUS_H
 
 #include <QDebug>
+#include <QObject>
 
 #include "autonomous_global.h"
 #include "core/core.h"
@@ -139,7 +140,7 @@ public:
 };
 
 
-class AUTONOMOUSSHARED_EXPORT Autonomous
+class AUTONOMOUSSHARED_EXPORT Autonomous : public QObject
 {
 public:
     Autonomous();
