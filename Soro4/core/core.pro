@@ -26,48 +26,50 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    gps/gps.cpp \
+    #gps/gps.cpp \
     #gps/gps2.cpp \
     #gps/main.cpp \
     #gps/tcp_example2.cpp \
     gps/edc.c \
-    #gps/gps.c \
+    gps/gps.c \
     #gps/main.c \
     gps/sbp.c \
     #gps/tcp_example2.c
+    comms.cpp
 
 
 HEADERS += \
         core.h \
 	comms.h \
-    gps/acquisition.h \
-    gps/bootload.h \
-    gps/common.h \
-    gps/edc.h \
-    gps/ext_events.h \
-    gps/file_io.h \
-    gps/flash.h \
-    gps/gnss.h \
-    gps/gps.h \
-    #gps/gps.hpp \
-    #gps/gps2.hpp \
-    gps/imu.h \
-    gps/logging.h \
-    gps/mag.h \
-    gps/navigation.h \
-    gps/ndb.h \
-    gps/observation.h \
-    gps/orientation.h \
-    gps/piksi.h \
-    gps/sbas.h \
-    gps/sbp.h \
-    gps/settings.h \
-    gps/ssr.h \
-    gps/system.h \
-    gps/tracking.h \
-    gps/user.h \
-    gps/vehicle.h \
-    gps/version.h
+        gps/acquisition.h \
+        gps/bootload.h \
+        gps/common.h \
+        gps/edc.h \
+        gps/ext_events.h \
+        gps/file_io.h \
+        gps/flash.h \
+        gps/gnss.h \
+        gps/gps.h \
+        #gps/gps.hpp \
+        #gps/gps2.hpp \
+        gps/imu.h \
+        gps/logging.h \
+        gps/mag.h \
+        gps/navigation.h \
+        gps/ndb.h \
+        gps/observation.h \
+        gps/orientation.h \
+        gps/piksi.h \
+        gps/sbas.h \
+        gps/sbp.h \
+        gps/settings.h \
+        gps/ssr.h \
+        gps/system.h \
+        gps/tracking.h \
+        gps/user.h \
+        gps/vehicle.h \
+        gps/version.h \
+    comms.h
 
 #unix {
     target.path = $$PWD/

@@ -11,7 +11,7 @@ const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the differe
 Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
 int SearchAlgorithm::maxy; //max y-value on the map
-volatile double angle = 0.0; //current angle of travel from the horizontal. Sign is reversed from what is expected
+//volatile double angle = 0.0; //current angle of travel from the horizontal. Sign is reversed from what is expected
 
 std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest, Cell ** map, int maxx, int maxy)
 {
@@ -282,7 +282,23 @@ void Autonomous::updateStatus()
 //This needs to be implemented as a GUI function where we can input the next set of coordinates that the people tell us the tennis ball is
 Cell Autonomous::inputNextCoords()
 {
+    Cell cell;
+    cell.lat = -1;
+    cell.lng = -1;
+    cell.gradient = -1;
+    return cell;
+}
 
+void Autonomous::updateAngle(){
+
+}
+
+std::vector<double> Autonomous::getWheelSpeedValues(double angleToTurn, double speed){
+    std::vector<double> wheelSpeeds;
+
+
+
+    return wheelSpeeds;
 }
 
 //Goes through all of the coordinates that we need to travel through
@@ -327,16 +343,16 @@ void Autonomous::mainLoop()
                 double angleToTurn = getAngleToTurn(*it);
 
                 std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
-                std::vector<int> newSpeeds(speeds.size(),0);
+                std::vector<qint8> newSpeeds(speeds.size(),0);
 
                 //FIXME: change all speeds to ints not doubles. Dont need that accurate
                 //mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
                 QByteArray array;
+                array.append(-127); //start byte
                 array.append((char)0);
                 array.append((char)0);
-                array.append((char)0);
-                array.append((char)speeds[0]);
-                array.append((char)speeds[1]);
+                array.append(newSpeeds[0]);
+                array.append(newSpeeds[1]);
                 array.append((char)0);
                 array.append((char)0);
                 array.append((char)(speeds[0] + speeds [1]) / 2);
