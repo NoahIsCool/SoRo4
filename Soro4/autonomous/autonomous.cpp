@@ -11,13 +11,7 @@ const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the differe
 Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
 int SearchAlgorithm::maxy; //max y-value on the map
-<<<<<<< HEAD
-//volatile double angle = 0.0; //current angle of travel from the horizontal. Sign is reversed from what is expected
-=======
 bool SearchAlgorithm::initialized = false; //are the map and max values initialized?
-
-volatile double angle = 0.0; //current angle of travel from the horizontal. Sign is reversed from what is expected
->>>>>>> 0fe79d26dc3f5ba97477667bae7d26fe87912e28
 
 void SearchAlgorithm::initializeMap(Cell ** map, int maxx, int maxy)
 {
@@ -168,8 +162,6 @@ double SearchAlgorithm::getHeuristic(int destx, int desty, int x, int y) {
 
 Autonomous::Autonomous() : mySocket("testConfig.conf")
 {
-    qInfo() << "library link test";
-
     mainLoop();
 }
 
@@ -208,7 +200,7 @@ std::list<Cell> Autonomous::GeneratePath(Cell dest)
 //impliment much later
 bool Autonomous::isThereObstacle()
 {
-
+    return false;
 }
 
 //Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obstacle
@@ -344,10 +336,10 @@ void Autonomous::mainLoop()
     timesStuck = 0;
     isStuck = false;
 
+    //used to calculate the angle to turn
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
 
-    //FIXME: shouldnt this be some struct we made?
     Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
     threadsRunning = true;
@@ -358,7 +350,7 @@ void Autonomous::mainLoop()
 
 		//if the first value is the kill vector, there was an error generating the path, prompt for input and restart the loop
 		if (*it == killVector) {
-	        nextCords = inputNextCords(); //gets the next set of coords
+            nextCords = inputNextCoords(); //gets the next set of coords
 			continue;
 		}
 
@@ -388,7 +380,9 @@ void Autonomous::mainLoop()
                 array.append((char)0);
                 array.append((char)(speeds[0] + speeds [1]) / 2);
                 mySocket.sendMessage(array);
-                usleep(500); //lets it drive for 500ms before continuing on
+                usleep(500000); //lets it drive for 500ms before continuing on
+                currentGPS.lat = pos_llh.lat;
+                currentGPS.lng = pos_llh.lon;
             }
 
             it++;
