@@ -24,16 +24,31 @@ private:
     QGamepad *m_gamepad;
     comms *myComms;
     QTimer *udpTimer;
-    bool cameraControl = false;
+    bool skidToggle = false;
     // bytes that are actally sent
     qint8 modifiers = 0;
     qint8 leftSide = 0;
     qint8 rightSide = 0;
     qint8 gimbleUD = 0;
     qint8 gimbleRL = 0;
+    // variables that hold data from gamepad
+    double lxAxis = 0; // left x axis
+    double lyAxis = 0;
+    double rxAxis = 0;
+    double ryAxis = 0;
+    double lTrigger = 0;
+    double rTrigger = 0;
+    bool buttonUp = false;
+    bool buttonDown = false;
+    bool buttonLeft = false;
+    bool buttonRight = false;
+    bool buttonRBumper = false;
+    bool buttonLBumper = false;
     void printVals();
 
 public slots:
+    // these slots update values of the controller and handle toggles
+    void onLXAxis(double value);
     void onLYAxis(double value);
     void onRXAxis(double value);
     void onRYAxis(double value);
@@ -45,7 +60,7 @@ public slots:
     void onButtonDown(bool pressed);
     void onButtonLeft(bool pressed);
     void onButtonRight(bool pressed);
-
+    // sendUDP actually calculates all the data to send over
     void sendUDP(); // connects to a QTimer timeout, sends drive control message to rover
 };
 
