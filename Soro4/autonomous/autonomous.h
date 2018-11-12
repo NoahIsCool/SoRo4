@@ -8,6 +8,7 @@
 #include "core/core.h"
 #include "core/comms.h"
 #include "core/gps/gps.h"
+#include "balltracker.h"
 
 #include <list>
 #include <math.h>

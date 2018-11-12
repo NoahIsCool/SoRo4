@@ -29,11 +29,13 @@ INCLUDEPATH += $$PWD/..
 LIBS = -L../../libs -lcore
 
 SOURCES += \
-        autonomous.cpp
+        autonomous.cpp \
+    balltracker.cpp
 
 HEADERS += \
         autonomous.h \
-        autonomous_global.h 
+        autonomous_global.h \ 
+    balltracker.h
 
 #unix {
     target.path = $$PWD
