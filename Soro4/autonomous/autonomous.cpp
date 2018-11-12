@@ -162,12 +162,10 @@ double SearchAlgorithm::getHeuristic(int destx, int desty, int x, int y) {
 
 Autonomous::Autonomous() : mySocket("testConfig.conf")
 {
-    // this should make the comms object print out any errors it encounters to the terminal
-    connect(&mySocket, SIGNAL(errorEncountered(QString)), this, SLOT([=](QString error){qDebug() << error;}));
-
-    qInfo() << "library link test";
-
-    mainLoop();
+	// this "should" make the comms object print out any errors it encounters to the terminal
+	connect(&mySocket, SIGNAL(errorEncountered(QString)), this, SLOT([=](QString error){qDebug() << error;}));
+	qInfo() << "library link test";
+	mainLoop();
 }
 
 //this function returns motor speeds so that while the rover is driving it is arcing to face the next set of coordinates (or just driving straight if its already facing the next set of coordinates)
@@ -208,7 +206,7 @@ std::list<Cell> Autonomous::GeneratePath(Cell dest)
 //impliment much later
 bool Autonomous::isThereObstacle()
 {
-
+    return false;
 }
 
 //Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obstacle
@@ -216,14 +214,14 @@ void Autonomous::avoidObstacle()
 {
     //backs up for 5 seconds
     QByteArray array;
-    array.append((char)-127);
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)-speed);
-    array.append((char)-speed);
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)(-2*speed/5));
+    array.append((char)-127);          //start message
+    array.append((char)0);          //drive device ID is 0
+    array.append((char)0);          //no modifiers
+    array.append((char)-speed);     //left wheels
+    array.append((char)-speed);     //right wheels
+    array.append((char)0);          //gimble vertical
+    array.append((char)0);          //gimble horizontal
+    array.append((char)-2*speed/5); //hash - average of the previous 5 bytes
     mySocket.sendMessage(array);
     usleep(5000000);
 
@@ -331,12 +329,11 @@ void Autonomous::mainLoop()
     timesStuck = 0;
     isStuck = false;
 
+    //used to calculate the angle to turn
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
 
     BallTracker tennisTracker = new BallTracker(); //automatically starts a thread to track the tennisball
-
-    //FIXME: shouldnt this be some struct we made?
     Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
@@ -346,52 +343,47 @@ void Autonomous::mainLoop()
 
 		//if the first value is the kill vector, there was an error generating the path, prompt for input and restart the loop
 		if (*it == killVector) {
-	        nextCords = inputNextCords(); //gets the next set of coords
+            nextCords = inputNextCoords(); //gets the next set of coords
 			continue;
 		}
 
         //loops through each of the coordinates to get to the next checkpoint
         while(*it != nextCords) //travels to the next set of coords. 
         {
-			Cell currentCoords;
-			currentCoords.lat = pos_llh.lat;
-			currentCoords.lng = pos_llh.lon;
-			currentCoords.gradient = 0.0;
-
-            //FIXME: what are these and where do they come from?
-            while(currentCoords != *it) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
+            Cell currentGPS;
+            currentGPS.lat = pos_llh.lat;
+            currentGPS.lng = pos_llh.lon;
+            while(currentGPS != *it) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
-                //if the tennisTracker has found the ball then let it take over
-                if(tennisTracker.hasFound())
-                    break;
-                else if(isThereObstacle() || isStuck)
-				{
-					avoidObstacle();
-				}
-				else
-				{
-					//find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
+                if(isThereObstacle())
+                {
+                    avoidObstacle();
+                }
+                else
+                {
+                    //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
                     double angleToTurn = getAngleToTurn(*it);
 
-                    std::vector<int> speeds = (int)round(getWheelSpeedValues(angleToTurn, speed));
+                    std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
+                    std::vector<qint8> newSpeeds(speeds.size(),0);
 
-					QByteArray array;
-                    array.append((char)-127); // begin message
-                    array.append((char)0); // device id of wheels - 0
-                    array.append((char)0); // no modifiers
-                    array.append((char)speeds[0]); // left wheels
-                    array.append((char)speeds[1]); // right wheels
-                    array.append((char)0); // gimble vertical
-                    array.append((char)0); // gimble horizontal
+                    //FIXME: change all speeds to ints not doubles. Dont need that accurate
+                    //mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
+                    QByteArray array;
+                    array.append(-127); //start byte
+                    array.append((char)0);
+                    array.append((char)0);
+                    array.append(newSpeeds[0]);
+                    array.append(newSpeeds[1]);
+                    array.append((char)0);
+                    array.append((char)0);
                     array.append((char)(speeds[0] + speeds [1]) / 5);
-					mySocket.sendMessage(array);
+                    mySocket.sendMessage(array);
                     usleep(500000); //lets it drive for 500ms before continuing on
-				}
-
-				currentCoords.lat = pos_llh.lat;
-				currentCoords.lng = pos_llh.lon;
-				currentCoords.gradient = 0.0;
-			}
+                    currentGPS.lat = pos_llh.lat;
+                    currentGPS.lng = pos_llh.lon;
+                }
+            }
 			it++;
         }
 
