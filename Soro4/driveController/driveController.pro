@@ -4,9 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += network
-
-QT       -= gui
+QT       += network gui widgets
 
 TARGET = driveController
 TEMPLATE = lib
@@ -26,13 +24,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-        drivecontroller.cpp
+        drivecontroller.cpp \
+    drivewindow.cpp
 
 HEADERS += \
         drivecontroller.h \
-        drivecontroller_global.h 
+        drivecontroller_global.h \ 
+    drivewindow.h
 
 #unix {
     target.path = $$PWD/
     INSTALLS += target
 #}
+
+FORMS += \
+    drivewindow.ui
