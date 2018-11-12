@@ -162,7 +162,10 @@ double SearchAlgorithm::getHeuristic(int destx, int desty, int x, int y) {
 
 Autonomous::Autonomous() : mySocket("testConfig.conf")
 {
-    mainLoop();
+	// this "should" make the comms object print out any errors it encounters to the terminal
+	connect(&mySocket, SIGNAL(errorEncountered(QString)), this, SLOT([=](QString error){qDebug() << error;}));
+	qInfo() << "library link test";
+	mainLoop();
 }
 
 //return the speeds that the wheels need to move at to get to the next coordinate
