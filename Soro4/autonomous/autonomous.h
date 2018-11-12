@@ -2,6 +2,7 @@
 #define AUTONOMOUS_H
 
 #include <QDebug>
+#include <QObject>
 
 #include "autonomous_global.h"
 #include "core/core.h"
@@ -143,25 +144,22 @@ public:
 };
 
 
-class AUTONOMOUSSHARED_EXPORT Autonomous
+class AUTONOMOUSSHARED_EXPORT Autonomous : public QObject
 {
 public:
     Autonomous();
 
 private:
     void mainLoop();
-    std::vector<double> getWheelSpeedsValues(double amountOff, double baseSpeed);
+    std::vector<double> getWheelSpeedValues(double amountOff, double baseSpeed);
      //FIXME: was std::vector. Should it be a list or a vector?
     std::list<Cell> GeneratePath(Cell dest);
     //FIXME: is taking over for obstacleOrStuck?
     bool isThereObstacle();
-    bool ObstacleOrStuck();
     void avoidObstacle();
     double getAngleToTurn(Cell next);
-    void updateAngle();
     Cell inputNextCoords();
     void updateStatus();
-    std::vector<double> getWheelSpeedValues(double angleToTurn, double speed);
 
     double speed = 60; //IDK what we want for speed right now or if we want to be updating it.
     volatile double angle; //Updated through updateAngle

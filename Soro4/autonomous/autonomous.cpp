@@ -166,7 +166,7 @@ Autonomous::Autonomous() : mySocket("testConfig.conf")
 }
 
 //return the speeds that the wheels need to move at to get to the next coordinate
-std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double baseSpeed)
+std::vector<double> Autonomous::getWheelSpeedValues(double amountOff, double baseSpeed)
 {
     std::vector<double> PIDValues(2);
 
@@ -209,25 +209,25 @@ void Autonomous::avoidObstacle()
     //backs up for 5 seconds
     //mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
     QByteArray array;
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)-speed);
-    array.append((char)-speed);
+    array.append((char)-127);
     array.append((char)0);
     array.append((char)0);
     array.append((char)-speed);
+    array.append((char)-speed);
+    array.append((char)0);
+    array.append((char)0);
+    array.append((char)(-2*speed/5));
     mySocket.sendMessage(array);
     usleep(5000);
 
     //turns for a few seconds to hopefully avoid the obsticle
     //mySocket.sendUDP(0, 0, 0, -speed, speed, 0, 0, 0);
     array.clear();
-    array.append((char)0);
+    array.append((char)-127);
     array.append((char)0);
     array.append((char)0);
     array.append((char)-speed);
-    array.append((char)-speed);
+    array.append((char)speed);
     array.append((char)0);
     array.append((char)0);
     array.append((char)0);
@@ -237,14 +237,14 @@ void Autonomous::avoidObstacle()
     //drive forward a bit and continue(?)
     //mySocket.sendUDP(0, 0, 0, speed, speed, 0, 0, speed);
     array.clear();
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)speed);
-    array.append((char)speed);
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)speed);
+    array.append((char)-127); // start message
+    array.append((char)0); // drive device ID is 0
+    array.append((char)0); // no modifiers
+    array.append((char)speed); // left wheels
+    array.append((char)speed); // right wheels
+    array.append((char)0); // gimble vertical
+    array.append((char)0); // gimble horizontal
+    array.append((char)(2*speed/5)); // hash - average of the previous 5 bytes
     mySocket.sendMessage(array);
     usleep(5000);
 }
@@ -305,18 +305,6 @@ Cell Autonomous::inputNextCoords()
     return cell;
 }
 
-void Autonomous::updateAngle(){
-
-}
-
-std::vector<double> Autonomous::getWheelSpeedValues(double angleToTurn, double speed){
-    std::vector<double> wheelSpeeds;
-
-
-
-    return wheelSpeeds;
-}
-
 //Goes through all of the coordinates that we need to travel through
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
 void Autonomous::mainLoop()
@@ -327,7 +315,8 @@ void Autonomous::mainLoop()
 
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
-    std::thread angleThread(&Autonomous::updateAngle,this);
+    threadsRunning = true;
+    std::thread statusThread(&Autonomous::updateStatus,this);
     Cell killVector;
     killVector.lat = -1;
     killVector.lng = -1;
@@ -340,9 +329,9 @@ void Autonomous::mainLoop()
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
 
+    BallTracker tennisTracker = new BallTracker(); //automatically starts a thread to track the tennisball
     Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
-    threadsRunning = true;
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
         std::list<Cell> path = GeneratePath(nextCords); //TODO generates the path to the given set of coords
@@ -393,10 +382,10 @@ void Autonomous::mainLoop()
             }
 			it++;
         }
-        
-        //once arrives to the checkpoint
-        //FIXME: gunna need a whole class for this
-        //FindTennisBall();
+
+        //wait for the tennisTracker to finish finding the tennis ball
+        //OR if the tennis ball has not been found by the time that the rover got to the given checkpoints then we will pretend like we found the tennis ball and move on as if we had
+
         nextCords = inputNextCoords(); //gets the next set of coords
     }
 
