@@ -4,3 +4,4 @@ bin
 Soro4/libs
 Soro4/bin
 SoRo4/Soro4.pro.user
+*.pro.user*
