@@ -209,14 +209,14 @@ void Autonomous::avoidObstacle()
     //backs up for 5 seconds
     //mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
     QByteArray array;
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)-speed);
-    array.append((char)-speed);
-    array.append((char)0);
-    array.append((char)0);
-    array.append((char)-speed);
+    array.append((char)0);          //start message
+    array.append((char)0);          //drive device ID is 0
+    array.append((char)0);          //no modifiers
+    array.append((char)-speed);     //left wheels
+    array.append((char)-speed);     //right wheels
+    array.append((char)0);          //gimble vertical
+    array.append((char)0);          //gimble horizontal
+    array.append((char)-2*speed/5); //hash - average of the previous 5 bytes
     mySocket.sendMessage(array);
     usleep(5000);
 
@@ -244,7 +244,7 @@ void Autonomous::avoidObstacle()
     array.append((char)speed);
     array.append((char)0);
     array.append((char)0);
-    array.append((char)speed);
+    array.append((char)2*speed/5);
     mySocket.sendMessage(array);
     usleep(5000);
 }
@@ -384,7 +384,7 @@ void Autonomous::mainLoop()
                     array.append(newSpeeds[1]);
                     array.append((char)0);
                     array.append((char)0);
-                    array.append((char)(speeds[0] + speeds [1]) / 2);
+                    array.append((char)(speeds[0] + speeds [1]) / 5);
                     mySocket.sendMessage(array);
                     usleep(500000); //lets it drive for 500ms before continuing on
                     currentGPS.lat = pos_llh.lat;
