@@ -212,7 +212,7 @@ void Autonomous::avoidObstacle()
     //backs up for 5 seconds
     //mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
     QByteArray array;
-    array.append((char)0);          //start message
+    array.append((char)-127);          //start message
     array.append((char)0);          //drive device ID is 0
     array.append((char)0);          //no modifiers
     array.append((char)-speed);     //left wheels
@@ -221,7 +221,7 @@ void Autonomous::avoidObstacle()
     array.append((char)0);          //gimble horizontal
     array.append((char)-2*speed/5); //hash - average of the previous 5 bytes
     mySocket.sendMessage(array);
-    usleep(5000);
+    msleep(5000);
 
     //turns for a few seconds to hopefully avoid the obsticle
     //mySocket.sendUDP(0, 0, 0, -speed, speed, 0, 0, 0);
@@ -235,7 +235,7 @@ void Autonomous::avoidObstacle()
     array.append((char)0);
     array.append((char)0);
     mySocket.sendMessage(array);
-    usleep(5000);
+    msleep(5000);
 
     //drive forward a bit and continue(?)
     //mySocket.sendUDP(0, 0, 0, speed, speed, 0, 0, speed);
@@ -249,7 +249,7 @@ void Autonomous::avoidObstacle()
     array.append((char)0); // gimble horizontal
     array.append((char)(2*speed/5)); // hash - average of the previous 5 bytes
     mySocket.sendMessage(array);
-    usleep(5000);
+    msleep(5000);
 }
 
 //returns the difference between the current angle to the horizontal and the desired angle to reach the next cell
