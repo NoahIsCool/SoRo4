@@ -168,22 +168,25 @@ Autonomous::Autonomous() : mySocket("testConfig.conf")
 	mainLoop();
 }
 
-//return the speeds that the wheels need to move at to get to the next coordinate
+//this function returns motor speeds so that while the rover is driving it is arcing to face the next set of coordinates (or just driving straight if its already facing the next set of coordinates)
+//you put in how many degrees the rover needs to turn to face the next set of coords and the speed that you want the rover to drive at if it is directly facing the next set of coordinates
+//For this to work best the base speed needs to be less than the maxium speed that the rover can drive at
 std::vector<double> Autonomous::getWheelSpeedValues(double amountOff, double baseSpeed)
 {
     std::vector<double> PIDValues(2);
 
     if(baseSpeed > 0)
     {
+        //this formula works by taking the baseSpeed and increasing or decreasing it by a percent based off of amountOff
         //this formula is still almost certainly going to need to be adjusted
-        PIDValues[0] = speed + speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
-        PIDValues[1] = speed - speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
+        PIDValues[0] = baseSpeed + baseSpeed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
+        PIDValues[1] = baseSpeed - baseSpeed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
     }
 
     else
     {
-        PIDValues[0] = speed - speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
-        PIDValues[1] = speed + speed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
+        PIDValues[0] = baseSpeed - baseSpeed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
+        PIDValues[1] = baseSpeed + baseSpeed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
     }
 
     return PIDValues;
@@ -210,7 +213,6 @@ bool Autonomous::isThereObstacle()
 void Autonomous::avoidObstacle()
 {
     //backs up for 5 seconds
-    //mySocket.sendUDP(0, 0, 0, -speed, -speed, 0, 0, -speed);
     QByteArray array;
     array.append((char)-127);          //start message
     array.append((char)0);          //drive device ID is 0
@@ -221,10 +223,9 @@ void Autonomous::avoidObstacle()
     array.append((char)0);          //gimble horizontal
     array.append((char)-2*speed/5); //hash - average of the previous 5 bytes
     mySocket.sendMessage(array);
-    msleep(5000);
+    usleep(5000000);
 
     //turns for a few seconds to hopefully avoid the obsticle
-    //mySocket.sendUDP(0, 0, 0, -speed, speed, 0, 0, 0);
     array.clear();
     array.append((char)-127);
     array.append((char)0);
@@ -235,10 +236,9 @@ void Autonomous::avoidObstacle()
     array.append((char)0);
     array.append((char)0);
     mySocket.sendMessage(array);
-    msleep(5000);
+    usleep(5000000);
 
     //drive forward a bit and continue(?)
-    //mySocket.sendUDP(0, 0, 0, speed, speed, 0, 0, speed);
     array.clear();
     array.append((char)-127); // start message
     array.append((char)0); // drive device ID is 0
@@ -249,7 +249,7 @@ void Autonomous::avoidObstacle()
     array.append((char)0); // gimble horizontal
     array.append((char)(2*speed/5)); // hash - average of the previous 5 bytes
     mySocket.sendMessage(array);
-    msleep(5000);
+    usleep(5000000);
 }
 
 //returns the difference between the current angle to the horizontal and the desired angle to reach the next cell
@@ -263,7 +263,7 @@ double Autonomous::getAngleToTurn(Cell next)
 
 //This is meant to be run as a thread the whole time the autonomous program is running.
 //This finds the angle that the rover is at and if the rover is stuck. This will be inaccurate if the rover does a pivot turn
-//The way that it finds if the rover is stuck is if it is in the EXACT same position 6 times in a row (3 seconds)
+//The way that it finds if the rover is stuck is if it is in the EXACT same position 6 times in a row (3 seconds) so this may need to be changed depending on the precision and noise of the GPS
 //TODO add the accelerometer information here (probably(?))
 void Autonomous::updateStatus()
 {
@@ -298,12 +298,14 @@ void Autonomous::updateStatus()
     }
 }
 
-//This needs to be implemented as a GUI function where we can input the next set of coordinates that the people tell us the tennis ball is
+//TODO implement as a GUI function where we can input the next set of coordinates that the people tell us the tennis ball is
+//right now just use cin to get the next coordinates
 Cell Autonomous::inputNextCoords()
 {
     Cell cell;
-    cell.lat = -1;
-    cell.lng = -1;
+    std::cout << "enter next coordinate: lat long" << std::endl;
+    std::cin >> cell.lat;
+    std::cin >> cell.lng;
     cell.gradient = -1;
     return cell;
 }
@@ -316,10 +318,10 @@ void Autonomous::mainLoop()
     //FIXME: get this from rob
     //searcher.parseMap();
 
-    //this can probably be done better by someone who is better at cpp than me
-    //this is just so we can tell the robot to stop driving
     threadsRunning = true;
     std::thread statusThread(&Autonomous::updateStatus,this);
+
+    //this is just so we can tell the robot to stop driving. We need to these into inputNextCoords to end the loop
     Cell killVector;
     killVector.lat = -1;
     killVector.lng = -1;
@@ -346,7 +348,7 @@ void Autonomous::mainLoop()
 			continue;
 		}
 
-         //loops through each of the coordinates to get to the next checkpoint        
+        //loops through each of the coordinates to get to the next checkpoint
         while(*it != nextCords) //travels to the next set of coords. 
         {
             Cell currentGPS;
