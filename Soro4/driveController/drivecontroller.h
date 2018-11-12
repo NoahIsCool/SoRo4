@@ -2,6 +2,7 @@
 #define DRIVECONTROLLER_H
 
 #include "drivecontroller_global.h"
+#include "drivewindow.h"
 
 class DRIVECONTROLLERSHARED_EXPORT DriveController
 {

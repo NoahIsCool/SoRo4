@@ -3,4 +3,6 @@
 
 DriveController::DriveController()
 {
+    driveWindow window;
+    window.show();
 }
