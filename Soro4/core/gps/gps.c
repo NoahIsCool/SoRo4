@@ -1,4 +1,4 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -134,4 +134,3 @@ void sbp_gps_time_callback(u16 sender_id, u8 len, u8 msg[], void *context)
 {
   gps_time = *(msg_gps_time_t *)msg;
 }
-
