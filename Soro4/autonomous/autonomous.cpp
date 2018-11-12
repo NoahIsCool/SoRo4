@@ -171,7 +171,7 @@ Autonomous::Autonomous() : mySocket("testConfig.conf")
 }
 
 //return the speeds that the wheels need to move at to get to the next coordinate
-std::vector<double> Autonomous::getWheelSpeedsValues(double amountOff, double baseSpeed)
+std::vector<double> Autonomous::getWheelSpeedValues(double amountOff, double baseSpeed)
 {
     std::vector<double> PIDValues(2);
 
@@ -310,18 +310,6 @@ Cell Autonomous::inputNextCoords()
     return cell;
 }
 
-void Autonomous::updateAngle(){
-
-}
-
-std::vector<double> Autonomous::getWheelSpeedValues(double angleToTurn, double speed){
-    std::vector<double> wheelSpeeds;
-
-
-
-    return wheelSpeeds;
-}
-
 //Goes through all of the coordinates that we need to travel through
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
 void Autonomous::mainLoop()
@@ -332,7 +320,8 @@ void Autonomous::mainLoop()
 
     //this can probably be done better by someone who is better at cpp than me
     //this is just so we can tell the robot to stop driving
-    std::thread angleThread(&Autonomous::updateAngle,this);
+    threadsRunning = true;
+    std::thread statusThread(&Autonomous::updateStatus,this);
     Cell killVector;
     killVector.lat = -1;
     killVector.lng = -1;
@@ -344,10 +333,11 @@ void Autonomous::mainLoop()
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
 
+    BallTracker tennisTracker = new BallTracker(); //automatically starts a thread to track the tennisball
+
     //FIXME: shouldnt this be some struct we made?
     Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
-    threadsRunning = true;
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
         std::list<Cell> path = GeneratePath(nextCords); //TODO generates the path to the given set of coords
@@ -370,18 +360,20 @@ void Autonomous::mainLoop()
             //FIXME: what are these and where do they come from?
             while(currentCoords != *it) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
-				if(isThereObstacle())
+                //if the tennisTracker has found the ball then let it take over
+                if(tennisTracker.hasFound())
+                    break;
+                else if(isThereObstacle() || isStuck)
 				{
 					avoidObstacle();
 				}
 				else
 				{
 					//find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-					double angleToTurn = getAngleToTurn(CurrentGPSHeading);
+                    double angleToTurn = getAngleToTurn(*it);
 
-					std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
-					//FIXME: change all speeds to ints not doubles. Dont need that accurate
-					//mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
+                    std::vector<int> speeds = (int)round(getWheelSpeedValues(angleToTurn, speed));
+
 					QByteArray array;
                     array.append((char)-127); // begin message
                     array.append((char)0); // device id of wheels - 0
@@ -392,7 +384,7 @@ void Autonomous::mainLoop()
                     array.append((char)0); // gimble horizontal
                     array.append((char)(speeds[0] + speeds [1]) / 5);
 					mySocket.sendMessage(array);
-					usleep(500); //lets it drive for 500ms before continuing on
+                    usleep(500000); //lets it drive for 500ms before continuing on
 				}
 
 				currentCoords.lat = pos_llh.lat;
@@ -401,10 +393,10 @@ void Autonomous::mainLoop()
 			}
 			it++;
         }
-        
-        //once arrives to the checkpoint
-        //FIXME: gunna need a whole class for this
-        //FindTennisBall();
+
+        //wait for the tennisTracker to finish finding the tennis ball
+        //OR if the tennis ball has not been found by the time that the rover got to the given checkpoints then we will pretend like we found the tennis ball and move on as if we had
+
         nextCords = inputNextCoords(); //gets the next set of coords
     }
 
