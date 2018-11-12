@@ -303,6 +303,7 @@ void Autonomous::updateStatus()
 Cell Autonomous::inputNextCoords()
 {
     Cell cell;
+    std::cout << "enter next coordinate: lat long" << std::endl;
     std::cin >> cell.lat;
     std::cin >> cell.lng;
     cell.gradient = -1;
