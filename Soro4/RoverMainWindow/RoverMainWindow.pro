@@ -24,10 +24,12 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-        RoverMainWindow.cpp
+        RoverMainWindow.cpp \
+    degreesminutesseconds.cpp
 
 HEADERS += \
-        RoverMainWindow.h
+        RoverMainWindow.h \
+    degreesminutesseconds.h
 
 FORMS += \
         RoverMainWindow.ui
