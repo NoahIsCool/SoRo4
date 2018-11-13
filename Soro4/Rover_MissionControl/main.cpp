@@ -5,8 +5,8 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    driveWindow drive;
-    drive.show();
+    DriveController controller;
+    controller.showWindow();
 
     return a.exec();
 }

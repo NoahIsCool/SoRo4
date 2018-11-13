@@ -3,6 +3,11 @@
 
 DriveController::DriveController()
 {
-    driveWindow window;
+
+}
+
+void DriveController::showWindow()
+{
     window.show();
 }
+

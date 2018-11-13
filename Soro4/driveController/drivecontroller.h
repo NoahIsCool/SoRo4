@@ -6,9 +6,11 @@
 
 class DRIVECONTROLLERSHARED_EXPORT DriveController
 {
-
+private:
+    driveWindow window;
 public:
     DriveController();
+    void showWindow();
 };
 
 #endif // DRIVECONTROLLER_H
