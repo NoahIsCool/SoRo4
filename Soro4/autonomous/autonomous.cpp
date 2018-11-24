@@ -174,7 +174,7 @@ Autonomous::Autonomous() : mySocket("testConfig.conf")
 std::vector<double> Autonomous::getWheelSpeedValues(double amountOff, double baseSpeed)
 {
     std::vector<double> PIDValues(2);
-
+    amountOff /= .00015; //THIS IS A STUPID FIX FOR THE FIRST VERSION OF THE FORMULA. UNLESS IT WORKS AS IS, GET RID OF THIS LINE
     if(baseSpeed > 0)
     {
         //this formula works by taking the baseSpeed and increasing or decreasing it by a percent based off of amountOff
