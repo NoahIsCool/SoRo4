@@ -102,7 +102,7 @@ bool comms::readConfig(const char* filename)
 
     config_file.close();
 
-    if(recieve_ip == nullptr || recieve_port == 0 || send_ip == nullptr || send_port == 0)
+    if(recieve_ip == NULL || recieve_port == 0 || send_ip == NULL || send_port == 0)
     {
         errorString = "Config missing info.";
         //qDebug() << errorString;

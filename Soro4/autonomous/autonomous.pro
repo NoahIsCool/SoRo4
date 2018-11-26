@@ -26,16 +26,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 INCLUDEPATH += $$PWD/..
-LIBS = -L../../libs -lcore
+LIBS = -L../../libs -lcore -lpthread
+
+QMAKE_CXXFLAGS += -std=c++11
 
 SOURCES += \
-        autonomous.cpp \
-    balltracker.cpp
+        autonomous.cpp
 
 HEADERS += \
         autonomous.h \
-        autonomous_global.h \ 
-    balltracker.h
+        autonomous_global.h 
 
 #unix {
     target.path = $$PWD
