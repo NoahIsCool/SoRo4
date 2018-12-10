@@ -48,6 +48,7 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 	int sourcex = round((source.lng - map[0][0].lng) / lngDiff);
 	int destx = round((dest.lng - map[0][0].lng) / lngDiff);
 
+    //FIXME: this kept on being called. maybe a problem with the conditions?
 	//if any of the coordinates are out of bounds of the map, return the error cell
 	if ((sourcey > maxy) || (sourcey < 0) || (desty > maxy) || (desty < 0) || (sourcex > maxx) || (sourcex < 0) || (destx > maxx) || (destx < 0)) {
 		Cell error;
@@ -56,6 +57,7 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 		error.gradient = 0.0;
 		std::list<Cell> out;
 		out.push_front(error);
+        std::cout << "returning error" << std::endl;
 		return out;
 	}
 
@@ -163,8 +165,7 @@ double SearchAlgorithm::getHeuristic(int destx, int desty, int x, int y) {
 Autonomous::Autonomous() : mySocket("testConfig.conf")
 {
 	// this "should" make the comms object print out any errors it encounters to the terminal
-	connect(&mySocket, SIGNAL(errorEncountered(QString)), this, SLOT([=](QString error){qDebug() << error;}));
-	qInfo() << "library link test";
+    //connect(&mySocket, SIGNAL(errorEncountered(QString)), this, SLOT([=](QString error){qDebug() << error;}));
 	mainLoop();
 }
 
@@ -322,7 +323,7 @@ std::vector< std::vector<Cell> > Autonomous::parseMap(){
 
 	//ifstream data("mapAvgV1.csv");//100 pixel avg
 	//ifstream data("mapNoAvg.csv");//no pixel averaging
-	std::ifstream data("mapNorman.csv");
+    std::ifstream data("/opt/soonerRover/soro4/SoRo4/Soro4/autonomous/map/mapNorman.csv");
 	std::string line;
 
 	//static Cell map[1720][3370];//no pixel averaging
@@ -366,8 +367,10 @@ std::vector< std::vector<Cell> > Autonomous::parseMap(){
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
 void Autonomous::mainLoop()
 {
-	//placeholder
-    searcher.initializeMap(parseMap(),522,1035);
+    //FIXME: this may be the problem...check into the maxx and maxy
+    //FIXME: always returning kill vector. Check the return error statement
+    std::vector<std::vector<Cell>> map = parseMap();
+    searcher.initializeMap(map,map.size(),map[0].size());
 
     threadsRunning = true;
     std::thread statusThread(&Autonomous::updateStatus,this);
@@ -390,8 +393,11 @@ void Autonomous::mainLoop()
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
+        //FIXME: path not being generated
         std::list<Cell> path = GeneratePath(nextCords); //TODO generates the path to the given set of coords
+        std::cout << "length of path: " << path.size() << std::endl;
 		std::list<Cell>::iterator it = path.begin();
+        std::cout << (*it).lat << " " << (*it).lng << std::endl;
 
 		//if the first value is the kill vector, there was an error generating the path, prompt for input and restart the loop
 		if (*it == killVector) {
@@ -402,6 +408,8 @@ void Autonomous::mainLoop()
         //loops through each of the coordinates to get to the next checkpoint
         while(*it != nextCords) //travels to the next set of coords. 
         {
+            //FIXME: currentGPS being corrupted...something is setting it to 2.7*10^-317
+            //FIXME: maybe a new problem with the gps code?
             Cell currentGPS;
             currentGPS.lat = pos_llh.lat;
             currentGPS.lng = pos_llh.lon;
