@@ -4,14 +4,15 @@
 
 //this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
 
+//FIXME: lets put all of this in the h file instead as class variables
 //Higher value means more avoidance from the algorithm
-const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
-const double SearchAlgorithm::UPWEIGHT = 1000.0; //Weight given to the difference in elevation when going up
-const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the difference in elevation when going down
-std::vector<std::vector<Cell>> SearchAlgorithm::map; //Matrix of Cell objects
-int SearchAlgorithm::maxx; //max x-value on the map
-int SearchAlgorithm::maxy; //max y-value on the map
-bool SearchAlgorithm::initialized = false; //are the map and max values initialized?
+//const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
+//const double SearchAlgorithm::UPWEIGHT = 1000.0; //Weight given to the difference in elevation when going up
+//const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the difference in elevation when going down
+//std::vector<std::vector<Cell>> SearchAlgorithm::map; //Matrix of Cell objects
+//int SearchAlgorithm::maxx; //max x-value on the map
+//int SearchAlgorithm::maxy; //max y-value on the map
+//bool SearchAlgorithm::initialized = false; //are the map and max values initialized?
 
 void SearchAlgorithm::initializeMap(std::vector<std::vector<Cell>> map, int maxx, int maxy)
 {
@@ -50,7 +51,7 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 
     //FIXME: this kept on being called. maybe a problem with the conditions?
 	//if any of the coordinates are out of bounds of the map, return the error cell
-	if ((sourcey > maxy) || (sourcey < 0) || (desty > maxy) || (desty < 0) || (sourcex > maxx) || (sourcex < 0) || (destx > maxx) || (destx < 0)) {
+    /*if ((sourcey > maxy) || (sourcey < 0) || (desty > maxy) || (desty < 0) || (sourcex > maxx) || (sourcex < 0) || (destx > maxx) || (destx < 0)) {
 		Cell error;
 		error.lat = -1.0;
 		error.lng = -1.0;
@@ -59,7 +60,7 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 		out.push_front(error);
         std::cout << "returning error" << std::endl;
 		return out;
-	}
+    }*/
 
 	//Create the source node and add it to the open list
 	std::priority_queue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
@@ -94,10 +95,12 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 
 	//create output list
 	std::list<Cell> out;
+    //FIXME: maybe copy constructor isnt working correctly? x and y are WAY outside of bounds.
 	Node * interest = new Node(destNode);
 
 	//ascend the parent tree, adding the corresponding GPS coordinates until we reach the source
 	do {
+        //FIXME: interest->x and interest->y are outside of the maps bounds...
 		Cell cell = map[interest->x][interest->y];
 
         Cell *pair = new Cell(); //CHNG 10/5: dynamically allocated array to avoid the overwriting problem
@@ -199,6 +202,8 @@ std::list<Cell> Autonomous::GeneratePath(Cell dest)
 	Cell source;
     source.lat = pos_llh.lat;
     source.lng = pos_llh.lon;
+    source.lat = -95;
+    source.lng = 35;
 	source.gradient = 0.0;
 
     return searcher.findPath(source, dest);
@@ -390,9 +395,11 @@ void Autonomous::mainLoop()
 
     //BallTracker tennisTracker = new BallTracker(); //automatically starts a thread to track the tennisball
     Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
+    std::cout << "next coords: " << nextCords.lat << " " << nextCords.lng << std::endl;
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
+        std::cout << "generating path" << std::endl;
         //FIXME: path not being generated
         std::list<Cell> path = GeneratePath(nextCords); //TODO generates the path to the given set of coords
         std::cout << "length of path: " << path.size() << std::endl;

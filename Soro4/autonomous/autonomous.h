@@ -90,6 +90,7 @@ private:
 		}
 	};
 
+    //FIXME: do we need these anymore?
 	/****
 	Comparator class for a min priority queue of Nodes. Compares nodes based on their f value.
 	*/
@@ -113,22 +114,23 @@ private:
 		}
 	};
 
+    //FIXME: why is everything static?
 	//Higher value means more avoidance from the algorithm
-	static const double DISTWEIGHT; //Weight given to the distance between two nodes when calculating cost
-	static const double UPWEIGHT; //Weight given to the difference in elevation when going up
-	static const double DOWNWEIGHT; //Weight given to the difference in elevation when going down
+    const double DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
+    const double UPWEIGHT = 1000.0; //Weight given to the difference in elevation when going up
+    const double DOWNWEIGHT = 1000.0; //Weight given to the difference in elevation when going down
 
-	static std::vector<std::vector<Cell>> map; //Matrix of Cell objects
-	static int maxx; //max x-value on the map
-	static int maxy; //max y-value on the map
-	static bool initialized; //are the map and max values initialized?
+    std::vector<std::vector<Cell>> map; //Matrix of Cell objects
+    int maxx; //max x-value on the map
+    int maxy; //max y-value on the map
+    bool initialized = false; //are the map and max values initialized?
 
 	//Returns a list of Nodes adjacent or diagonal from the chosen node
-	static std::list<Node> getNeighbors(Node& current, int destx, int desty);
+    std::list<Node> getNeighbors(Node& current, int destx, int desty);
 	//Returns the cost to reach the node specified by x and y from the source node
-	static double getGCost(Node current, int x, int y);
+    double getGCost(Node current, int x, int y);
 	//Returns the estimated cost to reach the destination node
-	static double getHeuristic(int destx, int desty, int x, int y);
+    double getHeuristic(int destx, int desty, int x, int y);
 
 public:
 
@@ -144,7 +146,7 @@ public:
 	return - a list of GPS coordinate pairs 50 meters apart forming a path from the source to the destination
 	*/
 	void initializeMap(std::vector<std::vector<Cell>>, int maxx, int maxy);
-	static std::list<Cell> findPath(Cell source, Cell dest);
+    std::list<Cell> findPath(Cell source, Cell dest);
 };
 
 
