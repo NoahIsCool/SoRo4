@@ -43,24 +43,28 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 	int desty = round((dest.lat - map[0][0].lat) / latDiff);
 
 	//Determine the difference in longitude between the first two columns
-	double lngDiff = map[1][0].lng - map[0][0].lng; //should be negative becasuse longitude proceeds east to west in NA
+    //FIXME: dont know if this is the best way to do it...Just multiplied it by -1 to ensure it is negative
+    double lngDiff = -1 *map[1][0].lng - map[0][0].lng; //should be negative becasuse longitude proceeds east to west in NA
+    std::cout << "starting point: " << map[0][0].lat << " " << map[0][0].lng << std::endl;
+    std::cout << "ending point: " << map[map.size()-1][map[0].size()-1].lat << " " << map[map.size()-1][map[0].size()-1].lng << std::endl;
 
 	//Find x coordinates
+    //FIXME: sourcex is some negative number...and is not negative
 	int sourcex = round((source.lng - map[0][0].lng) / lngDiff);
 	int destx = round((dest.lng - map[0][0].lng) / lngDiff);
 
-    //FIXME: this kept on being called. maybe a problem with the conditions?
 	//if any of the coordinates are out of bounds of the map, return the error cell
-    /*if ((sourcey > maxy) || (sourcey < 0) || (desty > maxy) || (desty < 0) || (sourcex > maxx) || (sourcex < 0) || (destx > maxx) || (destx < 0)) {
+    if ((sourcey > maxy) || (sourcey < 0) || (desty > maxy) || (desty < 0) || (sourcex > maxx) || (sourcex < 0) || (destx > maxx) || (destx < 0)) {
 		Cell error;
 		error.lat = -1.0;
 		error.lng = -1.0;
 		error.gradient = 0.0;
 		std::list<Cell> out;
 		out.push_front(error);
-        std::cout << "returning error" << std::endl;
+        std::cout << "outside map bounds?" << destx << " " << desty << " " << sourcex << " " << sourcey << std::endl;
+        std::cout << "max values: " << maxx << " " << maxy << std::endl;
 		return out;
-    }*/
+    }
 
 	//Create the source node and add it to the open list
 	std::priority_queue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
@@ -94,10 +98,10 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 	}
 
 	//create output list
-	std::list<Cell> out;
-    //FIXME: maybe copy constructor isnt working correctly? x and y are WAY outside of bounds.
+    std::list<Cell> out;
 	Node * interest = new Node(destNode);
 
+    //FIXME: something is wrong here. Crashes program
 	//ascend the parent tree, adding the corresponding GPS coordinates until we reach the source
 	do {
         //FIXME: interest->x and interest->y are outside of the maps bounds...
@@ -202,8 +206,8 @@ std::list<Cell> Autonomous::GeneratePath(Cell dest)
 	Cell source;
     source.lat = pos_llh.lat;
     source.lng = pos_llh.lon;
-    source.lat = -95;
-    source.lng = 35;
+    source.lat = 35.1999;
+    source.lng = -97.48;
 	source.gradient = 0.0;
 
     return searcher.findPath(source, dest);
@@ -372,8 +376,6 @@ std::vector< std::vector<Cell> > Autonomous::parseMap(){
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
 void Autonomous::mainLoop()
 {
-    //FIXME: this may be the problem...check into the maxx and maxy
-    //FIXME: always returning kill vector. Check the return error statement
     std::vector<std::vector<Cell>> map = parseMap();
     searcher.initializeMap(map,map.size(),map[0].size());
 
