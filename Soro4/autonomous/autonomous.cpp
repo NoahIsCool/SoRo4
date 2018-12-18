@@ -206,8 +206,9 @@ std::list<Cell> Autonomous::GeneratePath(Cell dest)
 	Cell source;
     source.lat = pos_llh.lat;
     source.lng = pos_llh.lon;
-    source.lat = 35.1999;
-    source.lng = -97.48;
+    //For at home testing without the gps system
+    //source.lat = 35.1999;
+    //source.lng = -97.48;
 	source.gradient = 0.0;
 
     return searcher.findPath(source, dest);
