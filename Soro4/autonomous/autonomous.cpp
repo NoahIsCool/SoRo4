@@ -5,8 +5,8 @@
 //this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
 
 //Higher value means more avoidance from the algorithm
-const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
 const double SearchAlgorithm::UPWEIGHT = 1000.0; //Weight given to the difference in elevation when going up
+const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
 const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the difference in elevation when going down
 Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
@@ -208,7 +208,7 @@ std::list<Cell> Autonomous::GeneratePath(Cell dest)
 //impliment much later
 bool Autonomous::isThereObstacle()
 {
-
+    return false;
 }
 
 //Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obstacle
@@ -351,7 +351,7 @@ void Autonomous::mainLoop()
 		}
 
         //loops through each of the coordinates to get to the next checkpoint
-        while(*it != nextCords) //travels to the next set of coords. 
+        while(*it != nextCords) //travels to the next set of coords.
         {
 			Cell currentCoords;
 			currentCoords.lat = pos_llh.lat;
