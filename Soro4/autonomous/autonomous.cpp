@@ -272,6 +272,7 @@ double Autonomous::getAngleToTurn(Cell next)
 //This finds the angle that the rover is at and if the rover is stuck. This will be inaccurate if the rover does a pivot turn
 //The way that it finds if the rover is stuck is if it is in the EXACT same position 6 times in a row (3 seconds) so this may need to be changed depending on the precision and noise of the GPS
 //TODO add the accelerometer information here (probably(?))
+//TODO need to change this to update every six times or something like that to filter out noise
 void Autonomous::updateStatus()
 {
     double longitude = pos_llh.lon;
@@ -296,7 +297,7 @@ void Autonomous::updateStatus()
         {
             isStuck = false;
             timesStuck = 0;
-            angle = std::atan((longitude - lastLongitude) / (latitude - lastLatitude)) * 180 / PI; //NOTE: sign is opposite of usual
+            angle = atan2(longitude - lastLongitude, latitude - lastLatitude) * 180 / PI;
 
             lastLatitude = latitude;
             lastLongitude = longitude;
