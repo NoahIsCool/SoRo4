@@ -259,8 +259,13 @@ double Autonomous::getAngleToTurn(Cell next)
 {
     double latitude = pos_llh.lat;
     double longitude = pos_llh.lon;
-    double target = std::atan((next.lng - longitude) / (next.lat - latitude)) * 180 / PI; //NOTE: angle sign is opposite of standard
-    return target - angle;
+    double target = atan2(next.lng - longitude, next.lat - latitude) * 180 / PI; //atan2 takes in parameters (y,x)...
+    double returnVal = angle - target;
+    while(returnVal > 180)
+        returnVal -= 360;
+    while(returnVal < -180)
+        returnVal += 360;
+    return returnVal;
 }
 
 //This is meant to be run as a thread the whole time the autonomous program is running.
