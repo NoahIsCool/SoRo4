@@ -5,8 +5,8 @@
 //this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
 
 //Higher value means more avoidance from the algorithm
-const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
 const double SearchAlgorithm::UPWEIGHT = 1000.0; //Weight given to the difference in elevation when going up
+const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
 const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the difference in elevation when going down
 Cell** SearchAlgorithm::map; //Matrix of Cell objects
 int SearchAlgorithm::maxx; //max x-value on the map
@@ -257,14 +257,20 @@ double Autonomous::getAngleToTurn(Cell next)
 {
     double latitude = pos_llh.lat;
     double longitude = pos_llh.lon;
-    double target = std::atan((next.lng - longitude) / (next.lat - latitude)) * 180 / PI; //NOTE: angle sign is opposite of standard
-    return target - angle;
+    double target = atan2(next.lng - longitude, next.lat - latitude) * 180 / PI; //atan2 takes in parameters (y,x)...
+    double returnVal = angle - target;
+    while(returnVal > 180)
+        returnVal -= 360;
+    while(returnVal < -180)
+        returnVal += 360;
+    return returnVal;
 }
 
 //This is meant to be run as a thread the whole time the autonomous program is running.
 //This finds the angle that the rover is at and if the rover is stuck. This will be inaccurate if the rover does a pivot turn
 //The way that it finds if the rover is stuck is if it is in the EXACT same position 6 times in a row (3 seconds) so this may need to be changed depending on the precision and noise of the GPS
 //TODO add the accelerometer information here (probably(?))
+//TODO need to change this to update every six times or something like that to filter out noise
 void Autonomous::updateStatus()
 {
     double longitude = pos_llh.lon;
@@ -289,7 +295,7 @@ void Autonomous::updateStatus()
         {
             isStuck = false;
             timesStuck = 0;
-            angle = std::atan((longitude - lastLongitude) / (latitude - lastLatitude)) * 180 / PI; //NOTE: sign is opposite of usual
+            angle = atan2(longitude - lastLongitude, latitude - lastLatitude) * 180 / PI;
 
             lastLatitude = latitude;
             lastLongitude = longitude;
@@ -349,7 +355,7 @@ void Autonomous::mainLoop()
 		}
 
         //loops through each of the coordinates to get to the next checkpoint
-        while(*it != nextCords) //travels to the next set of coords. 
+        while(*it != nextCords) //travels to the next set of coords.
         {
             Cell currentGPS;
             currentGPS.lat = pos_llh.lat;
