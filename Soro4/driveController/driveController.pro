@@ -25,14 +25,19 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += $$PWD/..
+LIBS = -L../../libs -lcore -lpthread
+
+QMAKE_CXXFLAGS += -std=c++11
+
 SOURCES += \
-        drivecontroller.cpp \
-    udp_mc_drive/gamepadmonitor.cpp
+        #drivecontroller.cpp \
+        gamepadmonitor.cpp
 
 HEADERS += \
-        drivecontroller.h \
+        #drivecontroller.h \
         drivecontroller_global.h \ 
-    udp_mc_drive/gamepadmonitor.h
+        gamepadmonitor.h
 
 #unix {
     target.path = $$PWD/
