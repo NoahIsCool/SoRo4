@@ -282,4 +282,3 @@ void GamepadMonitor::printVals() {
 GamepadMonitor::~GamepadMonitor() {
     delete m_gamepad;
 }
-

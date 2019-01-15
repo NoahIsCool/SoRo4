@@ -3,7 +3,7 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QTimer>
-#include "core/comms.h"
+#include <core/comms.h>
 
 QT_BEGIN_NAMESPACE
 class QGamepad;
