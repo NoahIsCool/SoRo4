@@ -259,7 +259,7 @@ double Autonomous::getAngleToTurn(Cell next)
 {
     double latitude = pos_llh.lat;
     double longitude = pos_llh.lon;
-    double target = atan2(next.lng - longitude, next.lat - latitude) * 180 / PI; //atan2 takes in parameters (y,x)...
+    double target = atan2(next.lat - latitude, next.lng - longitude) * 180 / PI; //atan2 takes in parameters (y,x)...
     double returnVal = angle - target;
     while(returnVal > 180)
         returnVal -= 360;
@@ -297,7 +297,7 @@ void Autonomous::updateStatus()
         {
             isStuck = false;
             timesStuck = 0;
-            angle = atan2(longitude - lastLongitude, latitude - lastLatitude) * 180 / PI;
+            angle = atan2(latitude - lastLatitude, longitude - lastLongitude) * 180 / PI;
 
             lastLatitude = latitude;
             lastLongitude = longitude;
