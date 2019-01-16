@@ -15,6 +15,9 @@ public:
     explicit driveWindow(QWidget *parent = nullptr);
     ~driveWindow();
 
+private slots:
+    void on_resetButton_pressed();
+
 private:
     Ui::driveWindow *ui;
 };

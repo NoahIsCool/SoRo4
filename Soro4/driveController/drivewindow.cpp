@@ -6,9 +6,16 @@ driveWindow::driveWindow(QWidget *parent) :
     ui(new Ui::driveWindow)
 {
     ui->setupUi(this);
+    ui->consoleList->addItem("Hello!");
 }
 
 driveWindow::~driveWindow()
 {
     delete ui;
+}
+
+void driveWindow::on_resetButton_pressed()
+{
+    ui->consoleList->clear();
+
 }
