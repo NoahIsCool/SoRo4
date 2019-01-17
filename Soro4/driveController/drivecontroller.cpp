@@ -7,6 +7,10 @@ DriveController::DriveController(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->consoleList->addItem("Hello!");
+
+    myGamepadMonitor = new GamepadMonitor();
+
+    connect(myGamepadMonitor, SIGNAL(errorEnountered(QString)), ui->consoleList, SLOT(addItem(QString)));
 }
 
 DriveController::~DriveController()
@@ -22,4 +26,7 @@ void DriveController::showWindow()
 void DriveController::on_resetButton_pressed()
 {
     ui->consoleList->clear();
+
+    delete myGamepadMonitor;
+    myGamepadMonitor = new GamepadMonitor();
 }

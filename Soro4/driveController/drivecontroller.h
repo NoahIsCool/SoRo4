@@ -4,6 +4,7 @@
 #include "drivecontroller_global.h"
 #include <QObject>
 #include <QWidget>
+#include "gamepadmonitor.h"
 
 namespace Ui {
 class DriveController;
@@ -22,6 +23,7 @@ private slots:
 
 private:
     Ui::DriveController *ui;
+    GamepadMonitor *myGamepadMonitor;
 };
 
 #endif // DRIVECONTROLLER_H
