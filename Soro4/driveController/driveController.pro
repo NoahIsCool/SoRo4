@@ -38,4 +38,4 @@ HEADERS += \
 #}
 
 FORMS += \
-    drivewindow.ui
+    drivecontroller.ui

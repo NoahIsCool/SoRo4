@@ -2,17 +2,26 @@
 #define DRIVECONTROLLER_H
 
 #include "drivecontroller_global.h"
-#include "drivewindow.h"
 #include <QObject>
+#include <QWidget>
 
-class DRIVECONTROLLERSHARED_EXPORT DriveController
+namespace Ui {
+class DriveController;
+}
+
+class DRIVECONTROLLERSHARED_EXPORT DriveController : public QWidget
 {
-private:
-    // lmao what are coding conventions???
-    driveWindow window;
+    Q_OBJECT
 public:
-    DriveController();
+    explicit DriveController(QWidget *parent = nullptr);
+    ~DriveController();
     void showWindow();
+
+private slots:
+    void on_resetButton_pressed();
+
+private:
+    Ui::DriveController *ui;
 };
 
 #endif // DRIVECONTROLLER_H

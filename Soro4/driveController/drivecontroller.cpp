@@ -1,12 +1,25 @@
 #include "drivecontroller.h"
+#include "ui_drivecontroller.h"
 
-DriveController::DriveController()
+DriveController::DriveController(QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::DriveController)
 {
+    ui->setupUi(this);
+    ui->consoleList->addItem("Hello!");
+}
 
+DriveController::~DriveController()
+{
+    delete ui;
 }
 
 void DriveController::showWindow()
 {
-    window.show();
+    this->show();
 }
 
+void DriveController::on_resetButton_pressed()
+{
+    ui->consoleList->clear();
+}
