@@ -4,34 +4,18 @@
 
 //this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
 
-//Higher value means more avoidance from the algorithm
-const double SearchAlgorithm::UPWEIGHT = 1000.0; //Weight given to the difference in elevation when going up
-const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
-const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the difference in elevation when going down
-Cell** SearchAlgorithm::map; //Matrix of Cell objects
-int SearchAlgorithm::maxx; //max x-value on the map
-int SearchAlgorithm::maxy; //max y-value on the map
-bool SearchAlgorithm::initialized = false; //are the map and max values initialized?
-
-void SearchAlgorithm::initializeMap(Cell ** map, int maxx, int maxy)
+SearchAlgorithm::SearchAlgorithm(Cell ** map, int maxx, int maxy, double distWeight, double upWeight, double downWeight)
 {
-	//Change the static class members to their provided values
-	SearchAlgorithm::map = map;
-	SearchAlgorithm::maxx = maxx;
-	SearchAlgorithm::maxy = maxy;
-	initialized = true;
+	this->map = map;
+	this->maxx = maxx;
+	this->maxy = maxy;
+	this->DISTWEIGHT = distWeight;
+	this->UPWEIGHT = upWeight;
+	this->DOWNWEIGHT = downWeight;
 }
 
 std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 {
-	//if the map is not initialized, print out a list containing only source and dest
-	if (!initialized) {
-		std::list<Cell> out;
-		out.push_front(dest);
-		out.push_front(source);
-		return out;
-	}
-
 	//Determine the x and y values of the source and destination from their latitude and longitude
 
 	//Determine the difference in latitude between the first two rows
@@ -50,13 +34,7 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 
 	//if any of the coordinates are out of bounds of the map, return the error cell
 	if ((sourcey > maxy) || (sourcey < 0) || (desty > maxy) || (desty < 0) || (sourcex > maxx) || (sourcex < 0) || (destx > maxx) || (destx < 0)) {
-		Cell error;
-		error.lat = -1.0;
-		error.lng = -1.0;
-		error.gradient = 0.0;
-		std::list<Cell> out;
-		out.push_front(error);
-		return out;
+		throw AStarException("Source or destination coordinates are out of bounds.\nSource: " + std::to_string(sourcex) + ", " + std::to_string(sourcey) + " Dest: " + std::to_string(destx) + ", " + std::to_string(desty));
 	}
 
 	//Create the source node and add it to the open list
@@ -64,13 +42,13 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 	std::set<Node, compareNodes2> closed;
 
 	Node sourceNode(sourcex, sourcey, nullptr, 0.0, 0.0);
-	Node destNode(destx, desty, &sourceNode, 0.0, 0.0); //CHNG 10/3: changed 'nullptr' to '&sourceNode'. This will change no-path output
+	Node destNode(destx, desty, &sourceNode, 0.0, 0.0); 
 	open.push(sourceNode);
 
 	//Loop while there are still elements in the open list
 	while (!open.empty()) {
 		//Add the best element in the open list to the closed list
-		Node * current = new Node(open.top()); //CHNG 10/3: to prevent a weird bug that made each node its own parent
+		Node * current = new Node(open.top());
 		open.pop();
 
 		//if that element is the destination, we're done with the loop
@@ -98,16 +76,12 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 	do {
 		Cell cell = map[interest->x][interest->y];
 
-        Cell *pair = new Cell(); //CHNG 10/5: dynamically allocated array to avoid the overwriting problem
-        pair->lat = cell.lat;
-        pair->lng = cell.lng;
-
-        out.push_front(*pair);
+		Cell *pair = new Cell(cell.lat, cell.lng, 0.0);
+		
+		out.push_front(*pair);
 
 		interest = interest->parent;
 	} while (interest != nullptr);
-
-	//CHNG 10/3: interest interest might be assigned to a null pointer, so changed it to a pointer
 
 	//return output list
 	return out;

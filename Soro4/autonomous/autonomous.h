@@ -15,7 +15,13 @@
 #include <iostream>
 #include <queue>
 #include <set>
+#include <stdexcept>
 #include <unistd.h>
+
+class AStarException : public std::runtime_error {
+public:
+	AStarException(const std::string& message) : runtime_error(message) {};
+};
 
 class SearchAlgorithm {
 private:
@@ -110,39 +116,35 @@ private:
 	};
 
 	//Higher value means more avoidance from the algorithm
-	static const double DISTWEIGHT; //Weight given to the distance between two nodes when calculating cost
-	static const double UPWEIGHT; //Weight given to the difference in elevation when going up
-	static const double DOWNWEIGHT; //Weight given to the difference in elevation when going down
+	double DISTWEIGHT; //Weight given to the distance between two nodes when calculating cost
+	double UPWEIGHT; //Weight given to the difference in elevation when going up
+	double DOWNWEIGHT; //Weight given to the difference in elevation when going down
 
-	static Cell** map; //Matrix of Cell objects
-	static int maxx; //max x-value on the map
-	static int maxy; //max y-value on the map
-	static bool initialized; //are the map and max values initialized?
+	Cell** map; //Matrix of Cell objects
+	int maxx; //max x-value on the map
+	int maxy; //max y-value on the map
 
 	//Returns a list of Nodes adjacent or diagonal from the chosen node
-	static std::list<Node> getNeighbors(Node& current, int destx, int desty);
+	std::list<Node> getNeighbors(Node& current, int destx, int desty);
 	//Returns the cost to reach the node specified by x and y from the source node
-	static double getGCost(Node current, int x, int y);
+	double getGCost(Node current, int x, int y);
 	//Returns the estimated cost to reach the destination node
-	static double getHeuristic(int destx, int desty, int x, int y);
+	double getHeuristic(int destx, int desty, int x, int y);
 
 public:
 
 	/****
 	Performs a* pathfinding over the topographic map and returns the best path. The first method must be run first to
-
 	double* source - latitude and longitude of the source in decimal degrees, expected in the format: latutude, longitude
 	double* dest - latitude and longitude of the destination in decimal degrees, expected in the format: latitude, longitude
 	Cell** map - a matrix of cell objects representing the topographic map
 	int maxx - the maximum x value of the matrix
 	int maxy - the maximum y value of the matrix
-
 	return - a list of GPS coordinate pairs 50 meters apart forming a path from the source to the destination
 	*/
-	void initializeMap(Cell** map, int maxx, int maxy);
-	static std::list<Cell> findPath(Cell source, Cell dest);
+	SearchAlgorithm(Cell** map, int maxx, int maxy, double distWeight, double upWeight, double downWeight);
+	std::list<Cell> findPath(Cell source, Cell dest);
 };
-
 
 class AUTONOMOUSSHARED_EXPORT Autonomous : public QObject
 {
