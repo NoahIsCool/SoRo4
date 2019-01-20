@@ -1,10 +1,10 @@
-﻿#include "drivesystem.h"
+﻿#include "socket.h"
 // my laptop is 10.0.0.3 (WIFI)
 // soro desktop is 192.168.1.100
 
-DriveSystem::DriveSystem(QObject *parent) : QObject(parent)
+socket::socket(QObject *parent) : QObject(parent)
 {
-    /*char tmp[10];
+    char tmp[10];
     // start the file
     for(int i = 0; i < 40; i++){
         sprintf(tmp, "dataFile%d.csv",i);
@@ -13,7 +13,7 @@ DriveSystem::DriveSystem(QObject *parent) : QObject(parent)
             dataFile = fopen(tmp,"w");
             break;
         }
-    }*/
+    }
     // timer to handle udp signal loss
     signalTimer = new QTimer();
     signalTimer->start(2000);
@@ -41,8 +41,7 @@ DriveSystem::DriveSystem(QObject *parent) : QObject(parent)
     // udp sockets
     socketIn = new QUdpSocket(this);
     //socketOut = new QUdpSocket(this);
-    //if(socketIn->bind(QHostAddress("10.0.0.3"), 1237))//"192.168.1.102"), 1234))
-    if(socketIn->bind(QHostAddress::Any,1237))
+    if(socketIn->bind(QHostAddress("10.0.0.3"), 1237))//"192.168.1.102"), 1234))
     {
         qDebug() << "Bound to port 1234";
     } else {
@@ -51,7 +50,7 @@ DriveSystem::DriveSystem(QObject *parent) : QObject(parent)
     connect(socketIn, SIGNAL(readyRead()), this, SLOT(readUDP()));
 }
 
-void DriveSystem::sendUDP(const char* message) // ******** CURRENTLY UNUSED
+void socket::sendUDP(const char* message) // ******** CURRENTLY UNUSED
 {
     QByteArray Data;
     Data.append(message);
@@ -61,14 +60,14 @@ void DriveSystem::sendUDP(const char* message) // ******** CURRENTLY UNUSED
     socketIn->writeDatagram(Data, QHostAddress("10.0.0.2"), 1237);//"192.168.1.103"), 1237);
 }
 
-void DriveSystem::sendUDP(QByteArray data) // ******** CURRENTLY UNUSED
+void socket::sendUDP(QByteArray data) // ******** CURRENTLY UNUSED
 {
     // qint64 QUdpSocket::writeDatagram(const QByteArray & datagram,
     //                      const QHostAddress & host, quint16 port)
     socketIn->writeDatagram(data, QHostAddress("10.0.0.2"), 1237);//"192.168.1.103"), 1237);
 }
 
-void DriveSystem::readUDP()
+void socket::readUDP()
 {
     QByteArray buffer;
     buffer.resize(socketIn->pendingDatagramSize());
@@ -169,19 +168,19 @@ void DriveSystem::readUDP()
     }
 }
 
-void DriveSystem::sendSerial(QSerialPort* port, const char* message) // not really necessary to make this a separate function
+void socket::sendSerial(QSerialPort* port, const char* message) // not really necessary to make this a separate function
 {
     QByteArray data;
     data.append(message);
     port->write(data);
 }
 
-void DriveSystem::sendSerial(QSerialPort* port, QByteArray message) // not really necessary to make this a separate function
+void socket::sendSerial(QSerialPort* port, QByteArray message) // not really necessary to make this a separate function
 {
     port->write(message);
 }
 
-void DriveSystem::sendSerialAll(const char* message) // for send serial all, do not include start line and device id bytes in data
+void socket::sendSerialAll(const char* message) // for send serial all, do not include start line and device id bytes in data
 {
     for(int i = 0; i < serialPorts.size(); i++)
     {
@@ -193,7 +192,7 @@ void DriveSystem::sendSerialAll(const char* message) // for send serial all, do 
     }
 }
 
-void DriveSystem::sendSerialAll(QByteArray message) // for send serial all, do not include start line and device id bytes in data
+void socket::sendSerialAll(QByteArray message) // for send serial all, do not include start line and device id bytes in data
 {
     // currently sends the data to all connected serial devices
     for(int i = 0; i < serialPorts.size(); i++)
@@ -206,14 +205,14 @@ void DriveSystem::sendSerialAll(QByteArray message) // for send serial all, do n
     }
 }
 
-void DriveSystem::readSerial()
+void socket::readSerial()
 {
     QSerialPort* port;
     port = dynamic_cast<QSerialPort*>(sender());
     const QByteArray buffer = port->readAll();
 
     printf(buffer);
-    //fprintf(dataFile,buffer);
+    fprintf(dataFile,buffer);
 
     if(buffer.at(0) == -126) // incorrect id
     {
@@ -250,7 +249,7 @@ void DriveSystem::readSerial()
     }
 }
 
-void DriveSystem::zeroDevices()
+void socket::zeroDevices()
 {
     //when you lose connection, tell all devices that all inputs are zero
     QByteArray stopBuffer;

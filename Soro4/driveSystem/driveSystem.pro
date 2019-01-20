@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += network
+QT       += network serialport
 
 QT       -= gui
 
@@ -30,8 +30,7 @@ SOURCES += \
 
 HEADERS += \
         drivesystem.h \
-        drivesystem_global.h \ 
-    drivesystem.h
+        drivesystem_global.h \
 
 #unix {
     target.path = $$PWD/

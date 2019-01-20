@@ -1,4 +1,4 @@
-QT       += network
+QT       += network serialport
 
 QT -= gui
 

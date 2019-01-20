@@ -1,5 +1,5 @@
-﻿#ifndef DRIVESYSTEM_H
-#define DRIVESYSTEM_H
+﻿#ifndef SOCKET_H
+#define SOCKET_H
 
 #include <QObject>
 #include <QUdpSocket>
@@ -21,12 +21,12 @@ inline bool operator ==(const data_path &dp1, const data_path &dp2)
     return (dp1.address == dp2.address)*(dp1.port == dp2.port)*(dp1.deviceId == dp2.deviceId);
 }
 
-class DriveSystem : public QObject
+class socket : public QObject
 {
     Q_OBJECT
 public:
     FILE *dataFile;
-    explicit DriveSystem(QObject *parent = nullptr);
+    explicit socket(QObject *parent = nullptr);
     void sendUDP(QByteArray data);
     void sendUDP(const char* message);
     void sendSerial(QSerialPort* port, QByteArray message);

@@ -16,11 +16,11 @@ int main(int argc, char *argv[])
     gps_init(ip, host);*/
 
 #ifdef DRIVE_SYSTEM
-    DriveSystem drive;
+    DriveSystem driveSystem;
 #elif AUTONOMOUS
     Autonomous autonomous;
 #endif
 
-    gps_finish();
+    //gps_finish();
     return a.exec();
 }
