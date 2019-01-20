@@ -6,11 +6,11 @@ DriveController::DriveController(QWidget *parent) :
     ui(new Ui::DriveController)
 {
     ui->setupUi(this);
-    ui->consoleList->addItem("Hello!");
+    addConsoleMessage("Hello!");
 
-    myGamepadMonitor = new GamepadMonitor();
-
-    connect(myGamepadMonitor, SIGNAL(errorEnountered(QString)), ui->consoleList, SLOT(addItem(QString)));
+    myGamepadMonitor = new GamepadMonitor(this);
+    connect(myGamepadMonitor, SIGNAL(errorEncountered(QString)), this, SLOT(addConsoleMessage(QString)));
+    myGamepadMonitor->init();
 }
 
 DriveController::~DriveController()
@@ -23,10 +23,19 @@ void DriveController::showWindow()
     this->show();
 }
 
+void DriveController::addConsoleMessage(QString message)
+{
+    ui->consoleList->addItem(message);
+}
+
 void DriveController::on_resetButton_pressed()
 {
     ui->consoleList->clear();
 
+    disconnect(myGamepadMonitor, SIGNAL(errorEncountered(QString)), this, SLOT(addConsoleMessage(QString)));
     delete myGamepadMonitor;
-    myGamepadMonitor = new GamepadMonitor();
+
+    myGamepadMonitor = new GamepadMonitor(this);
+    connect(myGamepadMonitor, SIGNAL(errorEncountered(QString)), this, SLOT(addConsoleMessage(QString)));
+    myGamepadMonitor->init();
 }

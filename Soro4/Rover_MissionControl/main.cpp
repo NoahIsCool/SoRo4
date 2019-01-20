@@ -1,5 +1,5 @@
 #include <QApplication>
-#include "../driveController/drivecontroller.h"
+#include "driveController/drivecontroller.h"
 
 int main(int argc, char *argv[])
 {

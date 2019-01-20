@@ -7,8 +7,14 @@
 
 GamepadMonitor::GamepadMonitor( QObject *parent)
     : QObject(parent)
-    , m_gamepad(nullptr)
 {
+
+}
+
+void GamepadMonitor::init()
+{
+    m_gamepad = new QGamepad();
+
     // make sure gamepads are connected
     auto gamepads = QGamepadManager::instance()->connectedGamepads();
     if (gamepads.isEmpty()) {

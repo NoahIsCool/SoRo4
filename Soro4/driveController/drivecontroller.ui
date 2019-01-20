@@ -16,8 +16,8 @@
   <widget class="QPushButton" name="resetButton">
    <property name="geometry">
     <rect>
-     <x>70</x>
-     <y>230</y>
+     <x>10</x>
+     <y>270</y>
      <width>89</width>
      <height>25</height>
     </rect>
@@ -29,10 +29,10 @@
   <widget class="QListWidget" name="consoleList">
    <property name="geometry">
     <rect>
-     <x>70</x>
-     <y>20</y>
-     <width>256</width>
-     <height>192</height>
+     <x>10</x>
+     <y>10</y>
+     <width>381</width>
+     <height>251</height>
     </rect>
    </property>
   </widget>

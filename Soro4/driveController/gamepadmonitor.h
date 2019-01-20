@@ -15,6 +15,7 @@ class GamepadMonitor : public QObject
 public:
     explicit GamepadMonitor(QObject *parent = nullptr);
     ~GamepadMonitor();
+    void init();
 
 signals:
     void errorEncountered(QString errorMessage); // emitted if setup of this or its subobject(s) fails

@@ -18,6 +18,9 @@ public:
     ~DriveController();
     void showWindow();
 
+public slots:
+    void addConsoleMessage(QString message);
+
 private slots:
     void on_resetButton_pressed();
 
