@@ -37,14 +37,11 @@ std::vector<double> Autonomous::getWheelSpeedValues(double amountOff, double bas
 }
 
 //Returns a list of cells from the rover's current location to the specified destination
-std::list<Cell> Autonomous::GeneratePath(Cell dest)
+std::list<Cell> Autonomous::GeneratePath(Cell dest, SearchAlgorithm& alg)
 {
-	Cell source;
-    source.lat = pos_llh.lat;
-    source.lng = pos_llh.lon;
-	source.gradient = 0.0;
+	Cell source(pos_llh.lat, pos_llh.lon, 0.0);
 
-    return searcher.findPath(source, dest);
+    return alg.findPath(source, dest);
 }
 
 //impliment much later
@@ -188,21 +185,20 @@ void Autonomous::mainLoop()
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-      std::list<Cell> path = GeneratePath(nextCords); //TODO generates the path to the given set of coords
-			std::list<Cell>::iterator it = path.begin();
-
-			//if the first value is the kill vector, there was an error generating the path, prompt for input and restart the loop
-			if (*it == killVector) {
-        nextCords = inputNextCoords(); //gets the next set of coords
+			try {
+      	std::list<Cell> path = GeneratePath(nextCords);
+			} catch (AStarException e) {
+				nextCords = inputNextCoords(); //gets the next set of coords
 				continue;
 			}
+
+			std::list<Cell>::iterator it = path.begin();
 
         //loops through each of the coordinates to get to the next checkpoint
         while(*it != nextCords) //travels to the next set of coords.
         {
-            Cell currentGPS;
-            currentGPS.lat = pos_llh.lat;
-            currentGPS.lng = pos_llh.lon;
+            Cell currentGPS(pos_llh.lat, pos_llh.lon, 0.0);
+
             while(currentGPS != *it) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
                 if(isThereObstacle())
