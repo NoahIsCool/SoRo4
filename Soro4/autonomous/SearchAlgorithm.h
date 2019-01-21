@@ -1,8 +1,11 @@
+#pragma once
+
 #include "core/core.h"
 #include <list>
+#include <stdexcept>
+#include <string>
 #include <queue>
 #include <set>
-#include <stdexcept>
 
 class AStarException : public std::runtime_error {
 public:

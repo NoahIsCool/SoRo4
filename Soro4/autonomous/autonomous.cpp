@@ -166,7 +166,9 @@ void Autonomous::mainLoop()
 {
 	//placeholder
     //FIXME: get this from rob
-    //searcher.parseMap();
+    //map = searcher.parseMap();
+		//FIXME: need map, MAXX, MAXY from rob
+		//SearchAlgorithm searchAlg(map, EXTX, EXTY, 1.0, 1000.0, 1000.0)
 
     threadsRunning = true;
     std::thread statusThread(&Autonomous::updateStatus,this);
@@ -186,14 +188,14 @@ void Autonomous::mainLoop()
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-        std::list<Cell> path = GeneratePath(nextCords); //TODO generates the path to the given set of coords
-		std::list<Cell>::iterator it = path.begin();
+      std::list<Cell> path = GeneratePath(nextCords); //TODO generates the path to the given set of coords
+			std::list<Cell>::iterator it = path.begin();
 
-		//if the first value is the kill vector, there was an error generating the path, prompt for input and restart the loop
-		if (*it == killVector) {
-            nextCords = inputNextCoords(); //gets the next set of coords
-			continue;
-		}
+			//if the first value is the kill vector, there was an error generating the path, prompt for input and restart the loop
+			if (*it == killVector) {
+        nextCords = inputNextCoords(); //gets the next set of coords
+				continue;
+			}
 
         //loops through each of the coordinates to get to the next checkpoint
         while(*it != nextCords) //travels to the next set of coords.
