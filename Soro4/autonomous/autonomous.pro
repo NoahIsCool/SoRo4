@@ -30,10 +30,12 @@ LIBS = -L../../libs -lcore
 
 SOURCES += \
         autonomous.cpp
+        SearchAlgorithm.cpp
 
 HEADERS += \
         autonomous.h \
-        autonomous_global.h 
+        autonomous_global.h
+        SearchAlgorithm.h
 
 #unix {
     target.path = $$PWD
