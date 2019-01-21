@@ -40,9 +40,7 @@ DriveSystem::DriveSystem(QObject *parent) : QObject(parent)
 
     // udp sockets
     socketIn = new QUdpSocket(this);
-    //socketOut = new QUdpSocket(this);
-    //if(socketIn->bind(QHostAddress("10.0.0.3"), 1237))//"192.168.1.102"), 1234))
-    if(socketIn->bind(QHostAddress::Any,1237))
+    if(socketIn->bind(QHostAddress("10.0.0.2"),1234))
     {
         qDebug() << "Bound to port 1234";
     } else {
@@ -76,8 +74,10 @@ void DriveSystem::readUDP()
     quint16 senderPort;
     socketIn->readDatagram(buffer.data(), buffer.size(), &sender, &senderPort);
 
-    qDebug() << "Message from: " << sender.toString();
-    qDebug() << "Message port: " << senderPort;
+    //qDebug() << "Message from: " << sender.toString();
+    //qDebug() << "Message port: " << senderPort;
+    //qDebug() << buffer;
+
     /*
     for(int i = 0; i < buffer.size(); i++)
     {
@@ -92,7 +92,7 @@ void DriveSystem::readUDP()
 
     // mc gives data to be sent to some device
     // format: -127, device id, [the rest of the message bytes]
-    if(buffer.at(0) == -127)
+    if((qint8)buffer.at(0) == -127)
     {
         for(int i = 0; i < serialPorts.size(); i++)
         {
@@ -113,7 +113,7 @@ void DriveSystem::readUDP()
     }
     // mc computer is requesting data from a device
     // format: -126, device id, ip1, ip2, ip3, ip4, port high, port low
-    else if(buffer.at(0) == -126)
+    else if((qint8)buffer.at(0) == -126)
     {
         data_path temp;
         bool exists = false;
@@ -145,7 +145,7 @@ void DriveSystem::readUDP()
     // mc is requesting a list of the devices it recieves data from
     // format (input): -125, mc ip, mc port
     // format (output): -125, number of devices, device id 1, device id...
-    if(buffer.at(0) == -125)
+    if((qint8)buffer.at(0) == -125)
     {
         int temp_port;
         char temp_address[15];
@@ -165,7 +165,7 @@ void DriveSystem::readUDP()
         buffer.append(uint8_t(idArray.size()));
         buffer.append(idArray);
 
-        socketIn->writeDatagram(buffer, QHostAddress(temp_address), temp_port);
+        socketIn->writeDatagram(buffer, QHostAddress("10.0.0.4"), 1237);
     }
 }
 
@@ -214,8 +214,10 @@ void DriveSystem::readSerial()
 
     printf(buffer);
     //fprintf(dataFile,buffer);
+    //qDebug() << buffer;
+    //qDebug() << (qint8)buffer.at(0);
 
-    if(buffer.at(0) == -126) // incorrect id
+    if((qint8)buffer.at(0) == -126) // incorrect id
     {
         for(int i = 0; i < serialPorts.size(); i++)
         {
@@ -226,16 +228,16 @@ void DriveSystem::readSerial()
             }
         }
     }
-    else if(buffer.at(0) == -127) // to be relayed to a mc computer
+    else if((qint8)buffer.at(0) == -127) // to be relayed to a mc computer
     {
-        /*
+        
         for(int i = 0; i < buffer.size(); i++)
         {
             int8_t temp = buffer.at(i);
             printf("%d,\t", temp);
         }
         printf("\n");
-        */
+        /*
         for(int i = 0; i < serialPorts.size(); i++)
         {
             if(serialPorts.at(i) == port)
@@ -247,6 +249,7 @@ void DriveSystem::readSerial()
                 }
             }
         }
+	*/
     }
 }
 

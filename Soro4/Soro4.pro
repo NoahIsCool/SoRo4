@@ -4,11 +4,11 @@ SUBDIRS += \
     core \
     autonomous \
     driveSystem \
+    RoverMain \
     slaveArm \
     driveController \
     masterArm \
     #videoServer \
-    RoverMain \
     Rover_MissionControl \
     #videoStreamer
 

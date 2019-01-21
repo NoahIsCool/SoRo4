@@ -12,10 +12,10 @@ MAKEFILE      = Makefile
 
 CC            = gcc
 CXX           = g++
-DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_NO_DEBUG -DQT_NETWORK_LIB -DQT_CORE_LIB
+DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_NO_DEBUG -DQT_NETWORK_LIB -DQT_SERIALPORT_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -O2 -std=c++0x -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I. -I../../Soro4 -isystem /usr/include/gstreamer-1.0 -isystem /usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/lib/arm-linux-gnueabihf/glib-2.0/include -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtNetwork -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -I. -I/usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++
+INCPATH       = -I. -I../../Soro4 -isystem /usr/include/gstreamer-1.0 -isystem /usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/lib/arm-linux-gnueabihf/glib-2.0/include -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtNetwork -isystem /usr/include/aarch64-linux-gnu/qt5/QtSerialPort -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -I. -I/usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++
 QMAKE         = /usr/lib/aarch64-linux-gnu/qt5/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -36,7 +36,7 @@ DISTNAME      = RoverMain1.0.0
 DISTDIR = /home/nvidia/soro4/SoRo4/Soro4/RoverMain/.tmp/RoverMain1.0.0
 LINK          = g++
 LFLAGS        = -Wl,--rpath=\$$ORIGIN/../libs -Wl,-O1
-LIBS          = $(SUBLIBS) -L../../libs -lautonomous -ldriveSystem -lslaveArm -lcore -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -lQt5Network -lQt5Core -lpthread 
+LIBS          = $(SUBLIBS) -L../../libs -lautonomous -ldriveSystem -lslaveArm -lcore -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -lQt5Network -lQt5SerialPort -lQt5Core -lpthread 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -78,6 +78,7 @@ DIST          = /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_platformsupport_private.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport_private.pri \
+		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_serialport.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql_private.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_testlib.pri \
@@ -165,6 +166,7 @@ Makefile: RoverMain.pro /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++/qmake.c
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_platformsupport_private.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport_private.pri \
+		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_serialport.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql_private.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_testlib.pri \
@@ -194,6 +196,7 @@ Makefile: RoverMain.pro /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++/qmake.c
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/lex.prf \
 		RoverMain.pro \
 		/usr/lib/aarch64-linux-gnu/libQt5Network.prl \
+		/usr/lib/aarch64-linux-gnu/libQt5SerialPort.prl \
 		/usr/lib/aarch64-linux-gnu/libQt5Core.prl
 	$(QMAKE) -o Makefile RoverMain.pro
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/spec_pre.prf:
@@ -224,6 +227,7 @@ Makefile: RoverMain.pro /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++/qmake.c
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_platformsupport_private.pri:
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport.pri:
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport_private.pri:
+/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_serialport.pri:
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql.pri:
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql_private.pri:
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_testlib.pri:
@@ -253,6 +257,7 @@ Makefile: RoverMain.pro /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++/qmake.c
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/lex.prf:
 RoverMain.pro:
 /usr/lib/aarch64-linux-gnu/libQt5Network.prl:
+/usr/lib/aarch64-linux-gnu/libQt5SerialPort.prl:
 /usr/lib/aarch64-linux-gnu/libQt5Core.prl:
 qmake: FORCE
 	@$(QMAKE) -o Makefile RoverMain.pro
@@ -313,7 +318,8 @@ main.o: main.cpp ../../Soro4/autonomous/autonomous.h \
 		../core/gps/sbp.h \
 		../core/gps/common.h \
 		../core/gps/system.h \
-		../core/gps/navigation.h
+		../core/gps/navigation.h \
+		../../Soro4/driveSystem/drivesystem.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 ####### Install

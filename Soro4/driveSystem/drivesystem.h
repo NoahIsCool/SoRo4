@@ -3,11 +3,14 @@
 
 #include <QObject>
 #include <QUdpSocket>
-#include <QSerialPort>
-#include <QSerialPortInfo>
+#include <QtSerialPort/QtSerialPort>
+//#include <QSerialPort>
+#include <QtSerialPort/QSerialPortInfo>
 #include <QList>
 #include <QTimer>
 #include <stdio.h>
+
+#include <stdint.h>
 
 // struct to hold info about what data (from a serial device) goes to what computer (udp stuff)
 struct data_path {

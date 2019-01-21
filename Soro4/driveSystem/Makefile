@@ -12,10 +12,10 @@ MAKEFILE      = Makefile
 
 CC            = gcc
 CXX           = g++
-DEFINES       = -DDRIVESYSTEM_LIBRARY -DQT_DEPRECATED_WARNINGS -DQT_NO_DEBUG -DQT_NETWORK_LIB -DQT_CORE_LIB
+DEFINES       = -DDRIVESYSTEM_LIBRARY -DQT_DEPRECATED_WARNINGS -DQT_NO_DEBUG -DQT_NETWORK_LIB -DQT_SERIALPORT_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-CXXFLAGS      = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I. -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtNetwork -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -I. -I/usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++
+CXXFLAGS      = -pipe -std=c++11 -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
+INCPATH       = -I. -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtNetwork -isystem /usr/include/aarch64-linux-gnu/qt5/QtSerialPort -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -I. -I/usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++
 QMAKE         = /usr/lib/aarch64-linux-gnu/qt5/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -36,7 +36,7 @@ DISTNAME      = driveSystem1.0.0
 DISTDIR = /home/nvidia/soro4/SoRo4/Soro4/driveSystem/.tmp/driveSystem1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-O1 -shared -Wl,-soname,libdriveSystem.so.1
-LIBS          = $(SUBLIBS) -lQt5Network -lQt5Core -lpthread 
+LIBS          = $(SUBLIBS) -lQt5Network -lQt5SerialPort -lQt5Core -lpthread 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -48,8 +48,9 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = drivesystem.cpp 
-OBJECTS       = drivesystem.o
+SOURCES       = drivesystem.cpp moc_drivesystem.cpp
+OBJECTS       = drivesystem.o \
+		moc_drivesystem.o
 DIST          = /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -78,6 +79,7 @@ DIST          = /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_platformsupport_private.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport_private.pri \
+		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_serialport.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql_private.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_testlib.pri \
@@ -190,6 +192,7 @@ Makefile: driveSystem.pro /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++/qmake
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_platformsupport_private.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport_private.pri \
+		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_serialport.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql_private.pri \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_testlib.pri \
@@ -218,6 +221,7 @@ Makefile: driveSystem.pro /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++/qmake
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/lex.prf \
 		driveSystem.pro \
 		/usr/lib/aarch64-linux-gnu/libQt5Network.prl \
+		/usr/lib/aarch64-linux-gnu/libQt5SerialPort.prl \
 		/usr/lib/aarch64-linux-gnu/libQt5Core.prl
 	$(QMAKE) -o Makefile driveSystem.pro
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/spec_pre.prf:
@@ -248,6 +252,7 @@ Makefile: driveSystem.pro /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++/qmake
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_platformsupport_private.pri:
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport.pri:
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport_private.pri:
+/usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_serialport.pri:
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql.pri:
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql_private.pri:
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/modules/qt_lib_testlib.pri:
@@ -276,6 +281,7 @@ Makefile: driveSystem.pro /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++/qmake
 /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/lex.prf:
 driveSystem.pro:
 /usr/lib/aarch64-linux-gnu/libQt5Network.prl:
+/usr/lib/aarch64-linux-gnu/libQt5SerialPort.prl:
 /usr/lib/aarch64-linux-gnu/libQt5Core.prl:
 qmake: FORCE
 	@$(QMAKE) -o Makefile driveSystem.pro
@@ -316,8 +322,12 @@ check: first
 
 compiler_rcc_make_all:
 compiler_rcc_clean:
-compiler_moc_header_make_all:
+compiler_moc_header_make_all: moc_drivesystem.cpp
 compiler_moc_header_clean:
+	-$(DEL_FILE) moc_drivesystem.cpp
+moc_drivesystem.cpp: drivesystem.h
+	/usr/lib/aarch64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/nvidia/soro4/SoRo4/Soro4/driveSystem -I/usr/include/aarch64-linux-gnu/qt5 -I/usr/include/aarch64-linux-gnu/qt5/QtNetwork -I/usr/include/aarch64-linux-gnu/qt5/QtSerialPort -I/usr/include/aarch64-linux-gnu/qt5/QtCore -I/usr/include/c++/5 -I/usr/include/aarch64-linux-gnu/c++/5 -I/usr/include/c++/5/backward -I/usr/lib/gcc/aarch64-linux-gnu/5/include -I/usr/local/include -I/usr/lib/gcc/aarch64-linux-gnu/5/include-fixed -I/usr/include/aarch64-linux-gnu -I/usr/include drivesystem.h -o moc_drivesystem.cpp
+
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
 compiler_yacc_decl_make_all:
@@ -326,13 +336,15 @@ compiler_yacc_impl_make_all:
 compiler_yacc_impl_clean:
 compiler_lex_make_all:
 compiler_lex_clean:
-compiler_clean: 
+compiler_clean: compiler_moc_header_clean 
 
 ####### Compile
 
-drivesystem.o: drivesystem.cpp drivesystem.h \
-		drivesystem_global.h
+drivesystem.o: drivesystem.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o drivesystem.o drivesystem.cpp
+
+moc_drivesystem.o: moc_drivesystem.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_drivesystem.o moc_drivesystem.cpp
 
 ####### Install
 
