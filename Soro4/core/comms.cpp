@@ -1,4 +1,4 @@
-#include "comms.h"
+﻿#include "comms.h"
 
 comms::comms(const char* config_file, QObject *parent) : QObject(parent)
 {
@@ -11,7 +11,7 @@ comms::comms(const char* config_file, QObject *parent) : QObject(parent)
     }
     // create udp socket and try to bind
     udpSocket = new QUdpSocket(this);
-    if(udpSocket->bind(QHostAddress(recieve_ip), recieve_port))
+    if(udpSocket->bind(QHostAddress::Any, recieve_port))
     {
         qDebug() << "Bound to" << recieve_ip << ":" << recieve_port;
         connect(udpSocket, SIGNAL(readyRead()), this, SLOT(readMessage()));

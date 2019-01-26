@@ -1,4 +1,4 @@
-#include "gamepadmonitor.h"
+﻿#include "gamepadmonitor.h"
 #include <cmath>
 #include <QtGamepad/QGamepad>
 #include <QDebug>
@@ -9,20 +9,22 @@ GamepadMonitor::GamepadMonitor( QObject *parent)
     : QObject(parent)
     , m_gamepad(nullptr)
 {
-    // make sure gamepads are connected
-    auto gamepads = QGamepadManager::instance()->connectedGamepads();
-    if (gamepads.isEmpty()) {
-        errorString = "No gamepads detected";
+
+    // attempt to set up communication ip's and stuff
+    myComms = new comms("/opt/soonerRover/soro4/SoRo4/Soro4/driveController/udp_mc_drive/udp_mc_drive.conf");
+    if(!myComms->isValid())
+    {
+        errorString = "Communications - " + myComms->getError();
         qDebug() << errorString;
+        qDebug() << "error with comms";
         emit errorEncountered(errorString);
         return;
     }
 
-    // attempt to set up communication ip's and stuff
-    myComms = new comms("udp_mc_drive.conf");
-    if(!myComms->isValid())
-    {
-        errorString = "Communications - " + myComms->getError();
+    // make sure gamepads are connected
+    auto gamepads = QGamepadManager::instance()->connectedGamepads();
+    if (gamepads.isEmpty()) {
+        errorString = "No gamepads detected";
         qDebug() << errorString;
         emit errorEncountered(errorString);
         return;
