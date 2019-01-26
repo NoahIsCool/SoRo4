@@ -18,7 +18,7 @@ const char DEVICE_ID = 0;
 Servo wheel[6];
 Servo gimbal_pan, gimbal_tilt;
 Servo disk;
-const int diskID = 16;// TBD
+const int diskID = 11;// TBD
 char myHash = 0;
 char serialHash = 0;
 char pan = 0;
@@ -46,7 +46,8 @@ void setup() {
   // 8 is an evil number, avoid at all cost
   gimbal_pan.attach(10);
   gimbal_tilt.attach(9);
-  disk.attach(diskID);
+  disk.attach(
+);
   Serial.begin(9600);
   delay(10);
 }

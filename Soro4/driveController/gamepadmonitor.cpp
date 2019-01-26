@@ -11,7 +11,7 @@ GamepadMonitor::GamepadMonitor( QObject *parent)
 {
 
     // attempt to set up communication ip's and stuff
-    myComms = new comms("/opt/soonerRover/soro4/SoRo4/Soro4/driveController/udp_mc_drive/udp_mc_drive.conf");
+    myComms = new comms("/opt/soonerRover/soro4/SoRo4/Soro4/driveController/udp_mc_drive.conf");
     if(!myComms->isValid())
     {
         errorString = "Communications - " + myComms->getError();
