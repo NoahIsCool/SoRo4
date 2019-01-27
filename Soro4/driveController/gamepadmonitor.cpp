@@ -194,8 +194,8 @@ void GamepadMonitor::sendUDP() {
         double mixLeftSide = (1.0-fPivScale)*premixLeftSide + fPivScale*( nPivSpeed);
         double mixRightSide = (1.0-fPivScale)*premixRightSide + fPivScale*(-nPivSpeed);
         // scale to motor range
-        leftSide = static_cast<qint8>(mixLeftSide*90.0);
-        rightSide = static_cast<qint8>(mixRightSide*90.0);
+        leftSide = static_cast<qint8>(mixLeftSide*80.0);
+        rightSide = static_cast<qint8>(mixRightSide*80.0);
 
         // gimble: vertical axis
         if (ryAxis > deadZone ) {
@@ -228,11 +228,11 @@ void GamepadMonitor::sendUDP() {
         double deadZone = 0.05;
         if (lyAxis > deadZone) {
             double x = (lyAxis-deadZone)/(1.0-deadZone);
-            leftSide = static_cast<qint8>(round(-x * 90.0));
+            leftSide = static_cast<qint8>(round(-x * 80.0));
         }
         else if (lyAxis < -deadZone) {
             double x = (lyAxis+deadZone)/(1.0-deadZone);
-            leftSide = static_cast<qint8>(round(-x * 90.0));
+            leftSide = static_cast<qint8>(round(-x * 80.0));
         }
         else {
             leftSide = 0;
@@ -240,11 +240,11 @@ void GamepadMonitor::sendUDP() {
         // right wheels
         if (ryAxis > deadZone) {
             double x = (ryAxis-deadZone)/(1.0-deadZone);
-            rightSide = static_cast<qint8>(round(-x * 90.0));
+            rightSide = static_cast<qint8>(round(-x * 80.0));
         }
         else if (ryAxis < -deadZone) {
             double x = (ryAxis+deadZone)/(1.0-deadZone);
-            rightSide = static_cast<qint8>(round(-x * 90.0));
+            rightSide = static_cast<qint8>(round(-x * 80.0));
         }
         else {
             rightSide = 0;
