@@ -1,4 +1,6 @@
 #include <Servo.h>
+#include <Ethernet.h>
+#include <EthernetUdp.h>
 
 // pin mapping
 /*
@@ -18,7 +20,7 @@ const char DEVICE_ID = 0;
 Servo wheel[6];
 Servo gimbal_pan, gimbal_tilt;
 Servo disk;
-const int diskID = 11;// TBD
+const int diskID = 16;// TBD
 char myHash = 0;
 char serialHash = 0;
 char pan = 0;
@@ -35,6 +37,19 @@ char serResp[] = " 1,190,200!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
 
 bool inTransmission = false;
 
+//ethernet data
+byte mac[] = {
+  0x69,0xFF,0xAD,0x9F,0x45,0x92
+};
+//IPaddress. lets use a static address
+IPAddress ip(10,0,0,10);
+EthernetUDP udp;
+unsigned int port = 4547;
+//storage for jetson ip
+IPAddress jetson;
+unsigned int jetsonPort = 4548;
+char udpPacket[7];
+
 //setup wheels
 void setup() {
   wheel[0].attach(2);
@@ -46,9 +61,28 @@ void setup() {
   // 8 is an evil number, avoid at all cost
   gimbal_pan.attach(10);
   gimbal_tilt.attach(9);
-  disk.attach(
-);
-  Serial.begin(9600);
+  disk.attach(diskID);
+  //Serial.begin(9600);
+  //need to figure out the CS pin for the shield but lets say 10
+  //may not need this
+  //Ethernet.init(10);
+  //start up udp socket
+  Ethernet.begin(mac,ip);
+  udp.begin(port);
+  
+  //wait for the init message
+  bool connected = false;
+  int packetSize = udp.parsePacket();
+  jetson = udp.remoteIP();
+  while(!connected){
+    udp.read(udpPacket,packetSize);
+    if(serResp == "ready"){
+      connected = true;
+      udp.beginPacket(jetson,jetsonPort);
+      udp.write("ready");
+      udp.endPacket();
+    }
+  }
   delay(10);
 }
 
@@ -67,9 +101,17 @@ void setup() {
 // science  2
 
 void loop() {
-  if(Serial.available()) // trying to read from an empty buffer usually breaks stuff
+  int packetSize = 0;
+  int pos = 0;
+  //if(Serial.available()) // trying to read from an empty buffer usually breaks stuff
+  if(udp.available()){
+    packetSize = udp.parsePacket();
+    udp.read(udpPacket,packetSize);
+  }
+  while(pos < packetSize)
   {
-    incomingByte = Serial.read();
+    //incomingByte = Serial.read();
+    incomingByte = udpPacket[pos];
     if(incomingByte == -127 && !inTransmission)
     {
       inTransmission = true;
@@ -83,9 +125,15 @@ void loop() {
           if(incomingByte != DEVICE_ID)
           {
             // transmission is invalid, clear buffer and then reply with device id
-            Serial.flush();
-            Serial.write(-126);
-            Serial.write(DEVICE_ID);
+            //Serial.flush();
+            //Serial.write(-126);
+            //Serial.write(DEVICE_ID);
+            char message[2] = {-126,DEVICE_ID};
+            pos = packetSize;
+            udp.beginPacket(jetson,jetsonPort);
+            udp.write(message);
+            udp.endPacket();
+            
             inTransmission = false;
           }
           break;
@@ -125,7 +173,9 @@ void loop() {
       }
       bytesRead++;
     }
+    pos++;
   }
+  Ethernet.maintain();
 }
 
 void updateServos(){
@@ -154,7 +204,7 @@ void updateServos(){
    }
    if(overdrive & 4){
        wheel[2].write(90 - leftWheels);
-       wheel[5].write(90 - legtWheels);
+       wheel[5].write(90 - leftWheels);
        return;
    }
 
