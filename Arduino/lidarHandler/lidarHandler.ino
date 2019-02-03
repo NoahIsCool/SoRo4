@@ -33,6 +33,16 @@ char ethernetBuffer[20];
  * anything to it and if you do with out a voltage
  * divider, it will most likly break the lidar
  * 
+ * Ethernet protocol
+ * 
+ * 0x01
+ * far left - 2 bytes
+ * left
+ * middle
+ * right
+ * far right
+ * checksum - 1 byte
+ * 
  */
 
 //total lidars to be used. index 4 is hardware
