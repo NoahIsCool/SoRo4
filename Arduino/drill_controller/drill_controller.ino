@@ -1,3 +1,7 @@
+/***
+* Code for the CO2 Sensor from: https://www.dfrobot.com/wiki/index.php/Gravity:_Analog_Infrared_CO2_Sensor_For_Arduino_SKU:_SEN0219#Tutorial
+*/
+
 #include <Wire.h>
 
 #include <Servo.h>
@@ -22,11 +26,11 @@
 #define DRILL_PIN 12
 dht11 DHT11;
 #define DHT11PIN 2
+#define CO2_PIN 4
 
 float gasData[8];
 float TandMData[7];
 int flag = -127;
-
 
 const char DEVICE_ID = 2;
 
@@ -64,7 +68,14 @@ void setup() {
   Serial.println("NH3,CO,NO2,C3H8,C4H10,CH4,H2,C2H5OH,Flag,Humidity,Tempature( C ),Fahrenheit,Kelvin,Dew Point,Dew Point,Hash");
   drill.attach(DRILL_PIN);
 
- 
+  analogReference(DEFAULT);
+
+  //delay while the CO2 sensor warms up
+  int voltage = analogRead(CO2_PIN) * (5000/1024.0);
+  while (voltage < 400) {
+    Serial.println("CO2 Preheating");
+    voltage = analogRead(CO2_PIN) * (5000/1024.0);
+  }
 }
 
 void loop() {
@@ -106,10 +117,10 @@ void loop() {
           inTransmission = false;
           //compute hash
           myHash = (drillStuff[0] + drillStuff[1] + drillStuff[2] + drillStuff[3] + fanSpeed) /5;
-          // read data everytime regarless of hash mismatch 
+          // read data everytime regarless of hash mismatch
           readGasSensor();
           readTandMSensor();
-          
+
           for(int i = 0; i < 8; i++){
             Serial.print(gasData[i]);
             Serial.print(",");
@@ -118,11 +129,21 @@ void loop() {
             Serial.print(TandMData[i]);
             Serial.print(",");
           }
-          
-          // check hash and actually move things 
+
+          //read CO2 sensor
+          int voltage = analogRead(CO2_PIN) * (5000/1024.0);
+          if (voltage == 0) {
+            Serial.println("CO2 Error");
+          } else {
+            float concentration = (voltage - 400) * 50.0/16.0;
+            Serial.print(concentration);
+            Serial.print(",");
+          }
+
+          // check hash and actually move things
           if (serialHash == myHash ) {
             moveDrill();
-            spinOfDeath(); 
+            spinOfDeath();
             spinFan();
           } else {
             Serial.print("Data Corrupted");
