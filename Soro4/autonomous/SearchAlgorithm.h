@@ -6,6 +6,7 @@
 #include <string>
 #include <queue>
 #include <set>
+#include <vector>
 
 class AStarException : public std::runtime_error {
 public:
@@ -109,7 +110,7 @@ private:
 	double UPWEIGHT; //Weight given to the difference in elevation when going up
 	double DOWNWEIGHT; //Weight given to the difference in elevation when going down
 
-	Cell** map; //Matrix of Cell objects
+	std::vector<std::vector<Cell>> map; //Matrix of Cell objects
 	int maxx; //max x-value on the map
 	int maxy; //max y-value on the map
 
@@ -131,6 +132,6 @@ public:
 	int maxy - the maximum y value of the matrix
 	return - a list of GPS coordinate pairs 50 meters apart forming a path from the source to the destination
 	*/
-	SearchAlgorithm(Cell** map, int maxx, int maxy, double distWeight, double upWeight, double downWeight);
+	SearchAlgorithm(std::vector<std::vector<Cell>> map, int maxx, int maxy, double distWeight, double upWeight, double downWeight);
 	std::list<Cell> findPath(Cell source, Cell dest);
 };
