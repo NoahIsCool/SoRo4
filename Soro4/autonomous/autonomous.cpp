@@ -7,7 +7,7 @@
 Autonomous::Autonomous() : mySocket("testConfig.conf")
 {
 	// this "should" make the comms object print out any errors it encounters to the terminal
-	connect(&mySocket, SIGNAL(errorEncountered(QString)), this, SLOT([=](QString error){qDebug() << error;}));
+    connect(mySocket, SIGNAL(messageReady(QByteArray)), this, SLOT(lidarValues(QByteArray)));
 	qInfo() << "library link test";
 	mainLoop();
 }
@@ -44,10 +44,16 @@ std::list<Cell> Autonomous::GeneratePath(Cell dest, SearchAlgorithm& alg)
     return alg.findPath(source, dest);
 }
 
-//impliment much later
-bool Autonomous::isThereObstacle()
+void Autonomous::lidarValues(QByteArray message)
 {
-    return false;
+    isThereObstacle =false;
+    for(int i = 0; i < 5; i++)
+    {
+        //TODO:fix this so that it converts the bytes to ints
+        obstacleHeights[i] = message[2*i] | message[2 * i - 1] << 8;
+        if(obstacleHeights[i] > maxObstacleHeights[i])
+            isThereObstacle = true;
+    }
 }
 
 //Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obstacle
@@ -77,7 +83,7 @@ void Autonomous::avoidObstacle()
     array.append((char)0);
     array.append((char)0);
     mySocket.sendMessage(array);
-    usleep(5000000);
+    usleep(2000000);
 
     //drive forward a bit and continue(?)
     array.clear();
@@ -201,7 +207,7 @@ void Autonomous::mainLoop()
 
             while(currentGPS != *it) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
-                if(isThereObstacle())
+                if(isThereObstacle)
                 {
                     avoidObstacle();
                 }
