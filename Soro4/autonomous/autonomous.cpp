@@ -184,7 +184,7 @@ std::vector< std::vector<Cell> > Autonomous::parseMap(){
 
 	//ifstream data("mapAvgV1.csv");//100 pixel avg
 	//ifstream data("mapNoAvg.csv");//no pixel averaging
-    std::ifstream data("/opt/soonerRover/soro4/SoRo4/Soro4/autonomous/map/mapNorman.csv");
+    std::ifstream data("/home/soro/Desktop/gps-test/SoRo4/Soro4/autonomous/map/mapNorman.csv");
 	std::string line;
 
 	//static Cell map[1720][3370];//no pixel averaging
@@ -229,7 +229,12 @@ std::vector< std::vector<Cell> > Autonomous::parseMap(){
 void Autonomous::mainLoop()
 {
     map = parseMap();
+    qInfo() << "parsed map";
+    qInfo() << "min lat: " << map[0][0].lat << " min long: " << map[0][0].lng;
+    qInfo() << "max lat: " << map[map.size()-1][map[0].size()-1].lat << " max long: " << map[map.size()-1][map[0].size()-1].lng;
+    qInfo() << "array size: " << map.size() << " " << map[0].size();
     searcher = new SearchAlgorithm(map, map.size(), map[0].size(), 1.0, 1000.0, 1000.0);
+    qInfo() << "created searcher";
 
     threadsRunning = true;
     std::thread statusThread(&Autonomous::updateStatus,this);
@@ -244,19 +249,23 @@ void Autonomous::mainLoop()
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
 
+    qInfo() << "current location: " << lastLatitude << " " << lastLongitude;
+
     //BallTracker tennisTracker = new BallTracker(); //automatically starts a thread to track the tennisball
     Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
-    std::cout << "next coords: " << nextCords.lat << " " << nextCords.lng << std::endl;
+    qInfo() << "next coords: " << nextCords.lat << " " << nextCords.lng;
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
         std::list<Cell> path;
-	try {
-        path = GeneratePath(nextCords, *searcher);
-	} catch (AStarException e) {
-		nextCords = inputNextCoords(); //gets the next set of coords
-		continue;
-	}
+        try {
+            path = GeneratePath(nextCords, *searcher);
+        } catch (AStarException e) {
+            qInfo() << "exception: " << e.what();
+            nextCords = inputNextCoords(); //gets the next set of coords
+            continue;
+        }
+        qInfo() << "size of path list: " << path.size();
 
         std::list<Cell>::iterator it = path.begin();
 

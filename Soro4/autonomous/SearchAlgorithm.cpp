@@ -57,7 +57,9 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 		std::pair<std::set<Node, compareNodes2>::iterator, bool> inserted = closed.insert(*current);
 		if (inserted.second) {
 			for (Node neighbor : getNeighbors(*current, destx, desty)) {
-				open.push(neighbor);
+                if(!open.find(neighbor)){
+                    open.push(neighbor);
+                }
 			}
 		}
 
@@ -91,7 +93,7 @@ std::list<SearchAlgorithm::Node> SearchAlgorithm::getNeighbors(Node& current, in
 		for (int y = current.y - 1; y <= current.y + 1; y++) { //CHNG 'y < current.y + 1' to 'x <= current.y + 1'
 			if (x < 0 || y < 0 || x >= maxx || y >= maxy || (x == current.x && y == current.y)) {
 				continue;
-			}
+            }delete
 
 			//construct a new node for each neighbor and add it to the list
 			double newG = getGCost(current, x, y);
