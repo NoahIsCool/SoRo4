@@ -1,11 +1,3 @@
-/*
-*	Testing for the SearchAlgorithm class
-*
-*
-*
-*
-*/
-
 #include "../SearchAlgorithm.h"
 #include <iostream>
 #include <fstream>
@@ -26,13 +18,12 @@ std::vector<std::string> tokenize(const std::string str, std::regex delim)
 int main()
 {
     //Make a 3x3 map
-	Cell ** map = new Cell * [3];
+	std::vector<std::vector<Cell>> map;
 
 	for (int i = 0; i < 3; i++) {
-		map[i] = new Cell[3];
+		map.emplace(map.end());
 		for (int j = 0; j < 3; j++) {
-			Cell cell(j, i, 0.0);
-			map[i][j] = cell;
+			map[i].emplace(map[i].end(), j, i, 0.0);
 		}
 	}
 
@@ -50,7 +41,7 @@ int main()
 
 	//read in test map
 	std::string line;
-	std::ifstream myfile("SearchAlgorithmTest.cpp");
+	std::ifstream myfile("test1.txt");
 
 	if (!myfile.is_open())
 	{
@@ -71,9 +62,16 @@ int main()
 
 	// ary[i][j] is then rewritten as
 	//ary[i*sizeY + j]
+	/*
 	Cell **map2 = new Cell*[sizeY];
 	for (int i = 0; i < sizeY; ++i) {
 		map2[i] = new Cell[sizeX];
+	}
+	*/
+
+	std::vector<std::vector<Cell>> map2;
+	for (int i = 0; i < sizeY; i++) {
+		map2.emplace(map2.end());
 	}
 
 	//Print and initialize map
@@ -86,7 +84,8 @@ int main()
 		for (int c = 0; c < sizeX; c++)
 		{
 			Cell cell(r, c, stod(it[c]));
-			map2[c][r] = cell;  //CHNG r(lat), c(lng) to c(lng), r(lat)
+			//map2[c][r] = cell;  //CHNG r(lat), c(lng) to c(lng), r(lat)
+			map2[c].emplace(map2[c].end(), r, c, stod(it[c]));
 			std::cout << "(x:" << c << ", y:" << r << ")(lat:" << cell.lat << ", lng:" << cell.lng << "), " <<
 				cell.gradient << " "; //CHNG clearly separate x,y and lat,lng. They should be opposite
 		}
