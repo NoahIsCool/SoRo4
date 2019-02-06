@@ -5,6 +5,7 @@
 #include <QObject>
 
 #include "autonomous_global.h"
+#include "SearchAlgorithm.h"
 #include "core/core.h"
 #include "core/comms.h"
 #include "core/gps/gps.h"
@@ -21,161 +22,49 @@
 #include <sstream>
 #include <vector>
 
-class SearchAlgorithm {
-private:
-
-	/****
-	Class representing a cell on a topographic map. Used for a* pathfinding
-	*/
-	struct Node {
-		//Coordinates of the node in the grid
-		int x;
-		int y;
-
-		//Parent node, used for backtracing after a* has found a path
-		Node* parent;
-
-		//The cost to move from the source to this node
-		double g;
-
-		//The score used to select the next node from the open list
-		double f;
-
-		Node() {
-			x = 0;
-			y = 0;
-			parent = nullptr;
-			g = 0.0;
-			f = 0.0;
-		}
-
-		//Node constructor. Present simply for convinience, it just assigns the node variables
-		Node(int x, int y, Node* parent, double g, double f) {
-			(*this).x = x;
-			(*this).y = y;
-			(*this).parent = parent;
-			(*this).g = g;
-			(*this).f = f;
-		}
-
-		//Copy constructor utilizing overloaded = operator
-		Node(const Node &copy) { //CHNG 10/3: added
-			(*this) = copy;
-		}
-
-		//Cleans up the whole list
-		~Node() {
-			delete parent;
-		}
-
-		//Overloaded = operator for Node object. Copies the entire list instead of just the value of the pointer.
-		void operator= (const Node& copy) {
-			x = copy.x;
-			y = copy.y;
-
-			if (copy.parent != nullptr) {
-				parent = new Node(*copy.parent);
-			}
-			else {
-				parent = nullptr;
-			}
-
-			g = copy.g;
-			f = copy.f;
-		}
-
-		//Overloaded == operator for node. Compares nodes based on coordinate
-		bool operator== (Node n) {
-			return ((*this).x == n.x) && ((*this).y == n.y);
-		}
-	};
-
-    //FIXME: do we need these anymore?
-	/****
-	Comparator class for a min priority queue of Nodes. Compares nodes based on their f value.
-	*/
-	struct compareNodes {
-		bool operator() (const Node& n1, const Node& n2) const {
-			return n1.f > n2.f;
-		}
-	};
-
-	/*****
-	Comparator class for set of Nodes. Compares nodes based on their x and y values.
-	*/
-	struct compareNodes2 {
-		bool operator() (const Node& n1, const Node& n2) const {
-			if (n1.x == n2.x) {
-				return n1.y < n2.y;
-			}
-			else {
-				return n1.x < n2.x;
-			}
-		}
-	};
-
-    //FIXME: why is everything static?
-	//Higher value means more avoidance from the algorithm
-    const double DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
-    const double UPWEIGHT = 1000.0; //Weight given to the difference in elevation when going up
-    const double DOWNWEIGHT = 1000.0; //Weight given to the difference in elevation when going down
-
-    std::vector<std::vector<Cell>> map; //Matrix of Cell objects
-    int maxx; //max x-value on the map
-    int maxy; //max y-value on the map
-    bool initialized = false; //are the map and max values initialized?
-
-	//Returns a list of Nodes adjacent or diagonal from the chosen node
-    std::list<Node> getNeighbors(Node& current, int destx, int desty);
-	//Returns the cost to reach the node specified by x and y from the source node
-    double getGCost(Node current, int x, int y);
-	//Returns the estimated cost to reach the destination node
-    double getHeuristic(int destx, int desty, int x, int y);
-
-public:
-
-	/****
-	Performs a* pathfinding over the topographic map and returns the best path. The first method must be run first to
-
-	double* source - latitude and longitude of the source in decimal degrees, expected in the format: latutude, longitude
-	double* dest - latitude and longitude of the destination in decimal degrees, expected in the format: latitude, longitude
-	Cell** map - a matrix of cell objects representing the topographic map
-	int maxx - the maximum x value of the matrix
-	int maxy - the maximum y value of the matrix
-
-	return - a list of GPS coordinate pairs 50 meters apart forming a path from the source to the destination
-	*/
-	void initializeMap(std::vector<std::vector<Cell>>, int maxx, int maxy);
-    std::list<Cell> findPath(Cell source, Cell dest);
-};
-
-
 class AUTONOMOUSSHARED_EXPORT Autonomous : public QObject
 {
-public:
-    Autonomous();
+    public:
+        Autonomous();
 
-private:
-    void mainLoop();
-    std::vector<double> getWheelSpeedValues(double amountOff, double baseSpeed);
-     //FIXME: was std::vector. Should it be a list or a vector?
-    std::list<Cell> GeneratePath(Cell dest);
-    bool isThereObstacle();
-    void avoidObstacle();
-    double getAngleToTurn(Cell next);
-    Cell inputNextCoords();
-    void updateStatus();
-    std::vector<std::vector<Cell>> parseMap();
+    private:
+        void mainLoop();
+        std::vector<double> getWheelSpeedValues(double amountOff, double baseSpeed);
+         //FIXME: was std::vector. Should it be a list or a vector?
+        std::list<Cell> GeneratePath(Cell dest);
+        void avoidObstacle();
+        double getAngleToTurn(Cell next);
+        Cell inputNextCoords();
+        void updateStatus();
 
-    double speed = 60; //IDK what we want for speed right now or if we want to be updating it but this currently represents the speed that we want the rover to be going at for everything
-    volatile double angle; //Updated through updateStatus
-    double lastLongitude = 0; //the last longitude updated from updateStatus
-    double lastLatitude = 0; //the last latitude update from updateStatus
-    bool threadsRunning = true; //checks if the threads should be running (currently just stops updateStatus
-    comms mySocket;
-    int timesStuck; // finds how many times the rover has been stuck in place
-    bool isStuck; //checks if the rover is considered stuck
-    SearchAlgorithm searcher;
+        bool isThereObstacle;
+        double speed = 60; //IDK what we want for speed right now or if we want to be updating it but this currently represents the speed that we want the rover to be going at for everything
+        volatile double angle; //Updated through updateStatus
+        double lastLongitude = 0; //the last longitude updated from updateStatus
+        double lastLatitude = 0; //the last latitude update from updateStatus
+        bool threadsRunning = true; //checks if the threads should be running (currently just stops updateStatus
+        comms mySocket;
+        int timesStuck; // finds how many times the rover has been stuck in place
+        bool isStuck; //checks if the rover is considered stuck
+        SearchAlgorithm searcher;
+
+        double centerLidarMaxHeight = 10; //the max height that the center lidar can find before it declares an obstacle
+        double middleLidarMaxHeight = 10; //the max height that the middle lidars can find before it declares an obstacle
+        double outerLidarMaxHeight = 10; //the max height that the outer lidars can find before it declares an obstacle
+        const double lidarAngle = 10; //the angle of the Lidars to the rover
+        const double lidarHeights = 10; //the height of the lidars from the ground
+
+
+        //outerLeftLidar, innerLeftLidar, centerLidar, innerRightLidar, outerRightLidar
+        int *obstacleDistancess = new int[5];//holds the readings from the Lidars
+        int *maxObstacleHeights = {10, 10, 10, 10, 10}; //The distances the Lidars see if there is an obstacle TODO: get actual values for this
+
+        //innerLeftLidar, centerLidar, innerRightLidar
+        int *maxHoleDepths = {20, 20, 20}; //The distances the Lidars see if there is a hole TODO: get actual values for this
+
+    private slots:
+        void lidarValue(QByteArray message);
+	std::vector< std::vector<Cell> > parseMap();
 };
 
 #endif // AUTONOMOUS_H

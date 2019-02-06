@@ -1,18 +1,13 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2018-09-18T08:53:08
+# Project created by QtCreator 2018-10-01T10:22:35
 #
 #-------------------------------------------------
 
-QT       += network
+QT       += core gui widgets
 
-QT       -= gui
-
-TARGET = autonomous
-TEMPLATE = lib
-DESTDIR = ../../libs
-
-DEFINES += AUTONOMOUS_LIBRARY
+TARGET = RoverMainWindow
+TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -25,21 +20,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-INCLUDEPATH += $$PWD/..
-LIBS = -L../../libs -lcore -lpthread
-
-QMAKE_CXXFLAGS += -std=c++11
+CONFIG += c++11
 
 SOURCES += \
-        autonomous.cpp
-        SearchAlgorithm.cpp
+        main.cpp \
+        RoverMainWindow.cpp \
+    degreesminutesseconds.cpp
 
 HEADERS += \
-        autonomous.h \
-        autonomous_global.h
-        SearchAlgorithm.h
+        RoverMainWindow.h \
+    degreesminutesseconds.h
 
-#unix {
-    target.path = $$PWD
-    INSTALLS += target
-#}
+FORMS += \
+        RoverMainWindow.ui
+
+# Default rules for deployment.
+qnx: target.path = /tmp/$${TARGET}/bin
+else: unix:!android: target.path = /opt/$${TARGET}/bin
+!isEmpty(target.path): INSTALLS += target

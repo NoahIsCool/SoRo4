@@ -3,176 +3,11 @@
 #define PI 3.14159265
 
 //this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
-
-//FIXME: lets put all of this in the h file instead as class variables
-//Higher value means more avoidance from the algorithm
-//const double SearchAlgorithm::DISTWEIGHT = 1.0; //Weight given to the distance between two nodes when calculating cost
-//const double SearchAlgorithm::UPWEIGHT = 1000.0; //Weight given to the difference in elevation when going up
-//const double SearchAlgorithm::DOWNWEIGHT = 1000.0; //Weight given to the difference in elevation when going down
-//std::vector<std::vector<Cell>> SearchAlgorithm::map; //Matrix of Cell objects
-//int SearchAlgorithm::maxx; //max x-value on the map
-//int SearchAlgorithm::maxy; //max y-value on the map
-//bool SearchAlgorithm::initialized = false; //are the map and max values initialized?
-
-void SearchAlgorithm::initializeMap(std::vector<std::vector<Cell>> map, int maxx, int maxy)
-{
-	//Change the static class members to their provided values
-	SearchAlgorithm::map = map;
-	SearchAlgorithm::maxx = maxx;
-	SearchAlgorithm::maxy = maxy;
-	initialized = true;
-}
-
-std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
-{
-	//if the map is not initialized, print out a list containing only source and dest
-	if (!initialized) {
-		std::list<Cell> out;
-		out.push_front(dest);
-		out.push_front(source);
-		return out;
-	}
-
-	//Determine the x and y values of the source and destination from their latitude and longitude
-
-	//Determine the difference in latitude between the first two rows
-	double latDiff = map[0][1].lat - map[0][0].lat; //Should be negative because 0 lat is equator
-
-	//Find y coordinates
-	int sourcey = round((source.lat - map[0][0].lat) / latDiff);
-	int desty = round((dest.lat - map[0][0].lat) / latDiff);
-
-	//Determine the difference in longitude between the first two columns
-    //FIXME: dont know if this is the best way to do it...Just multiplied it by -1 to ensure it is negative
-    double lngDiff = -1 *map[1][0].lng - map[0][0].lng; //should be negative becasuse longitude proceeds east to west in NA
-    std::cout << "starting point: " << map[0][0].lat << " " << map[0][0].lng << std::endl;
-    std::cout << "ending point: " << map[map.size()-1][map[0].size()-1].lat << " " << map[map.size()-1][map[0].size()-1].lng << std::endl;
-
-	//Find x coordinates
-    //FIXME: sourcex is some negative number...and is not negative
-	int sourcex = round((source.lng - map[0][0].lng) / lngDiff);
-	int destx = round((dest.lng - map[0][0].lng) / lngDiff);
-
-	//if any of the coordinates are out of bounds of the map, return the error cell
-    if ((sourcey > maxy) || (sourcey < 0) || (desty > maxy) || (desty < 0) || (sourcex > maxx) || (sourcex < 0) || (destx > maxx) || (destx < 0)) {
-		Cell error;
-		error.lat = -1.0;
-		error.lng = -1.0;
-		error.gradient = 0.0;
-		std::list<Cell> out;
-		out.push_front(error);
-        std::cout << "outside map bounds?" << destx << " " << desty << " " << sourcex << " " << sourcey << std::endl;
-        std::cout << "max values: " << maxx << " " << maxy << std::endl;
-		return out;
-    }
-
-	//Create the source node and add it to the open list
-	std::priority_queue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
-	std::set<Node, compareNodes2> closed;
-
-	Node sourceNode(sourcex, sourcey, nullptr, 0.0, 0.0);
-	Node destNode(destx, desty, &sourceNode, 0.0, 0.0); //CHNG 10/3: changed 'nullptr' to '&sourceNode'. This will change no-path output
-	open.push(sourceNode);
-
-	//Loop while there are still elements in the open list
-	while (!open.empty()) {
-		//Add the best element in the open list to the closed list
-		Node * current = new Node(open.top()); //CHNG 10/3: to prevent a weird bug that made each node its own parent
-		open.pop();
-
-		//if that element is the destination, we're done with the loop
-		if (*current == destNode) {
-			destNode.parent = current->parent;
-			break;
-		}
-
-		//if the current node is not in the closed list, add it, and add its neighbors to the open list
-		std::pair<std::set<Node, compareNodes2>::iterator, bool> inserted = closed.insert(*current);
-		if (inserted.second) {
-			for (Node neighbor : getNeighbors(*current, destx, desty)) {
-				open.push(neighbor);
-			}
-		}
-
-		delete current;
-	}
-
-	//create output list
-    std::list<Cell> out;
-	Node * interest = new Node(destNode);
-
-    //FIXME: something is wrong here. Crashes program
-	//ascend the parent tree, adding the corresponding GPS coordinates until we reach the source
-	do {
-        //FIXME: interest->x and interest->y are outside of the maps bounds...
-		Cell cell = map[interest->x][interest->y];
-
-        Cell *pair = new Cell(); //CHNG 10/5: dynamically allocated array to avoid the overwriting problem
-        pair->lat = cell.lat;
-        pair->lng = cell.lng;
-
-        out.push_front(*pair);
-
-		interest = interest->parent;
-	} while (interest != nullptr);
-
-	//CHNG 10/3: interest interest might be assigned to a null pointer, so changed it to a pointer
-
-	//return output list
-	return out;
-}
-
-std::list<SearchAlgorithm::Node> SearchAlgorithm::getNeighbors(Node& current, int destx, int desty) {
-	std::list<Node> out;
-
-	//for each neighbor, excluding the current node and any neighbors that go out of map bounds
-	for (int x = current.x - 1; x <= current.x + 1; x++) { //CHNG 'x < current.x + 1' to 'x <= current.x + 1'
-		for (int y = current.y - 1; y <= current.y + 1; y++) { //CHNG 'y < current.y + 1' to 'x <= current.y + 1'
-			if (x < 0 || y < 0 || x >= maxx || y >= maxy || (x == current.x && y == current.y)) {
-				continue;
-			}
-
-			//construct a new node for each neighbor and add it to the list
-			double newG = getGCost(current, x, y);
-			double newF = newG + getHeuristic(destx, desty, x, y);
-
-			Node * parent = new Node(current);
-			Node * neighbor = new Node(x, y, parent, newG, newF);
-
-			out.push_front(*neighbor);
-		}
-	}
-
-	return out;
-}
-
-double SearchAlgorithm::getGCost(SearchAlgorithm::Node current, int x, int y) {
-	//if the two nodes are adjacent, distance is 1, if they are diagonal, it is 1.4
-	double distance = (abs((current.x + current.y) - (x + y)) == 1) ? 1.0 : 1.4;
-	double gradientDiff = map[current.x][current.y].gradient - map[x][y].gradient;
-
-	double gradientVal = 0.0;
-	//Weight the gradient differently depending on if we are going up or down
-	if (gradientDiff < 0) { //we're going up
-		gradientVal = abs(gradientDiff) * UPWEIGHT;
-	}
-	else {
-		gradientVal = gradientDiff * DOWNWEIGHT;
-	}
-
-	//return the cost so far plus the cost to move to the new node
-	return current.g + (DISTWEIGHT * distance + gradientVal);
-}
-
-double SearchAlgorithm::getHeuristic(int destx, int desty, int x, int y) {
-	//return the Manhattan distance between the point of interest and the destination point
-	return (abs(destx - x) + abs(desty - y));
-}
-
 Autonomous::Autonomous() : mySocket("testConfig.conf")
 {
 	// this "should" make the comms object print out any errors it encounters to the terminal
-    //connect(&mySocket, SIGNAL(errorEncountered(QString)), this, SLOT([=](QString error){qDebug() << error;}));
+    connect(mySocket, SIGNAL(messageReady(QByteArray)), this, SLOT(lidarValues(QByteArray)));
+	qInfo() << "library link test";
 	mainLoop();
 }
 
@@ -182,7 +17,7 @@ Autonomous::Autonomous() : mySocket("testConfig.conf")
 std::vector<double> Autonomous::getWheelSpeedValues(double amountOff, double baseSpeed)
 {
     std::vector<double> PIDValues(2);
-
+    amountOff /= .00015; //THIS IS A STUPID FIX FOR THE FIRST VERSION OF THE FORMULA. UNLESS IT WORKS AS IS, GET RID OF THIS LINE
     if(baseSpeed > 0)
     {
         //this formula works by taking the baseSpeed and increasing or decreasing it by a percent based off of amountOff
@@ -201,23 +36,32 @@ std::vector<double> Autonomous::getWheelSpeedValues(double amountOff, double bas
 }
 
 //Returns a list of cells from the rover's current location to the specified destination
-std::list<Cell> Autonomous::GeneratePath(Cell dest)
+std::list<Cell> Autonomous::GeneratePath(Cell dest, SearchAlgorithm& alg)
 {
-	Cell source;
-    source.lat = pos_llh.lat;
-    source.lng = pos_llh.lon;
-    //For at home testing without the gps system
-    //source.lat = 35.1999;
-    //source.lng = -97.48;
-	source.gradient = 0.0;
+	Cell source(pos_llh.lat, pos_llh.lon, 0.0);
 
-    return searcher.findPath(source, dest);
+	return alg.findPath(source, dest);
 }
 
-//impliment much later
-bool Autonomous::isThereObstacle()
+//updates all of the lidar readings and checks to see if an obstacle has been spotted
+void Autonomous::lidarValues(QByteArray message)
 {
-    return false;
+    isThereObstacle =false;
+
+    //updates the Lidar values and checks to see if there is an obstacle
+    for(int i = 0; i < 5; i++)
+    {
+        obstacleDistances[i] = message[2*i] | message[2 * i - 1] << 8;
+        if(obstacleDistances[i] < maxObstacleHeights[i])
+            isThereObstacle = true;
+    }
+
+    //checks for holes. We may need to update this to check to make sure at least two Lidars see a hole before running avoidObstacle
+    for(int i = 1; i < 4; i++)
+    {
+        if(obstacleDistances[i] > maxHoleDepth[i - 1])
+            isThereObstacle = true;
+    }
 }
 
 //Simply backs up, turns for a bit and then drives forward to before resuming normal operations if the robot is stuck or sees an obstacle
@@ -247,7 +91,7 @@ void Autonomous::avoidObstacle()
     array.append((char)0);
     array.append((char)0);
     mySocket.sendMessage(array);
-    usleep(5000000);
+    usleep(2000000);
 
     //drive forward a bit and continue(?)
     array.clear();
@@ -268,14 +112,20 @@ double Autonomous::getAngleToTurn(Cell next)
 {
     double latitude = pos_llh.lat;
     double longitude = pos_llh.lon;
-    double target = std::atan((next.lng - longitude) / (next.lat - latitude)) * 180 / PI; //NOTE: angle sign is opposite of standard
-    return target - angle;
+    double target = atan2(next.lat - latitude, next.lng - longitude) * 180 / PI; //atan2 takes in parameters (y,x)...
+    double returnVal = angle - target;
+    while(returnVal > 180)
+        returnVal -= 360;
+    while(returnVal < -180)
+        returnVal += 360;
+    return returnVal;
 }
 
 //This is meant to be run as a thread the whole time the autonomous program is running.
 //This finds the angle that the rover is at and if the rover is stuck. This will be inaccurate if the rover does a pivot turn
 //The way that it finds if the rover is stuck is if it is in the EXACT same position 6 times in a row (3 seconds) so this may need to be changed depending on the precision and noise of the GPS
 //TODO add the accelerometer information here (probably(?))
+//TODO need to change this to update every six times or something like that to filter out noise
 void Autonomous::updateStatus()
 {
     double longitude = pos_llh.lon;
@@ -300,7 +150,7 @@ void Autonomous::updateStatus()
         {
             isStuck = false;
             timesStuck = 0;
-            angle = std::atan((longitude - lastLongitude) / (latitude - lastLatitude)) * 180 / PI; //NOTE: sign is opposite of usual
+            angle = atan2(latitude - lastLatitude, longitude - lastLongitude) * 180 / PI;
 
             lastLatitude = latitude;
             lastLongitude = longitude;
@@ -377,17 +227,17 @@ std::vector< std::vector<Cell> > Autonomous::parseMap(){
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
 void Autonomous::mainLoop()
 {
-    std::vector<std::vector<Cell>> map = parseMap();
-    searcher.initializeMap(map,map.size(),map[0].size());
+	//placeholder
+    //FIXME: get this from rob
+    map = parseMap();
+		//FIXME: need map, MAXX, MAXY from rob
+		//SearchAlgorithm searchAlg(map, EXTX, EXTY, 1.0, 1000.0, 1000.0)
 
     threadsRunning = true;
     std::thread statusThread(&Autonomous::updateStatus,this);
 
     //this is just so we can tell the robot to stop driving. We need to these into inputNextCoords to end the loop
-    Cell killVector;
-    killVector.lat = -1;
-    killVector.lng = -1;
-    killVector.gradient = 0.0;
+    Cell killVector(-1, -1, 0.0);
 
     timesStuck = 0;
     isStuck = false;
@@ -402,30 +252,22 @@ void Autonomous::mainLoop()
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-        std::cout << "generating path" << std::endl;
-        //FIXME: path not being generated
-        std::list<Cell> path = GeneratePath(nextCords); //TODO generates the path to the given set of coords
-        std::cout << "length of path: " << path.size() << std::endl;
-		std::list<Cell>::iterator it = path.begin();
-        std::cout << (*it).lat << " " << (*it).lng << std::endl;
+	try {
+		std::list<Cell> path = GeneratePath(nextCords);
+	} catch (AStarException e) {
+		nextCords = inputNextCoords(); //gets the next set of coords
+		continue;
+	}
 
-		//if the first value is the kill vector, there was an error generating the path, prompt for input and restart the loop
-		if (*it == killVector) {
-            nextCords = inputNextCoords(); //gets the next set of coords
-			continue;
-		}
+			std::list<Cell>::iterator it = path.begin();
 
         //loops through each of the coordinates to get to the next checkpoint
-        while(*it != nextCords) //travels to the next set of coords. 
+        while(*it != nextCords) //travels to the next set of coords.
         {
-            //FIXME: currentGPS being corrupted...something is setting it to 2.7*10^-317
-            //FIXME: maybe a new problem with the gps code?
-            Cell currentGPS;
-            currentGPS.lat = pos_llh.lat;
-            currentGPS.lng = pos_llh.lon;
+            Cell currentGPS(pos_llh.lat, pos_llh.lon, 0.0);
             while(currentGPS != *it) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
-                if(isThereObstacle())
+                if(isThereObstacle)
                 {
                     avoidObstacle();
                 }
