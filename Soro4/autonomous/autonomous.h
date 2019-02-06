@@ -52,8 +52,11 @@ class AUTONOMOUSSHARED_EXPORT Autonomous : public QObject
 
 
         //outerLeftLidar, innerLeftLidar, centerLidar, innerRightLidar, outerRightLidar
-        int *obstacleHeights = new int[5];
-        int *maxObstacleHeights = {10, 10, 10, 10, 10}; //this needs to be fixed
+        int *obstacleDistancess = new int[5];//holds the readings from the Lidars
+        int *maxObstacleHeights = {10, 10, 10, 10, 10}; //The distances the Lidars see if there is an obstacle TODO: get actual values for this
+
+        //innerLeftLidar, centerLidar, innerRightLidar
+        int *maxHoleDepths = {20, 20, 20}; //The distances the Lidars see if there is a hole TODO: get actual values for this
 
     private slots:
         void lidarValue(QByteArray message);

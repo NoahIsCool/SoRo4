@@ -44,14 +44,23 @@ std::list<Cell> Autonomous::GeneratePath(Cell dest, SearchAlgorithm& alg)
     return alg.findPath(source, dest);
 }
 
+//updates all of the lidar readings and checks to see if an obstacle has been spotted
 void Autonomous::lidarValues(QByteArray message)
 {
     isThereObstacle =false;
+
+    //updates the Lidar values and checks to see if there is an obstacle
     for(int i = 0; i < 5; i++)
     {
-        //TODO:fix this so that it converts the bytes to ints
-        obstacleHeights[i] = message[2*i] | message[2 * i - 1] << 8;
-        if(obstacleHeights[i] > maxObstacleHeights[i])
+        obstacleDistances[i] = message[2*i] | message[2 * i - 1] << 8;
+        if(obstacleDistances[i] < maxObstacleHeights[i])
+            isThereObstacle = true;
+    }
+
+    //checks for holes. We may need to update this to check to make sure at least two Lidars see a hole before running avoidObstacle
+    for(int i = 1; i < 4; i++)
+    {
+        if(obstacleDistances[i] > maxHoleDepth[i - 1])
             isThereObstacle = true;
     }
 }
