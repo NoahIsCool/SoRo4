@@ -1,6 +1,6 @@
 #include "SearchAlgorithm.h"
 
-SearchAlgorithm::SearchAlgorithm(Cell ** map, int maxx, int maxy, double distWeight, double upWeight, double downWeight)
+SearchAlgorithm::SearchAlgorithm(std::vector<std::vector<Cell>> map, int maxx, int maxy, double distWeight, double upWeight, double downWeight)
 {
 	this->map = map;
 	this->maxx = maxx;
