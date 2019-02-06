@@ -21,6 +21,8 @@ struct data_path {
 
 inline bool operator ==(const data_path &dp1, const data_path &dp2)
 {
+    //FIXME:
+    //is this supposed to be &&?
     return (dp1.address == dp2.address)*(dp1.port == dp2.port)*(dp1.deviceId == dp2.deviceId);
 }
 

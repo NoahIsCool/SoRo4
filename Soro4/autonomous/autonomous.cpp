@@ -6,7 +6,8 @@
 Autonomous::Autonomous() : mySocket("testConfig.conf")
 {
 	// this "should" make the comms object print out any errors it encounters to the terminal
-    connect(mySocket, SIGNAL(messageReady(QByteArray)), this, SLOT(lidarValues(QByteArray)));
+    //FIXME: this is throwing some weird error
+    //connect(mySocket, SIGNAL(messageReady(QByteArray)), this, SLOT(lidarValues(QByteArray)));
 	qInfo() << "library link test";
 	mainLoop();
 }
@@ -59,7 +60,7 @@ void Autonomous::lidarValues(QByteArray message)
     //checks for holes. We may need to update this to check to make sure at least two Lidars see a hole before running avoidObstacle
     for(int i = 1; i < 4; i++)
     {
-        if(obstacleDistances[i] > maxHoleDepth[i - 1])
+        if(obstacleDistances[i] > maxHoleDepths[i - 1])
             isThereObstacle = true;
     }
 }
@@ -227,11 +228,8 @@ std::vector< std::vector<Cell> > Autonomous::parseMap(){
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
 void Autonomous::mainLoop()
 {
-	//placeholder
-    //FIXME: get this from rob
     map = parseMap();
-		//FIXME: need map, MAXX, MAXY from rob
-		//SearchAlgorithm searchAlg(map, EXTX, EXTY, 1.0, 1000.0, 1000.0)
+    searcher = new SearchAlgorithm(map, map.size(), map[0].size(), 1.0, 1000.0, 1000.0);
 
     threadsRunning = true;
     std::thread statusThread(&Autonomous::updateStatus,this);
@@ -252,14 +250,15 @@ void Autonomous::mainLoop()
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
+        std::list<Cell> path;
 	try {
-		std::list<Cell> path = GeneratePath(nextCords);
+        path = GeneratePath(nextCords, *searcher);
 	} catch (AStarException e) {
 		nextCords = inputNextCoords(); //gets the next set of coords
 		continue;
 	}
 
-			std::list<Cell>::iterator it = path.begin();
+        std::list<Cell>::iterator it = path.begin();
 
         //loops through each of the coordinates to get to the next checkpoint
         while(*it != nextCords) //travels to the next set of coords.

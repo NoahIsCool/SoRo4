@@ -31,13 +31,13 @@ LIBS = -L../../libs -lcore -lpthread
 QMAKE_CXXFLAGS += -std=c++11
 
 SOURCES += \
-        autonomous.cpp
-        SearchAlgorithm.cpp
+        autonomous.cpp \
+    SearchAlgorithm.cpp
 
 HEADERS += \
         autonomous.h \
-        autonomous_global.h
-        SearchAlgorithm.h
+        autonomous_global.h \
+    SearchAlgorithm.h
 
 #unix {
     target.path = $$PWD

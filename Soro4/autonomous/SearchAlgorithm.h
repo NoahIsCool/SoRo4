@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "core/core.h"
 #include <list>
@@ -7,6 +7,7 @@
 #include <queue>
 #include <set>
 #include <vector>
+#include <math.h>
 
 class AStarException : public std::runtime_error {
 public:
