@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/core.h"
+#include "core/SearchPriQueue.h"
 #include <list>
 #include <stdexcept>
 #include <string>
