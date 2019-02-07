@@ -63,9 +63,8 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 				if (*it == neighbor) {
 					//and the new route to that neighbor is less expensive than the old one, replace
 					if (it->f > neighbor.f) {
-						it->f = neighbor.f;
-						it->g = neighbor.g;
-						it->parent = neighbor.parent;
+						open.remove(neigbor);
+						open.push(neighbor);
 					}
 				// else add the neighbor to the queue
 				} else {
