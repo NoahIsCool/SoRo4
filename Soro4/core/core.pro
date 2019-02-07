@@ -69,7 +69,8 @@ HEADERS += \
         gps/user.h \
         gps/vehicle.h \
         gps/version.h \
-    comms.h
+    comms.h \
+    SearchPriQueue.h
 
 #unix {
     target.path = $$PWD/

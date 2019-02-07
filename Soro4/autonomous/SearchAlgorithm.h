@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "core/core.h"
+#include "core/SearchPriQueue.h"
 #include <list>
 #include <stdexcept>
 #include <string>
@@ -78,7 +79,7 @@ private:
 		}
 
 		//Overloaded == operator for node. Compares nodes based on coordinate
-		bool operator== (Node n) {
+        bool operator== (Node &n) {
 			return ((*this).x == n.x) && ((*this).y == n.y);
 		}
 	};

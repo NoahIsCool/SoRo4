@@ -34,7 +34,7 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 	}
 
 	//Create the source node and add it to the open list
-	std::priority_queue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
+	SearchPriQueue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
 	std::set<Node, compareNodes2> closed;
 
 	Node sourceNode(sourcex, sourcey, nullptr, 0.0, 0.0);
@@ -57,9 +57,18 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 		std::pair<std::set<Node, compareNodes2>::iterator, bool> inserted = closed.insert(*current);
 		if (inserted.second) {
 			for (Node neighbor : getNeighbors(*current, destx, desty)) {
-                if(!open.find(neighbor)){
-                    open.push(neighbor);
-                }
+                auto it = open.find(neighbor);
+				//if the neighbor is already in the queue
+                if ((SearchAlgorithm::Node)*it == neighbor) {
+					//and the new route to that neighbor is less expensive than the old one, replace
+					if (it->f > neighbor.f) {
+                        open.remove(neighbor);
+						open.push(neighbor);
+					}
+				// else add the neighbor to the queue
+				} else {
+					open.push(neighbor);
+				}
 			}
 		}
 
@@ -93,7 +102,7 @@ std::list<SearchAlgorithm::Node> SearchAlgorithm::getNeighbors(Node& current, in
 		for (int y = current.y - 1; y <= current.y + 1; y++) { //CHNG 'y < current.y + 1' to 'x <= current.y + 1'
 			if (x < 0 || y < 0 || x >= maxx || y >= maxy || (x == current.x && y == current.y)) {
 				continue;
-            }delete
+            }
 
 			//construct a new node for each neighbor and add it to the list
 			double newG = getGCost(current, x, y);
