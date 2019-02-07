@@ -34,7 +34,7 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 	}
 
 	//Create the source node and add it to the open list
-	std::priority_queue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
+	SearchPriQueue<Node, std::vector<Node>, compareNodes> open; //Create open, closed, and register lists
 	std::set<Node, compareNodes2> closed;
 
 	Node sourceNode(sourcex, sourcey, nullptr, 0.0, 0.0);
@@ -57,7 +57,20 @@ std::list<Cell> SearchAlgorithm::findPath(Cell source, Cell dest)
 		std::pair<std::set<Node, compareNodes2>::iterator, bool> inserted = closed.insert(*current);
 		if (inserted.second) {
 			for (Node neighbor : getNeighbors(*current, destx, desty)) {
-				open.push(neighbor);
+
+				std::SearchPriQueue<Node, std::vector<Node>, compareNodes>::iterator it = open.find(neighbor);
+				//if the neighbor is already in the queue
+				if (*it == neighbor) {
+					//and the new route to that neighbor is less expensive than the old one, replace
+					if (it->f > neighbor.f) {
+						it->f = neighbor.f;
+						it->g = neighbor.g;
+						it->parent = neighbor.parent;
+					}
+				// else add the neighbor to the queue
+				} else {
+					open.push(neighbor);
+				}
 			}
 		}
 
