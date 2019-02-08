@@ -38,7 +38,7 @@
 #define JETSON_POWER A0
 
 // ethernet interface ip address (static ip)
-static byte myip[] = { 10,0,0,177 };
+static byte myip[] = { 10,0,0,101 };
 // gateway ip address
 static byte gwip[] = { 10,0,0,1 };
 // ethernet mac address - must be unique on your network
@@ -59,7 +59,7 @@ char rightWheels = 0;
 char modifiers = 0;
 char tilt = 90;
 
-int timeOut = 0;
+unsigned long timeOut = 0;
 
 
 //callback that prints received packets to the serial port
@@ -137,7 +137,7 @@ void setup(){
   ether.printIp("DNS: ", ether.dnsip);
 
   //register udpSerialPrint() to port 1337
-  ether.udpServerListenOnPort(&udpSerialPrint, 8888);
+  ether.udpServerListenOnPort(&udpSerialPrint, 1001);
 
   // setup servos
   wheel[0].attach(WHEEL_FL);
