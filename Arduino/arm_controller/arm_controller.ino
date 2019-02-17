@@ -5,6 +5,7 @@
 enum DATA_POS : int{
   START = 0,
   ID,
+  STOW,
   DISABLE,
   BASE,
   SHOULDER,
@@ -14,6 +15,8 @@ enum DATA_POS : int{
   CLAW,
   HASH
 };
+//packet size: HASH+1 because hash is the last in the message
+int packetSize = HASH+1;
 
 const char DEVICE_ID = 1;
 
@@ -123,6 +126,16 @@ void loop() {
 }
 
 void updateServos() {
+
+  Serial.print(base_pos);
+  Serial.print(" ");
+  Serial.print(shoulder_pos);
+  Serial.print(" ");
+  Serial.print(wrist_pos);
+  Serial.print(" ");
+  Serial.print(wristRotateSpeed);
+  Serial.print(" ");
+  Serial.println(clawDir);
 
   base.write(base_pos);
   shoulder.write(shoulder_pos);

@@ -38,11 +38,31 @@
 //Serial Communication ID so the computer knows what device this is.
 int ID = 1; 
 
-
+//lists the data positions for the udp message
+enum DATA_POS : int{
+  START = 0,
+  ID_POS,
+  STOW,
+  DISABLE,
+  BASE,
+  SHOULDER,
+  ELBOW,
+  WRIST,
+  WRIST_ROTATE_SPEED,
+  CLAW,
+  HASH
+};
+//packet size: HASH+1 because hash is the last in the message
+int packetSize = HASH+1;
 
 //Port Numbers 
 int buttons[4] = {0,1,2,3}; //rollLeft (CCW from the rover's perspective), rollRight (CW from the rover's perspective), let go, grab (digital ports connected to buttons)
-int joints[4] = {0,1,2,3}; //yaw, shoulder, elbow, wrist pitch (the analog ports the potentiometers are connected to)
+#define BASE_POT 0
+#define SHOULDER_POT 1
+#define ELBOW_POT 2
+#define WRIST_POT 3
+#define JOYSTICK 4
+int joints[5] = {0,1,2,3,4}; //base, shoulder, elbow, wrist pitch (the analog ports the potentiometers are connected to)
 
 //Ethernet stuff
 static byte ip[] = {10,0,0,105};
@@ -55,8 +75,8 @@ uint8_t slavePort= 1001;
 
 //cannot use pins 13 - 11 and 8
 //for digital control pins
-#define CLOSE_CLAW_PIN 2
-#define OPEN_CLAW_PIN 3
+#define CLAW_CLOSE_PIN 2
+#define CLAW_OPEN_PIN 3
 #define STOW_ARM 4
 #define DISABLE_ARM 5
 
@@ -66,6 +86,11 @@ uint8_t slavePort= 1001;
 #define ELBOW_ANALOG A2
 #define WRIST_ANALOG A3
 #define JOYSTICK A4
+
+//speeds for controlling the claw
+#define HOLD 90
+#define OPEN_CLAW 120
+#define CLOSE_CLAW 60
 
 void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port, const char *data, uint16_t len){
 
@@ -102,41 +127,34 @@ void sendData(){
   0.263671875 is the value 270°/1024 to convert the potentiometer output to degrees (5v/1024 represents 270°)
   NOTE: The converstion to a int restricts our accuracy to a minimum of ~4° of accuracy and to type on a keyboard we need 1.2°)
   */
-  //FIXME: may need to change this to char
-  char data[8];
-  data[0] = -127; //Start command to tell the computer we are sending data
-  data[1] = ID; //ID number to identify the arduino this is coming from.
-  data[2] = (char)analogRead(joints[0])/1024.0;//*0.263671875; //Get the data from the Yaw Pot. (rotate arm horizontally)
-  data[3] = (char)analogRead(joints[1])/1024.0;//*0.263671875; //Get the data from the Shoulder Pot. (the bottom joint)
-  data[4] = (char)analogRead(joints[2])/1024.0;//*0.263671875; //Get the data from the Elbow Pot. (the second from the bottom joint)
-  data[5] = (char)analogRead(joints[3])/1024.0;//*0.263671875; //Get the data from the Wrist Pitch Pot. (rotate the finger/hand pitch)
-  data[6] = 0; //Set all the button data to default to 0 (low)
-  
-
-  //Figure out if the buttons are being pressed or not
-  for(int i = 0; i<4; i++){
-    
-    //Set the digital port i to pinmode of input so we can read data from it.
-    pinMode(buttons[i], INPUT);
-    
-    //If the button is pressed run this if statement
-    if(digitalRead(buttons[i] = 0) == HIGH){
-      
-      /*
-       * Make data[6] a byte with values:
-        (button 3)(button 2)(Button 1)(Button 0)(Button 3)(Button 2)(Button 1)(Button 0) and each value is 1 (high) or 0 (low)
-        data[6] starts as 00000000 and by bitwise XOR'ing the value we store the button values as 1 or 0
-        There are 4 buttons and since we have an extra 4 bits the sequence repeats for redundancy
-      */
-      data[6]=data[6]^(int)pow(2,i)^(int)pow(2,4+i); //pow(2,i) edits the least 4 significant bits and pow(2,4+i) edits the 4 most significant bits
-    }
+  char data[packetSize];
+  data[START] = -127; //Start command to tell the computer we are sending data
+  data[ID_POS] = ID; //ID number to identify the arduino this is coming from.
+  data[BASE] = (char)analogRead(joints[BASE_POT]) / 1024.0;//*0.263671875; //Get the data from the Yaw Pot. (rotate arm horizontally)
+  data[SHOULDER] = (char)analogRead(joints[SHOULDER_POT]) / 1024.0;//*0.263671875; //Get the data from the Shoulder Pot. (the bottom joint)
+  data[ELBOW] = (char)analogRead(joints[ELBOW_POT]) / 1024.0;//*0.263671875; //Get the data from the Elbow Pot. (the second from the bottom joint)
+  data[WRIST] = (char)analogRead(joints[WRIST_POT]) / 1024.0;//*0.263671875; //Get the data from the Wrist Pitch Pot. (rotate the finger/hand pitch)
+  data[WRIST_ROTATE_SPEED] = (char)analogRead(joints[JOYSTICK]) / 1024;
+  if(digitalRead(CLAW_OPEN_PIN) == HIGH){
+    data[CLAW] = OPEN_CLAW;
+  }else if(digitalRead(CLAW_CLOSE_PIN) == HIGH){
+    data[CLAW] = CLOSE_CLAW;
+  }else{
+    data[CLAW] = HOLD;
+  }
+  //data[6] = 0; //Set all the button data to default to 0 (low)
+  if(digitalRead(STOW_ARM) == HIGH){
+    data[STOW] = 1;
+  }
+  if(digitalRead(DISABLE_ARM) == HIGH){
+    data[DISABLE] = 1;
   }
   
   //Set this variable to 0 so we can average it at the end
   int sum = 0;
   
   //Cycle throught all elements of the message and send
-  for(int z = 0; z<7; z++){
+  for(int z = 0; z<packetSize; z++){
     
     //Send the data array element by element (will be seen by reader as a series of integers)
     Serial.print(data[z]);
@@ -146,8 +164,8 @@ void sendData(){
     //Increase the sum by the data value so we can average it out at the end
     sum = sum + data[z];
   }
-  Serial.println(sum/7);
-  data[7] = sum / 7;
+  Serial.println(sum/10);
+  data[HASH] = sum / 10;
   ether.sendUdp(data, sizeof(data), port, roverIP, slavePort);
 
 }
