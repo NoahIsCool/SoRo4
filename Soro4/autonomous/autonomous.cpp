@@ -202,12 +202,13 @@ void Autonomous::mainLoop()
             else
             {
                 //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-                double angleToTurn = getAngleToTurn(*it);
+                double angleToTurn = getAngleToTurn(nextCords);
 
                 std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
                 std::vector<qint8> newSpeeds(speeds.size(),0);
+                newSpeeds[0] = ((int)round(speeds[0]) <= 90 && (int)round(speeds[0]) >= -90) ? (int)round(speeds[0]) : (int)round(speeds[0]) >= 90 ? 90 : -90;
+                newSpeeds[1] = ((int)round(speeds[1]) <= 90 && (int)round(speeds[1]) >= -90) ? (int)round(speeds[1]) : (int)round(speeds[1]) >= 90 ? 90 : -90;
 
-                //FIXME: change all speeds to ints not doubles. Dont need that accurate
                 //mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
                 QByteArray array;
                 array.append(-127); //start byte
