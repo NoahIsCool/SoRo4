@@ -18,7 +18,7 @@
 
 #define DEVICE_ID 1
 
-byte message[14]; // the bytes we send out over UDP
+char message[14]; // the bytes we send out over UDP
 
 
 // master address (this)
@@ -33,7 +33,7 @@ const int dstPort PROGMEM = 1002;
 static byte gwip[] = { 192, 168, 0, 1 };
 
 // ethernet mac address - must be unique on your network
-static byte mymac[] = { 0x69, 0x69, 0x69, 0x69, 0x69, 0x69 }; // nice
+static byte mymac[] = { 0x69, 0x69, 0x69, 0x69, 0x69, 0x69 };
 
 // tcp/ip send and receive buffer
 byte Ethernet::buffer[500];
@@ -67,6 +67,7 @@ void setup()
 
 void loop()
 {  
+  delay(125);
   readData();
 
   // the message format (14 bytes total):
@@ -84,20 +85,20 @@ void readData()
   message[1] = DEVICE_ID;
 
   // pot values are 2 bytes (most significant bits sent first)
-  message[2] = (byte)(analogRead(POT_YAW) >> 8);
-  message[3] = (byte)(analogRead(POT_YAW));
+  message[2] = (char)(analogRead(POT_YAW) >> 8);
+  message[3] = (char)(analogRead(POT_YAW));
 
-  message[4] = (byte)(analogRead(POT_SHOULDER) >> 8);
-  message[5] = (byte)(analogRead(POT_SHOULDER));
+  message[4] = (char)(analogRead(POT_SHOULDER) >> 8);
+  message[5] = (char)(analogRead(POT_SHOULDER));
 
-  message[6] = (byte)(analogRead(POT_ELBOW) >> 8);
-  message[7] = (byte)(analogRead(POT_ELBOW));
+  message[6] = (char)(analogRead(POT_ELBOW) >> 8);
+  message[7] = (char)(analogRead(POT_ELBOW));
 
-  message[8] = (byte)(analogRead(POT_WRIST_PITCH) >> 8);
-  message[9] = (byte)(analogRead(POT_WRIST_PITCH));
+  message[8] = (char)(analogRead(POT_WRIST_PITCH) >> 8);
+  message[9] = (char)(analogRead(POT_WRIST_PITCH));
 
-  message[10] = (byte)(analogRead(POT_WRIST_ROLL) >> 8);
-  message[11] = (byte)(analogRead(POT_WRIST_ROLL));
+  message[10] = (char)(analogRead(POT_WRIST_ROLL) >> 8);
+  message[11] = (char)(analogRead(POT_WRIST_ROLL));
   
   // buttons - each bit is a different button
   message[12] = 0;
