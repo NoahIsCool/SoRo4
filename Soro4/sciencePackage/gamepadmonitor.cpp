@@ -132,7 +132,6 @@ void GamepadMonitor::sendUDP(){
 
     QByteArray out;
     out.append(char(-127));
-    out.append(char(2));
     out.append(char(actuator));
     out.append(char(actuatorSpeed));
     out.append(char(spin));

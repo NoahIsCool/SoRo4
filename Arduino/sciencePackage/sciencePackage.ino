@@ -24,11 +24,9 @@ dht11 DHT11;
 #define DHT11PIN 2
 #define CO2_PIN 4
 
-float gasData[8];
-float TandMData[7];
+//float gasData[8];
+//float TandMData[7];
 int flag = -127;
-
-const char DEVICE_ID = 2;
 
 int drillStuff[] = { 2, 0, 0 };
 int fanSpeed = 0;
@@ -55,25 +53,31 @@ int localPort = 4400;
 //the packet size should be the position of the last byte of data + 1
 #define packetSize HASH_POS + 1//((8 + 7 + 1) * 4)
 char message[packetSize];
+char nack = "nack";
+int header = -127;
 
 //recieving data positions
 #define HEADER 0
-#define ID_POS 1
-#define BASE_POS 2
-#define SHOULDER_POS 3
-#define ELBOW_POS 4
-#define OVERDRIVE_POS 5
-#define FAN_SPEED_POS 6
-#define HASH_POS 7
+#define BASE_POS 1
+#define SHOULDER_POS 2
+#define ELBOW_POS 3
+#define OVERDRIVE_POS 4
+#define FAN_SPEED_POS 5
+#define HASH_POS 6
+
+//union struct to help with copying floats into message
+union floatStruct{
+  float f;
+  uint8_t data[4];
+};
 
 Servo myservo;
 Servo drill;
 int drillSpeed = 0;
 
 void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port, const char *data, uint16_t len){
-  if(data[ID_POS] != DEVICE_ID){
-    char badMessage[] = {-126, DEVICE_ID, data[ID_POS]};
-    ether.sendUdp(badMessage,sizeof(badMessage), localPort, mcIP, port);
+  if(data[HEADER] != header){
+    ether.sendUdp(nack,sizeof(nack), localPort, mcIP, port);
   }else{
     drillStuff[0] = data[BASE_POS];
     drillStuff[1] = data[SHOULDER_POS];
@@ -89,20 +93,21 @@ void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port
     //write gas sensor data to mc
     //need to pack it?
     //gasData
+    /*int nextPos = GAS_DATA_POS;
     for(int i = 0; i < 8; i++){
-      message[GAS_DATA_POS + (i* 4)] = ((uint32_t)gasData[i]);
-      message[GAS_DATA_POS + (i* 4) + 1] = ((uint32_t)gasData[i]) << 8;
-      message[GAS_DATA_POS + (i* 4) + 2] = ((uint32_t)gasData[i]) << 16;
-      message[GAS_DATA_POS + (i* 4) + 3] = ((uint32_t)gasData[i]) << 24;
+      nextPos = GAS_DATA_POS + (i * 4);
+      message[nextPos] = ((uint32_t)gasData[i]);
+      message[nextPos + 1] = ((uint32_t)gasData[i]) << 8;
+      message[nextPos + 2] = ((uint32_t)gasData[i]) << 16;
+      message[nextPos + 3] = ((uint32_t)gasData[i]) << 24;
     }
     for(int i = 0; i < 7; i++){
-      message[T_AND_M_DATA_POS + (i*4)] = ((uint32_t)TandMData[i]);
-      message[T_AND_M_DATA_POS + (i*4) + 1] = ((uint32_t)TandMData[i]) << 8;
-      message[T_AND_M_DATA_POS + (i*4) + 2] = ((uint32_t)TandMData[i]) << 16;
-      message[T_AND_M_DATA_POS + (i*4) + 3] = ((uint32_t)TandMData[i]) << 24;
-    }
-    //ether.sendUdp(gasData,sizeof(gasData), localPort, mcIP, port);
-    //ether.sendUdp(TandMData,sizeof(TandMData), localPort, mcIP, port);
+      nextPos = T_AND_M_DATA_POS + (i * 4);
+      message[nextPos] = ((uint32_t)TandMData[i]);
+      message[nextPos + 1] = ((uint32_t)TandMData[i]) << 8;
+      message[nextPos + 2] = ((uint32_t)TandMData[i]) << 16;
+      message[nextPos + 3] = ((uint32_t)TandMData[i]) << 24;
+    }*/
     
     //now read CO2 sensor data
     //read CO2 sensor
@@ -112,8 +117,7 @@ void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port
       Serial.println("CO2 Error");
     } else {
       float concentration = (voltage - 400) * 50.0/16.0;
-      Serial.print(concentration);
-      Serial.print(",");
+      Serial.println(concentration);
       message[CONCENTRATION_POS] = ((uint32_t)concentration);
       message[CONCENTRATION_POS + 1] = ((uint32_t)concentration) << 8;
       message[CONCENTRATION_POS + 2] = ((uint32_t)concentration) << 16;
@@ -127,6 +131,7 @@ void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port
       spinFan();
     } else {
       Serial.print("Data Corrupted");
+      ether.sendUdp(nack,sizeof(nack), localPort, mcIP, port);
     }
 
     ether.sendUdp(message,sizeof(message), localPort, mcIP, port);
@@ -206,26 +211,133 @@ void readTandMSensor()
       flag = -118;//"Unknown error");
       break;
   }
-  TandMData[0] = flag;
+  /*TandMData[0] = flag;
   TandMData[1] = (float)DHT11.humidity;// Humidity (%)
   TandMData[2] = (float)DHT11.temperature; // Temperature (°C)
   TandMData[3] = Fahrenheit(DHT11.temperature);
   TandMData[4] = Kelvin(DHT11.temperature);
   TandMData[5] = dewPoint(DHT11.temperature, DHT11.humidity);// Dew Point (°C):
-  TandMData[6] =  dewPointFast(DHT11.temperature, DHT11.humidity); // Dew PointFast (°C)??? TODO: use one or the other
+  TandMData[6] =  dewPointFast(DHT11.temperature, DHT11.humidity); // Dew PointFast (°C)??? TODO: use one or the other*/
+
+  int nextPos = T_AND_M_DATA_POS;
+  floatStruct nextReading;
+  char *messagePointer = message;
+  messagePointer += nextPos;
+  messagePointer[0] = flag;
+  messagePointer++;
+  nextReading.f = (float)DHT11.humidity;
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
+  messagePointer += 4;
+  nextReading.f = (float)DHT11.temperature;
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
+  messagePointer += 4;
+  nextReading.f = Fahrenheit(DHT11.temperature);
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
+  messagePointer += 4;
+  nextReading.f = Kelvin(DHT11.temperature);
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
+  messagePointer += 4;
+  nextReading.f = dewPoint(DHT11.temperature, DHT11.humidity);
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
+  nextReading.f = dewPointFast(DHT11.temperature, DHT11.humidity);
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
 }
 
 void readGasSensor()
 {
   // NH3,CO,NO2,C3H8,C4H10,CH4,H2,C2H5OH
-  gasData[0] = gas.measure_NH3();
+  /*gasData[0] = gas.measure_NH3();
   gasData[1] = gas.measure_CO();
   gasData[2] = gas.measure_NO2();
   gasData[3] = gas.measure_C3H8();
   gasData[4] = gas.measure_C4H10();
   gasData[5] = gas.measure_CH4();
   gasData[6] = gas.measure_H2();
-  gasData[7] = gas.measure_C2H5OH();
+  gasData[7] = gas.measure_C2H5OH();*/
+
+  //sweet-ass memory trick. Props the only time you would ever use a union. The float and char array share the same memory so you dont have to do bit shifting
+  //the message pointer allows me to increment the address to the next address or the next byte in the message
+  int nextPos = GAS_DATA_POS;
+  floatStruct nextReading;
+  char *messagePointer = message;
+  messagePointer += nextPos;
+  nextReading.f = gas.measure_NH3();
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
+  messagePointer += 4;
+  nextReading.f = gas.measure_CO();
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
+  messagePointer += 4;
+  nextReading.f = gas.measure_NO2();
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
+  messagePointer += 4;
+  nextReading.f = gas.measure_C3H8();
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
+  messagePointer += 4;
+  nextReading.f = gas.measure_C4H10();
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
+  messagePointer += 4;
+  nextReading.f = gas.measure_CH4();
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
+  messagePointer += 4;
+  nextReading.f = gas.measure_H2();
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
+  messagePointer += 4;
+  nextReading.f = gas.measure_C2H5OH();
+  memcpy(messagePointer, nextReading.data, sizeof(nextReading));
+  
+  /*message[nextPos] = nextReading;
+  message[nextPos + 1] = nextReading << 8;
+  message[nextPos + 2] = nextReading << 16;
+  message[nextPos + 3] = nextReading << 24;
+  nextPos += 4;
+  
+  nextReading = (uint32_t)gas.measure_CO();
+  message[nextPos] = nextReading;
+  message[nextPos + 1] = nextReading << 8;
+  message[nextPos + 2] = nextReading << 16;
+  message[nextPos + 3] = nextReading << 24;
+  nextPos += 4;
+  
+  nextReading = (uint32_t)gas.measure_NO2();
+  message[nextPos] = nextReading;
+  message[nextPos + 1] = nextReading << 8;
+  message[nextPos + 2] = nextReading << 16;
+  message[nextPos + 3] = nextReading << 24;
+  nextPos += 4;
+
+  nextReading = (uint32_t)gas.measure_C3H8();
+  message[nextPos] = nextReading;
+  message[nextPos + 1] = nextReading << 8;
+  message[nextPos + 2] = nextReading << 16;
+  message[nextPos + 3] = nextReading << 24;
+  nextPos += 4;
+
+  nextReading = (uint32_t)gas.measure_C4H10();
+  message[nextPos] = nextReading;
+  message[nextPos + 1] = nextReading << 8;
+  message[nextPos + 2] = nextReading << 16;
+  message[nextPos + 3] = nextReading << 24;
+  nextPos += 4;
+
+  nextReading = (uint32_t)gas.measure_CH4();
+  message[nextPos] = nextReading;
+  message[nextPos + 1] = nextReading << 8;
+  message[nextPos + 2] = nextReading << 16;
+  message[nextPos + 3] = nextReading << 24;
+  nextPos += 4;
+
+  nextReading = (uint32_t)gas.measure_H2();
+  message[nextPos] = nextReading;
+  message[nextPos + 1] = nextReading << 8;
+  message[nextPos + 2] = nextReading << 16;
+  message[nextPos + 3] = nextReading << 24;
+  nextPos += 4;
+
+  nextReading = (uint32_t)gas.measure_C2H5OH();
+  message[nextPos] = nextReading;
+  message[nextPos + 1] = nextReading << 8;
+  message[nextPos + 2] = nextReading << 16;
+  message[nextPos + 3] = nextReading << 24;*/
 }
 
 double Fahrenheit(double celsius)
