@@ -23,7 +23,7 @@ INCLUDEPATH += /usr/lib/arm-linux-gnueabihf/glib-2.0/include
 SOURCES += \
         main.cpp
 
-LIBS += -L../../libs -ldriveController -lmasterArm -lcore
+LIBS += -L../../libs -ldriveController -lmasterArm -lcore -lsciencePackage
 
 QMAKE_LFLAGS += -Wl,--rpath=\\\$\$ORIGIN/../libs
 
