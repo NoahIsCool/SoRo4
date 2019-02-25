@@ -11,6 +11,7 @@ QT += gamepad
 
 TARGET = sciencePackage
 TEMPLATE = lib
+DESTDIR = ../../libs
 
 DEFINES += SCIENCEPACKAGE_LIBRARY
 
@@ -30,14 +31,14 @@ LIBS = -L../../libs -lcore -lpthread
 
 SOURCES += \
         sciencepackage.cpp \
-    gamepadmonitor.cpp
+    gamepadmonitor.cpp \
+    sciencepackage.cpp
 
 HEADERS += \
         sciencepackage.h \
         sciencepackage_global.h \ 
-    gamepadmonitor.h
+    gamepadmonitor.h \
+    sciencepackage.h
 
-unix {
-    target.path = /usr/lib
+    target.path = $$PWD/
     INSTALLS += target
-}

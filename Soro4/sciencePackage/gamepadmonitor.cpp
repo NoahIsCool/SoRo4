@@ -33,14 +33,14 @@ GamepadMonitor::GamepadMonitor( QObject *parent, comms *drillComm)
     connect(m_gamepad, SIGNAL(buttonR2Changed(double)), this, SLOT(onR2(double)));
 
 
-    //connect(&mySocket, SIGNAL(messageReady(QByteArray)), this, SLOT(message(QByteArray)));
+    //connect(mySocket, SIGNAL(messageReady(QByteArray)), this, SLOT(message(QByteArray)));
 
 
     clawL = 75;
     clawR = 150;
     udpTimer = new QTimer();
     connect(udpTimer, SIGNAL(timeout()), this, SLOT(sendUDP()));
-    udpTimer->start(100);
+    udpTimer->start(500);
 }
 
 void GamepadMonitor::message(QByteArray arr){
@@ -137,12 +137,12 @@ void GamepadMonitor::sendUDP(){
     out.append(char(spin));
     out.append(char(overdrive));
     out.append(fan);
-    int hash = (actuator+actuatorSpeed+spin+overdrive+fan)/5;
-    out.append(char(hash));
+    char hash = (char)(actuator+actuatorSpeed+spin+overdrive+fan)/5;
+    out.append(hash);
 
     mySocket->sendMessage(out);
-    qDebug()<< "Actuator: "   << actuator  << "\tSpeed: "  <<  actuatorSpeed<<"\tDrill Speed: " << spin
-            << "\tOverdrie: " << int(overdrive) << "\tFan Speed: " <<  fan  <<  "\tHash: "<< hash;
+    //qDebug()<< "Actuator: "   << actuator  << "\tSpeed: "  <<  actuatorSpeed<<"\tDrill Speed: " << spin
+    //        << "\tOverdrie: " << int(overdrive) << "\tFan Speed: " <<  fan  <<  "\tHash: "<< hash;
 }
 
 void GamepadMonitor::printVals(){

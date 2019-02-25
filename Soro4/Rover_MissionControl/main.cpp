@@ -4,7 +4,7 @@
 #include "sciencePackage/sciencepackage.h"
 
 //until we can get the gui working, we will use define flags to determine which system to run
-#define DRIVE_SYSTEM
+#define SCIENCE_PACKAGE
 
 int main(int argc, char *argv[])
 {

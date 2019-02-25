@@ -16,7 +16,10 @@
 
 //#include <Adafruit_MotorShield.h>
 
-#define FAN_PIN 10
+//this one will control the fan being on or off
+#define FAN_PIN 8
+//this one will always be low
+#define FAN_LOW_PIN 9
 #define ACTUATOR_PIN_A 3
 #define ACTUATOR_PIN_B 5
 #define DRILL_PIN 12
@@ -30,16 +33,16 @@ int flag = -127;
 
 int drillStuff[] = { 2, 0, 0 };
 int fanSpeed = 0;
-int clientHash = 0;
-int myHash = 0;
-int hash = 0;
+char hash = 0;
 // Need MAC and IP address of the Arduino
-static byte ip[] = {10,0,0,105};
-static byte gw[] = {10,0,0,1};
+static byte ip[] = {192,168,1,105};//{10,0,0,105};
+static byte gw[] = {192,168,1,1};//{10,0,0,1};
+static byte dnsip[] = { 8,8,8,8 };
+static byte netmask[] = { 255,255,255,0 };
 static byte mac[] = {0x69,0xFF,0x3D,0x9A,0x88,0x12};
-static byte mcIP[] = {10,0,0,103};
+static byte mcIP[] = {192,168,1,102};//{10,0,0,103};
 byte Ethernet::buffer[500];
-uint8_t port = 21;
+uint8_t port = 4444;
 int localPort = 4400;
 
 //sending data positions
@@ -71,21 +74,22 @@ union floatStruct{
   uint8_t data[4];
 };
 
-Servo myservo;
 Servo drill;
 int drillSpeed = 0;
 
 void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port, const char *data, uint16_t len){
   if(data[HEADER] != header){
+    Serial.print("bad message: ");
+    Serial.println(data[HEADER]);
     ether.sendUdp(nack,sizeof(nack), localPort, mcIP, port);
   }else{
+    //Serial.println(data);
     drillStuff[0] = data[BASE_POS];
     drillStuff[1] = data[SHOULDER_POS];
     drillStuff[2] = data[ELBOW_POS];
     drillStuff[3] = data[OVERDRIVE_POS];
     drillStuff[4] = data[FAN_SPEED_POS];
-    hash = data[HASH_POS];
-    myHash = (drillStuff[0] + drillStuff[1] + drillStuff[2] + drillStuff[3] + drillStuff[4]) / 5;
+    hash = (data[BASE_POS] + data[SHOULDER_POS] + data[ELBOW_POS] + data[OVERDRIVE_POS] + data[FAN_SPEED_POS]) / 5;
 
     readGasSensor();
     readTandMSensor();
@@ -117,7 +121,7 @@ void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port
       Serial.println("CO2 Error");
     } else {
       float concentration = (voltage - 400) * 50.0/16.0;
-      Serial.println(concentration);
+      //Serial.println(concentration);
       message[CONCENTRATION_POS] = ((uint32_t)concentration);
       message[CONCENTRATION_POS + 1] = ((uint32_t)concentration) << 8;
       message[CONCENTRATION_POS + 2] = ((uint32_t)concentration) << 16;
@@ -125,40 +129,60 @@ void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port
     }
 
     // check hash and actually move things
-    if (data[HASH_POS] == myHash ) {
+    if (data[HASH_POS] == hash ) {
       moveDrill();
       spinOfDeath();
       spinFan();
     } else {
       Serial.print("Data Corrupted");
+      Serial.print((int)data[HASH_POS]);
+      Serial.print(" ");
+      Serial.println((int)hash);
       ether.sendUdp(nack,sizeof(nack), localPort, mcIP, port);
+      return;
     }
 
     ether.sendUdp(message,sizeof(message), localPort, mcIP, port);
+    Serial.print("sent message of size: ");
+    Serial.println((char*)mcIP);
   }
 }
 
 void setup() {
   // Start gas sensor
-  gas.begin(0x04);//the default I2C address of the slave is 0x04
-  gas.powerOn();
+  //gas.begin(0x04);//the default I2C address of the slave is 0x04
+  //gas.powerOn();
   delay(1000);
-  myservo.attach(FAN_PIN);
-  Serial.begin(9600);
-  Serial.setTimeout(1000);
+  pinMode(FAN_PIN,OUTPUT);
+  pinMode(FAN_LOW_PIN,OUTPUT);
+  digitalWrite(FAN_PIN,LOW);
+  digitalWrite(FAN_LOW_PIN,LOW);
+  Serial.begin(115200);
+  //Serial.setTimeout(1000);
   Serial.println("NH3,CO,NO2,C3H8,C4H10,CH4,H2,C2H5OH,Flag,Humidity,Tempature( C ),Fahrenheit,Kelvin,Dew Point,Dew Point,Hash");
   drill.attach(DRILL_PIN);
+
+  if (ether.begin(sizeof Ethernet::buffer, mac, 10) == 0)
+    Serial.println(F("Failed to access Ethernet controller"));
+  ether.staticSetup(ip, gw, dnsip, netmask);
+
+  ether.udpServerListenOnPort(&handleMessage, localPort);
+
+  ether.printIp("IP:  ", ether.myip);
+  ether.printIp("GW:  ", ether.gwip);
+  ether.printIp("DNS: ", ether.dnsip);
 
   //analogReference(DEFAULT);
 
   //delay while the CO2 sensor warms up
-  int voltage = analogRead(CO2_PIN) * (5000/1024.0);
+  /*int voltage = analogRead(CO2_PIN) * (5000/1024.0);
   char *reheatingMessage = "CO2 Preheating";
   while (voltage < 400) {
     //Serial.println("CO2 Preheating");
     ether.sendUdp(reheatingMessage, sizeof(reheatingMessage), localPort, mcIP, port);
     voltage = analogRead(CO2_PIN) * (5000/1024.0);
-  }
+  }*/
+  Serial.println("all setup");
 }
 
 void loop() {
@@ -385,7 +409,12 @@ double dewPointFast(double celsius, double humidity)
 }
 
 void spinFan() {
-    myservo.write(90 + fanSpeed);
+    //myservo.write(90 + fanSpeed);
+    if(fanSpeed > 50){
+      digitalWrite(FAN_PIN,HIGH);
+    }else{
+      digitalWrite(FAN_PIN,LOW);
+    }
 }
 
 void moveDrill() {

@@ -1,4 +1,4 @@
-#include <queue>
+﻿#include <queue>
 #include <algorithm>
 
 template<
@@ -19,14 +19,14 @@ public:
         auto first = this->c.cbegin();
         auto last = this->c.cend();
         while (first!=last) {
-            if (*first==val) return first;
-            ++first;
+            //if (*first==val) return first;
+            //++first;
         }
         return last;
     }
 
     bool remove(const T& value) {
-        auto it = std::find(this->c.begin(), this->c.end(), value);
+        /*auto it = std::find(this->c.begin(), this->c.end(), value);
         if (it != this->c.end()) {
             this->c.erase(it);
             std::make_heap(this->c.begin(), this->c.end(), this->comp);
@@ -34,6 +34,7 @@ public:
        }
        else {
         return false;
-       }
+       }*/
+        return false;
      }
 };
