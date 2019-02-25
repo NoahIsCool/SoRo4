@@ -1,8 +1,9 @@
 // Eric Rackelin
-// 2/20/19
+// 2/21/19
+// arduino uno shield version
 
-#include <EtherCard.h>
-#include <IPAddress.h>
+#include <Ethernet.h>
+#include <EthernetUdp.h>
 #include <Servo.h>
 
 #define BUTTON_CLAW_OPEN 2
@@ -20,23 +21,18 @@
 
 char message[14]; // the bytes we send out over UDP
 
-
 // master address (this)
-static byte myip[] = { 192, 168, 0, 69 };
+IPAddress myip(192, 168, 1, 69);
 const int srcPort PROGMEM = 4321;
-
-// slave address
-static byte dstIp[] = { 10, 0, 0, 102 };
-const int dstPort PROGMEM = 1002;
-
-// gateway ip address
-static byte gwip[] = { 192, 168, 0, 1 };
 
 // ethernet mac address - must be unique on your network
 static byte mymac[] = { 0x69, 0x69, 0x69, 0x69, 0x69, 0x69 };
 
-// tcp/ip send and receive buffer
-byte Ethernet::buffer[500];
+// slave address
+IPAddress dstip(192, 168, 1, 140);
+const int dstPort PROGMEM = 2040;
+
+EthernetUDP Udp;
 
 void setup()
 {
@@ -54,29 +50,47 @@ void setup()
   pinMode(POT_WRIST_ROLL, INPUT);
 
   // ethernet
-  Serial.begin(9600);
-  if (ether.begin(sizeof Ethernet::buffer, mymac, 10) == 0)
-    Serial.println(F("Failed to access Ethernet controller"));
+  Ethernet.init(10);
   
-  ether.staticSetup(myip, gwip);
+  Ethernet.begin(mymac, myip);
 
-  ether.printIp("IP:  ", ether.myip);
-  ether.printIp("GW:  ", ether.gwip);
-  ether.printIp("DNS: ", ether.dnsip);
+  // Open serial communications and wait for port to open:
+  Serial.begin(9600);
+  while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
+
+  // Check for Ethernet hardware present
+  if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+    Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
+    while (true) {
+      delay(1); // do nothing, no point running without Ethernet hardware
+    }
+  }
+  if (Ethernet.linkStatus() == LinkOFF) {
+    Serial.println("Ethernet cable is not connected.");
+  }
+
+  // start UDP
+  Udp.begin(srcPort);
 }
 
 void loop()
 {  
-  delay(125);
+  delay(1000);
   readData();
 
   // the message format (14 bytes total):
   // (-127) | Device ID (1) | yaw (high) | yaw (low) | shoulder (high) ...
   // ... | shoulder (low) | elbow (high) | elbow (low) | wrist pitch (high) ...
-  // ... | wrist pitch (low) | wrist roll (high) | wrist roll (low) | hash
+  // ... | wrist pitch (low) | wrist roll (high) | wrist roll (low) | buttons | hash
   
-  //static void sendUdp (char *data,uint8_t len,uint16_t sport, uint8_t *dip, uint16_t dport);
-  ether.sendUdp(message, sizeof(message), srcPort, dstIp, dstPort );
+  Udp.beginPacket(dstip, dstPort);
+  for(int i = 0; i < 14; i++)
+  {
+    Udp.write(message[i]);
+  }
+  Udp.endPacket();
 }
 
 void readData()
