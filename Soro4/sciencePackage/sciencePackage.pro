@@ -32,13 +32,11 @@ LIBS = -L../../libs -lcore -lpthread
 SOURCES += \
         sciencepackage.cpp \
     gamepadmonitor.cpp \
-    sciencepackage.cpp
 
 HEADERS += \
         sciencepackage.h \
         sciencepackage_global.h \ 
     gamepadmonitor.h \
-    sciencepackage.h
 
     target.path = $$PWD/
     INSTALLS += target

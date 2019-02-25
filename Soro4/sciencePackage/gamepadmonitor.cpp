@@ -13,7 +13,8 @@ GamepadMonitor::GamepadMonitor( QObject *parent, comms *drillComm)
     this->wrist_rotation = 0.0;
     auto gamepads = QGamepadManager::instance()->connectedGamepads();
     if (gamepads.isEmpty()) {
-        return;
+        qDebug() << "gamepad missing";
+        //return;
     }
 
     mySocket = drillComm;
@@ -141,8 +142,7 @@ void GamepadMonitor::sendUDP(){
     out.append(hash);
 
     mySocket->sendMessage(out);
-    //qDebug()<< "Actuator: "   << actuator  << "\tSpeed: "  <<  actuatorSpeed<<"\tDrill Speed: " << spin
-    //        << "\tOverdrie: " << int(overdrive) << "\tFan Speed: " <<  fan  <<  "\tHash: "<< hash;
+    //qDebug()<< "Actuator: "   << actuator  << "\tSpeed: "  <<  actuatorSpeed<<"\tDrill Speed: " << spin << "\tOverdrie: " << int(overdrive) << "\tFan Speed: " <<  fan  <<  "\tHash: "<< hash;
 }
 
 void GamepadMonitor::printVals(){
