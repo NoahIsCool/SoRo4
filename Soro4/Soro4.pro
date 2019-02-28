@@ -11,6 +11,7 @@ SUBDIRS += \
     RoverMain \
     Rover_MissionControl \
     #videoStreamer
+    SciencePackage
 
 CONFIG += ordered
 
