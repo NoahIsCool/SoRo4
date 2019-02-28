@@ -48,9 +48,6 @@ void setup() {
 
   // start UDP
   Udp.begin(localPort);
-
-  Serial.print("Max packet size:");
-  Serial.println(UDP_TX_PACKET_MAX_SIZE);
 }
 
 void loop() {
