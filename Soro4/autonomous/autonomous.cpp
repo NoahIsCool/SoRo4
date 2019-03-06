@@ -4,7 +4,7 @@
 
 //this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
 
-Autonomous::Autonomous() : mySocket("testConfig.conf")
+Autonomous::Autonomous() : mySocket("lidar.conf")
 {
 	// this "should" make the comms object print out any errors it encounters to the terminal
     connect(mySocket, SIGNAL(messageReady(QByteArray)), this, SLOT(lidarValues(QByteArray)));

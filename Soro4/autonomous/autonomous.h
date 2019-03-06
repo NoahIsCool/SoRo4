@@ -59,7 +59,7 @@ class AUTONOMOUSSHARED_EXPORT Autonomous : public QObject
         int *maxHoleDepths = {20, 20, 20}; //The distances the Lidars see if there is a hole TODO: get actual values for this
 
     private slots:
-        void lidarValue(QByteArray message);
+        void lidarValues(QByteArray message);
 };
 
 #endif // AUTONOMOUS_H
