@@ -1,22 +1,21 @@
 #include <SoftwareSerial.h>
-#include <Ethernet.h>
-#include <EthernetUdp.h>
+#include <EtherCard.h>
+#include <IPAddress.h>
 
 //should limit the software serial buffer to 9 bytes.
 //this will really help with speed and ram ussage
 #define _SS_MAX_RX_BUFF 9
 
-//mac address for ethernet
-byte mac[] = {
-  0x69,0xAD,0x45,0x92,0xFF,0x9F
-};
-
 //IPaddress. lets use a static address
-IPAddress ip(10,0,0,9);
-EthernetUDP udp;
-unsigned int port = 4545;
-//storage for jetson ip
-IPAddress jetson;
+static byte ip[] = {10,0,0,9};
+static byte gw[] = {192,168,1,1};//{10,0,0,1};
+static byte dnsip[] = { 8,8,8,8 };
+static byte netmask[] = { 255,255,255,0 };
+static byte mac[] = {0x69,0xAD,0x45,0x92,0xFF,0x9F};
+static byte mcIP[] = {192,168,1,102};//{10,0,0,103};
+byte Ethernet::buffer[500];
+int mcPort = 8989;
+int localPort = 4400;
 
 //need to figure out what the packet size we will be recieving
 char ethernetBuffer[20];
@@ -76,26 +75,13 @@ void setup() {
   lidars[3].begin(115200);
   Serial.begin(115200);
 
-  //need to figure out the CS pin for the shield but lets say 10
-  //may not need this
-  //Ethernet.init(10);
-  //start up udp socket
-  Ethernet.begin(mac,ip);
-  udp.begin(port);
+  if (ether.begin(sizeof Ethernet::buffer, mac, 10) == 0)
+    Serial.println("Failed to access Ethernet controller");
+  ether.staticSetup(ip, gw, dnsip, netmask);
+
+  //this would allow us to listen to a local port
+  //ether.udpServerListenOnPort(&handleMessage, localPort);
   
-  //wait for the init message
-  bool connected = false;
-  int packetSize = udp.parsePacket();
-  jetson = udp.remoteIP();
-  while(!connected){
-    udp.read(ethernetBuffer,packetSize);
-    if(ethernetBuffer == "ready"){
-      connected = true;
-      udp.beginPacket(udp.remoteIP(),udp.remotePort());
-      udp.write("ready");
-      udp.endPacket();
-    }
-  }
   lastSendTime = millis();
 }
 
@@ -185,10 +171,8 @@ void loop() {
   while(millis() - lastSendTime);
 
   //write the buffer
-  udp.beginPacket(udp.remoteIP(),udp.remotePort());
-  udp.write((char*)buf);
-  udp.endPacket();
+  ether.sendUdp(buf,sizeof(buf), localPort, mcIP, mcPort);
   lastSendTime = millis();
   
-  Ethernet.maintain();
+  ether.packetLoop(ether.packetReceive());
 }

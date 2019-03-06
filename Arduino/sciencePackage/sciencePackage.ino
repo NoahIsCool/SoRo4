@@ -1,5 +1,9 @@
 /***
 * Code for the CO2 Sensor from: https://www.dfrobot.com/wiki/index.php/Gravity:_Analog_Infrared_CO2_Sensor_For_Arduino_SKU:_SEN0219#Tutorial
+* 
+* fan and drill are using talon
+* 
+* linear actuator is using motor controller
 */
 
 #include <Wire.h>
@@ -31,7 +35,16 @@ dht11 DHT11;
 //float TandMData[7];
 int flag = -127;
 
-int drillStuff[] = { 2, 0, 0 };
+#define EXTEND_ACTUATOR 0
+#define RETRACT_ACTUATOR 1
+#define BREAK_ACTUATOR 2
+
+#define DRILL_ACTUATOR 0
+#define DRILL_ACTUATOR_SPEED 1
+#define RUN_DRILL 2
+#define DRILL_OVERDRIVE 3
+#define DRILL_FAN 4
+int drillStuff[5];
 int fanSpeed = 0;
 char hash = 0;
 // Need MAC and IP address of the Arduino
@@ -42,8 +55,9 @@ static byte netmask[] = { 255,255,255,0 };
 static byte mac[] = {0x69,0xFF,0x3D,0x9A,0x88,0x12};
 static byte mcIP[] = {192,168,1,102};//{10,0,0,103};
 byte Ethernet::buffer[500];
-uint8_t port = 4444;
+int mcPort = 4444;
 int localPort = 4400;
+
 
 //sending data positions
 #define GAS_DATA_POS 0
@@ -55,15 +69,15 @@ int localPort = 4400;
 //gasData and TandMData and concentration are all floats or 4 bytes
 //the packet size should be the position of the last byte of data + 1
 #define packetSize HASH_POS + 1//((8 + 7 + 1) * 4)
-char message[packetSize];
+unsigned char message[packetSize];
 char nack = "nack";
 int header = -127;
 
 //recieving data positions
-#define HEADER 0
-#define BASE_POS 1
-#define SHOULDER_POS 2
-#define ELBOW_POS 3
+#define HEADER_POS 0
+#define ACTUATOR_DIRECTION_POS 1
+#define ACTUATOR_SPEED_POS 2
+#define DRILL_SPEED_POS 3
 #define OVERDRIVE_POS 4
 #define FAN_SPEED_POS 5
 #define HASH_POS 6
@@ -74,22 +88,28 @@ union floatStruct{
   uint8_t data[4];
 };
 
+#define actuatorSideA 5
+#define actuatorSideB 9
+Servo fan;
+#define fanPinA 6
+#define fanPinB 7
 Servo drill;
-int drillSpeed = 0;
+#define drillPin 13
+int drillSpeed = 70;
 
 void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port, const char *data, uint16_t len){
-  if(data[HEADER] != header){
+  if(data[HEADER_POS] != header){
     Serial.print("bad message: ");
-    Serial.println(data[HEADER]);
-    ether.sendUdp(nack,sizeof(nack), localPort, mcIP, port);
+    Serial.println(data[HEADER_POS]);
+    ether.sendUdp(nack,sizeof(nack), localPort, mcIP, mcPort);
   }else{
     //Serial.println(data);
-    drillStuff[0] = data[BASE_POS];
-    drillStuff[1] = data[SHOULDER_POS];
-    drillStuff[2] = data[ELBOW_POS];
-    drillStuff[3] = data[OVERDRIVE_POS];
-    drillStuff[4] = data[FAN_SPEED_POS];
-    hash = (data[BASE_POS] + data[SHOULDER_POS] + data[ELBOW_POS] + data[OVERDRIVE_POS] + data[FAN_SPEED_POS]) / 5;
+    actuatorDirection = data[ACTUATOR_DIRECTION_POS];
+    drillStuff[DRILL_ACTUATOR_SPEED] = data[ACTUATOR_SPEED_POS];
+    drillStuff[RUN_DRILL] = data[DRILL_SPEED_POS];
+    drillStuff[DRILL_OVERDRIVE] = data[OVERDRIVE_POS];
+    drillStuff[DRILL_FAN] = data[FAN_SPEED_POS];
+    hash = (data[ACTUATOR_DIRECTION_POS] + data[ACTUATOR_SPEED_POS] + data[DRILL_SPEED_POS] + data[OVERDRIVE_POS] + data[FAN_SPEED_POS]) / 5;
 
     readGasSensor();
     readTandMSensor();
@@ -138,32 +158,45 @@ void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port
       Serial.print((int)data[HASH_POS]);
       Serial.print(" ");
       Serial.println((int)hash);
-      ether.sendUdp(nack,sizeof(nack), localPort, mcIP, port);
+      ether.sendUdp(nack,sizeof(nack), localPort, mcIP, mcPort);
       return;
     }
 
-    ether.sendUdp(message,sizeof(message), localPort, mcIP, port);
-    Serial.print("sent message of size: ");
-    Serial.println((char*)mcIP);
+    ether.sendUdp(message,sizeof(message), localPort, mcIP, mcPort);
+    Serial.println("sent message: ");
+    for(int i = 0; i < sizeof(message); i++){
+      Serial.println((unsigned int)message[i]);
+    }
   }
 }
 
 void setup() {
   // Start gas sensor
+  //DONT FORGET ME: for testing leave this commented. For actaully getting data, uncomment
   //gas.begin(0x04);//the default I2C address of the slave is 0x04
   //gas.powerOn();
   delay(1000);
-  pinMode(FAN_PIN,OUTPUT);
-  pinMode(FAN_LOW_PIN,OUTPUT);
-  digitalWrite(FAN_PIN,LOW);
-  digitalWrite(FAN_LOW_PIN,LOW);
+
+  //setup the hardware
+  drill.attach(drillPin);
+  //fan uses an hbridge so one side will always be low and the other
+  //will control speed
+  fan.attach(fanPinA);
+  pinMode(fanPinB,OUTPUT);
+  digitalWrite(fanPinB,LOW);
+  //actuator also uses an hbridge
+  pinMode(actuatorSideA,OUTPUT);
+  pinMode(actuatorSideB,OUTPUT);
+  digitalWrite(actuatorSideA,LOW);
+  digitalWrite(actuatorSideB,LOW);
+  
   Serial.begin(115200);
   //Serial.setTimeout(1000);
   Serial.println("NH3,CO,NO2,C3H8,C4H10,CH4,H2,C2H5OH,Flag,Humidity,Tempature( C ),Fahrenheit,Kelvin,Dew Point,Dew Point,Hash");
   drill.attach(DRILL_PIN);
 
   if (ether.begin(sizeof Ethernet::buffer, mac, 10) == 0)
-    Serial.println(F("Failed to access Ethernet controller"));
+    Serial.println("Failed to access Ethernet controller");
   ether.staticSetup(ip, gw, dnsip, netmask);
 
   ether.udpServerListenOnPort(&handleMessage, localPort);
@@ -197,8 +230,8 @@ void stow()
 
 void spinOfDeath() {
   // Spin the drill
-  int val = drillStuff[2];
-  if (drillStuff[2] == 0 ) {
+  int val = drillStuff[OVERDRIVE_POS];
+  if (drillStuff[OVERDRIVE_POS] == 0 ) {
     drill.write(92);
     return;
   }
@@ -207,7 +240,7 @@ void spinOfDeath() {
     //afms.setPWM(1, (val * 2048/255) + 2045 );
   }
   else {
-    if (drillStuff[2] < 0) {
+    if (drillStuff[OVERDRIVE_POS] < 0) {
       drill.write(84 + (val * 18 / 24));
       //afms.setPWM(1, (2045 - (val * 2048/255)));
     } else {
@@ -249,21 +282,21 @@ void readTandMSensor()
   messagePointer += nextPos;
   messagePointer[0] = flag;
   messagePointer++;
-  nextReading.f = (float)DHT11.humidity;
+  nextReading.f = 69.69;//(float)DHT11.humidity;
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
   messagePointer += 4;
-  nextReading.f = (float)DHT11.temperature;
+  nextReading.f = 69.69;//(float)DHT11.temperature;
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
   messagePointer += 4;
-  nextReading.f = Fahrenheit(DHT11.temperature);
+  nextReading.f = 69.69;//Fahrenheit(DHT11.temperature);
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
   messagePointer += 4;
-  nextReading.f = Kelvin(DHT11.temperature);
+  nextReading.f = 69.69;//Kelvin(DHT11.temperature);
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
   messagePointer += 4;
-  nextReading.f = dewPoint(DHT11.temperature, DHT11.humidity);
+  nextReading.f = 69.69;//dewPoint(DHT11.temperature, DHT11.humidity);
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
-  nextReading.f = dewPointFast(DHT11.temperature, DHT11.humidity);
+  nextReading.f = 69.69;//dewPointFast(DHT11.temperature, DHT11.humidity);
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
 }
 
@@ -285,28 +318,28 @@ void readGasSensor()
   floatStruct nextReading;
   char *messagePointer = message;
   messagePointer += nextPos;
-  nextReading.f = gas.measure_NH3();
+  nextReading.f = 69.69;//gas.measure_NH3();
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
   messagePointer += 4;
-  nextReading.f = gas.measure_CO();
+  nextReading.f = 69.69;//gas.measure_CO();
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
   messagePointer += 4;
-  nextReading.f = gas.measure_NO2();
+  nextReading.f = 69.69;//gas.measure_NO2();
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
   messagePointer += 4;
-  nextReading.f = gas.measure_C3H8();
+  nextReading.f = 69.69;//gas.measure_C3H8();
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
   messagePointer += 4;
-  nextReading.f = gas.measure_C4H10();
+  nextReading.f = 69.69;//gas.measure_C4H10();
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
   messagePointer += 4;
-  nextReading.f = gas.measure_CH4();
+  nextReading.f = 69.69;//gas.measure_CH4();
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
   messagePointer += 4;
-  nextReading.f = gas.measure_H2();
+  nextReading.f = 69.69;//gas.measure_H2();
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
   messagePointer += 4;
-  nextReading.f = gas.measure_C2H5OH();
+  nextReading.f = 69.69;//gas.measure_C2H5OH();
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
   
   /*message[nextPos] = nextReading;
@@ -409,28 +442,9 @@ double dewPointFast(double celsius, double humidity)
 }
 
 void spinFan() {
-    //myservo.write(90 + fanSpeed);
-    if(fanSpeed > 50){
-      digitalWrite(FAN_PIN,HIGH);
-    }else{
-      digitalWrite(FAN_PIN,LOW);
-    }
+    fan.write(fanSpeed);
 }
 
 void moveDrill() {
-
-  switch (drillStuff[0]) {
-    case 0:
-      analogWrite(ACTUATOR_PIN_A, drillStuff[1]);
-      analogWrite(ACTUATOR_PIN_B, 0);
-      break;
-    case 1:
-      analogWrite(ACTUATOR_PIN_A, 0);
-      analogWrite(ACTUATOR_PIN_B, drillStuff[1]);
-      break;
-    case 2:
-      analogWrite(ACTUATOR_PIN_A, 0);
-      analogWrite(ACTUATOR_PIN_B, 0);
-      break;
-  }
+  drill.write(90+drillSpeed);
 }

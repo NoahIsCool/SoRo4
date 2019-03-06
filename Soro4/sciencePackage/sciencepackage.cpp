@@ -17,7 +17,7 @@ void SciencePackage::handleMessage(QByteArray message){
     //debug purposes
     qDebug() << "got message";
     for(quint8 next : message){
-        csvFile << (int)next << ",";
+        csvFile << (uint)next << ",";
         qDebug() << next << ",";
     }
     csvFile << std::endl;

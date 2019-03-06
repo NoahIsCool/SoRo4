@@ -41,7 +41,7 @@ GamepadMonitor::GamepadMonitor( QObject *parent, comms *drillComm)
     clawR = 150;
     udpTimer = new QTimer();
     connect(udpTimer, SIGNAL(timeout()), this, SLOT(sendUDP()));
-    udpTimer->start(500);
+    udpTimer->start(1000);
 }
 
 void GamepadMonitor::message(QByteArray arr){
