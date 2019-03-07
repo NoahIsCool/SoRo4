@@ -1,13 +1,13 @@
-﻿#include "autonomous.h"
+#include "autonomous.h"
 
 #define PI 3.14159265
 
 //this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
+
 Autonomous::Autonomous() : mySocket("testConfig.conf")
 {
 	// this "should" make the comms object print out any errors it encounters to the terminal
-    //FIXME: this is throwing some weird error
-    //connect(mySocket, SIGNAL(messageReady(QByteArray)), this, SLOT(lidarValues(QByteArray)));
+    connect(mySocket, SIGNAL(messageReady(QByteArray)), this, SLOT(lidarValues(QByteArray)));
 	qInfo() << "library link test";
 	mainLoop();
 }
@@ -41,7 +41,7 @@ std::list<Cell> Autonomous::GeneratePath(Cell dest, SearchAlgorithm& alg)
 {
 	Cell source(pos_llh.lat, pos_llh.lon, 0.0);
 
-	return alg.findPath(source, dest);
+    return alg.findPath(source, dest);
 }
 
 //updates all of the lidar readings and checks to see if an obstacle has been spotted
@@ -60,7 +60,7 @@ void Autonomous::lidarValues(QByteArray message)
     //checks for holes. We may need to update this to check to make sure at least two Lidars see a hole before running avoidObstacle
     for(int i = 1; i < 4; i++)
     {
-        if(obstacleDistances[i] > maxHoleDepths[i - 1])
+        if(obstacleDistances[i] > maxHoleDepth[i - 1])
             isThereObstacle = true;
     }
 }
@@ -172,69 +172,15 @@ Cell Autonomous::inputNextCoords()
     return cell;
 }
 
-std::vector< std::vector<Cell> > Autonomous::parseMap(){
-	int colNum = 522;
-	int rowNum = 1035;
-
-	float lngW = -97.450039;
-	float lngE = -97.43323;
-	float latN = 35.203796;
-	float latS = 35.182157;
-	 
-
-	//ifstream data("mapAvgV1.csv");//100 pixel avg
-	//ifstream data("mapNoAvg.csv");//no pixel averaging
-    std::ifstream data("/home/soro/Desktop/gps-test/SoRo4/Soro4/autonomous/map/mapNorman.csv");
-	std::string line;
-
-	//static Cell map[1720][3370];//no pixel averaging
-	//vector< vector<Cell> > map(1720, vector<Cell>(3370));
-	std::vector< std::vector<Cell> > map(1035, std::vector<Cell>(522));
-	//Cell map[172][337];//100 pixel avg
-
-	//parse map value csv file
-	std::vector<std::vector<std::string>> parsedCsv;
-	while (getline(data, line))
-	{
-		std::stringstream lineStream(line);
-		std::string cell;
-		std::vector<std::string> parsedRow;
-		while (getline(lineStream, cell, ','))
-		{
-			parsedRow.push_back(cell);
-		}
-		parsedCsv.push_back(parsedRow);
-	}
-
-
-	//attach gps coords to average blocks
-	//coords should be the center of the block
-	for (int row = 0; row < rowNum; row++)
-	{
-		for (int col = 0; col < colNum; col++)
-		{
-			//map[row][col].lat = latN - (((latN - latS) / colNum)*(col + 0.5));
-			map[row][col].lat = latN - (((latN - latS) / colNum)*col);
-			//map[row][col].lng = lngW - (((lngW - lngE) / rowNum)*(row + 0.5));
-			map[row][col].lng = lngW - (((lngW - lngE) / rowNum)*	row);
-			map[row][col].gradient = std::stoi(parsedCsv[row][col]);
-		}
-	}
-
-	return map;
-}
-
 //Goes through all of the coordinates that we need to travel through
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
 void Autonomous::mainLoop()
 {
-    map = parseMap();
-    qInfo() << "parsed map";
-    qInfo() << "min lat: " << map[0][0].lat << " min long: " << map[0][0].lng;
-    qInfo() << "max lat: " << map[map.size()-1][map[0].size()-1].lat << " max long: " << map[map.size()-1][map[0].size()-1].lng;
-    qInfo() << "array size: " << map.size() << " " << map[0].size();
-    searcher = new SearchAlgorithm(map, map.size(), map[0].size(), 1.0, 1000.0, 1000.0);
-    qInfo() << "created searcher";
+	//placeholder
+    //FIXME: get this from rob
+    //map = searcher.parseMap();
+		//FIXME: need map, MAXX, MAXY from rob
+		//SearchAlgorithm searchAlg(map, EXTX, EXTY, 1.0, 1000.0, 1000.0)
 
     threadsRunning = true;
     std::thread statusThread(&Autonomous::updateStatus,this);
@@ -249,30 +195,25 @@ void Autonomous::mainLoop()
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
 
-    qInfo() << "current location: " << lastLatitude << " " << lastLongitude;
-
-    //BallTracker tennisTracker = new BallTracker(); //automatically starts a thread to track the tennisball
+    BallTracker tennisTracker = new BallTracker(); //automatically starts a thread to track the tennisball
     Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
-    qInfo() << "next coords: " << nextCords.lat << " " << nextCords.lng;
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-        std::list<Cell> path;
-        try {
-            path = GeneratePath(nextCords, *searcher);
-        } catch (AStarException e) {
-            qInfo() << "exception: " << e.what();
-            nextCords = inputNextCoords(); //gets the next set of coords
-            continue;
-        }
-        qInfo() << "size of path list: " << path.size();
+			try {
+      	std::list<Cell> path = GeneratePath(nextCords);
+			} catch (AStarException e) {
+				nextCords = inputNextCoords(); //gets the next set of coords
+				continue;
+			}
 
-        std::list<Cell>::iterator it = path.begin();
+			std::list<Cell>::iterator it = path.begin();
 
         //loops through each of the coordinates to get to the next checkpoint
         while(*it != nextCords) //travels to the next set of coords.
         {
             Cell currentGPS(pos_llh.lat, pos_llh.lon, 0.0);
+
             while(currentGPS != *it) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
             {
                 if(isThereObstacle)
@@ -314,6 +255,6 @@ void Autonomous::mainLoop()
     }
 
     threadsRunning = false;
-    statusThread.join();
+    angleThread.join();
     std::cout << "We win!" << std::endl;
 }
