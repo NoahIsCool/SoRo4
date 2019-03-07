@@ -17,10 +17,6 @@
 #include <queue>
 #include <set>
 #include <unistd.h>
-#include <thread>
-#include <fstream>
-#include <sstream>
-#include <vector>
 
 class AUTONOMOUSSHARED_EXPORT Autonomous : public QObject
 {
@@ -31,7 +27,7 @@ class AUTONOMOUSSHARED_EXPORT Autonomous : public QObject
         void mainLoop();
         std::vector<double> getWheelSpeedValues(double amountOff, double baseSpeed);
          //FIXME: was std::vector. Should it be a list or a vector?
-        std::list<Cell> GeneratePath(Cell dest, SearchAlgorithm& alg);
+        std::list<Cell> GeneratePath(Cell dest);
         void avoidObstacle();
         double getAngleToTurn(Cell next);
         Cell inputNextCoords();
@@ -46,7 +42,7 @@ class AUTONOMOUSSHARED_EXPORT Autonomous : public QObject
         comms mySocket;
         int timesStuck; // finds how many times the rover has been stuck in place
         bool isStuck; //checks if the rover is considered stuck
-        SearchAlgorithm *searcher;
+        SearchAlgorithm searcher;
 
         double centerLidarMaxHeight = 10; //the max height that the center lidar can find before it declares an obstacle
         double middleLidarMaxHeight = 10; //the max height that the middle lidars can find before it declares an obstacle
@@ -56,18 +52,14 @@ class AUTONOMOUSSHARED_EXPORT Autonomous : public QObject
 
 
         //outerLeftLidar, innerLeftLidar, centerLidar, innerRightLidar, outerRightLidar
-        int *obstacleDistances = new int[5];//holds the readings from the Lidars
-        int maxObstacleHeights[5] = {10, 10, 10, 10, 10}; //The distances the Lidars see if there is an obstacle TODO: get actual values for this
+        int *obstacleDistancess = new int[5];//holds the readings from the Lidars
+        int *maxObstacleHeights = {10, 10, 10, 10, 10}; //The distances the Lidars see if there is an obstacle TODO: get actual values for this
 
         //innerLeftLidar, centerLidar, innerRightLidar
-        int maxHoleDepths[5] = {20, 20, 20}; //The distances the Lidars see if there is a hole TODO: get actual values for this
+        int *maxHoleDepths = {20, 20, 20}; //The distances the Lidars see if there is a hole TODO: get actual values for this
 
     private slots:
         void lidarValue(QByteArray message);
-        std::vector< std::vector<Cell> > parseMap();
-        void lidarValues(QByteArray message);
-
-        std::vector< std::vector<Cell> > map;
 };
 
 #endif // AUTONOMOUS_H

@@ -1,4 +1,4 @@
-QT       += network serialport
+QT       += network
 
 QT -= gui
 
@@ -24,8 +24,8 @@ INCLUDEPATH += /usr/lib/arm-linux-gnueabihf/glib-2.0/include
 SOURCES += \
         main.cpp
 
-LIBS += -L../../libs -lautonomous -ldriveSystem -lcore #-lvideoServer-lslaveArm
-#LIBS += -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0
+LIBS += -L../../libs -lautonomous -ldriveSystem -lslaveArm -lcore #-lvideoServer
+LIBS += -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0
 
 QMAKE_LFLAGS += -Wl,--rpath=\\\$\$ORIGIN/../libs
 

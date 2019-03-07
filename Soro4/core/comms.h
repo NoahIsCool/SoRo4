@@ -9,7 +9,7 @@ class comms : public QObject
 {
     Q_OBJECT
 public:
-    explicit comms(const char* config_file, QObject *parent = NULL);
+    explicit comms(const char* config_file, QObject *parent = nullptr);
     void sendMessage(QByteArray message);
     bool isValid() { return valid; }
     QString getError() { return errorString; }
@@ -19,9 +19,9 @@ signals:
         void errorEncountered(QString errorMessage); // emitted if setup is a failure
 
 private:
-    QString send_ip = NULL;
+    QString send_ip = nullptr;
     quint16 send_port = 0;
-    QString recieve_ip = NULL;
+    QString recieve_ip = nullptr;
     quint16 recieve_port = 0;
     QUdpSocket* udpSocket;
     bool readConfig(const char* filename); // returns true on success, false on failure

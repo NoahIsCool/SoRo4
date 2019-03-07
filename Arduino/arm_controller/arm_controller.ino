@@ -66,6 +66,7 @@ void setup() {
 void loop() {
   if (Serial.available() > 4) // trying to read from an empty buffer usually breaks stuff
   { /*
+
       incomingByte = Serial.read();
       if(incomingByte == -127)
       {
@@ -103,6 +104,7 @@ void loop() {
       //Serial.println("no bytes to read");
       //Serial.read();// dispose packets untill the start flag(-127)
       }
+
       /**/
     incomingByte = Serial.read();
     if (incomingByte == -127 && !inTransmission) {
@@ -212,6 +214,7 @@ void updateServos() {
 }
 /*
    this interuptes the processor to count the number of pulses that come from the encoder.
+
    Warning this can happen as much as 1,669,656 times a second, and the arduino clock is only 16mhz
 */
 void leftEncoder() {
@@ -228,3 +231,4 @@ void calibrate() {
 
 
 }
+

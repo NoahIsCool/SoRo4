@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "core/core.h"
 #include "core/SearchPriQueue.h"
@@ -8,7 +8,6 @@
 #include <queue>
 #include <set>
 #include <vector>
-#include <math.h>
 
 class AStarException : public std::runtime_error {
 public:
@@ -79,7 +78,7 @@ private:
 		}
 
 		//Overloaded == operator for node. Compares nodes based on coordinate
-        bool operator== (Node &n) {
+		bool operator== (Node n) {
 			return ((*this).x == n.x) && ((*this).y == n.y);
 		}
 	};
