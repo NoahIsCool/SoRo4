@@ -44,8 +44,6 @@ int flag = -127;
 #define RUN_DRILL 2
 #define DRILL_OVERDRIVE 3
 #define DRILL_FAN 4
-int drillStuff[5];
-int fanSpeed = 0;
 char hash = 0;
 // Need MAC and IP address of the Arduino
 static byte ip[] = {192,168,1,105};//{10,0,0,105};
@@ -88,13 +86,21 @@ union floatStruct{
   uint8_t data[4];
 };
 
+//used for both actuator and drill
+#define EXTEND 1
+#define NOTHING 0
+#define RETRACT -1
+
 #define actuatorSideA 5
 #define actuatorSideB 9
+int actuatorDirection = NOTHING;
 Servo fan;
+int runFan = 0;
 #define fanPinA 6
 #define fanPinB 7
 Servo drill;
 #define drillPin 13
+int drillDirection = NOTHING;
 int drillSpeed = 70;
 
 void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port, const char *data, uint16_t len){
@@ -106,9 +112,9 @@ void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port
     //Serial.println(data);
     actuatorDirection = data[ACTUATOR_DIRECTION_POS];
     drillStuff[DRILL_ACTUATOR_SPEED] = data[ACTUATOR_SPEED_POS];
-    drillStuff[RUN_DRILL] = data[DRILL_SPEED_POS];
+    drillDirection = data[DRILL_SPEED_POS];
     drillStuff[DRILL_OVERDRIVE] = data[OVERDRIVE_POS];
-    drillStuff[DRILL_FAN] = data[FAN_SPEED_POS];
+    runFan = data[FAN_SPEED_POS];
     hash = (data[ACTUATOR_DIRECTION_POS] + data[ACTUATOR_SPEED_POS] + data[DRILL_SPEED_POS] + data[OVERDRIVE_POS] + data[FAN_SPEED_POS]) / 5;
 
     readGasSensor();
@@ -151,7 +157,7 @@ void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port
     // check hash and actually move things
     if (data[HASH_POS] == hash ) {
       moveDrill();
-      spinOfDeath();
+      spinDrill();
       spinFan();
     } else {
       Serial.print("Data Corrupted");
@@ -228,7 +234,18 @@ void stow()
   // Move all servos to stowed positions
 }
 
-void spinOfDeath() {
+void spinDrill() {
+  switch(drillDirection){
+    case EXTEND:
+      drill.write(drillSpeed);
+    break;
+    case NOTHING:
+      drill.write(90);
+    break;
+    case RETRACT:
+      drill.write(-drillSpeed);
+    break;
+  };
   // Spin the drill
   int val = drillStuff[OVERDRIVE_POS];
   if (drillStuff[OVERDRIVE_POS] == 0 ) {

@@ -6,7 +6,6 @@ SUBDIRS += \
     driveSystem \
     RoverMain \
     slaveArm \
-    sciencePackage \
     driveController \
     masterArm \
     #videoServer \

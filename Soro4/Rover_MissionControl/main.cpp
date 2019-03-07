@@ -2,14 +2,8 @@
 #include <signal.h>
 
 #include "driveController/gamepadmonitor.h"
-#include "sciencePackage/sciencepackage.h"
 
 //until we can get the gui working, we will use define flags to determine which system to run
-#define SCIENCE_PACKAGE
-
-#ifdef SCIENCE_PACKAGE
-SciencePackage *package;
-#endif
 
 void my_handler(int s){
            qDebug() << "killing mission control";
@@ -34,10 +28,6 @@ int main(int argc, char *argv[])
 
 #ifdef DRIVE_SYSTEM
     GamepadMonitor drivepad;
-#endif
-
-#ifdef SCIENCE_PACKAGE
-    package = new SciencePackage();
 #endif
 
     return a.exec();
