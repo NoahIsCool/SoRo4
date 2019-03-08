@@ -31,19 +31,6 @@ dht11 DHT11;
 #define DHT11PIN 2
 #define CO2_PIN 4
 
-//float gasData[8];
-//float TandMData[7];
-int flag = -127;
-
-#define EXTEND_ACTUATOR 0
-#define RETRACT_ACTUATOR 1
-#define BREAK_ACTUATOR 2
-
-#define DRILL_ACTUATOR 0
-#define DRILL_ACTUATOR_SPEED 1
-#define RUN_DRILL 2
-#define DRILL_OVERDRIVE 3
-#define DRILL_FAN 4
 char hash = 0;
 // Need MAC and IP address of the Arduino
 static byte ip[] = {192,168,1,105};//{10,0,0,105};
@@ -56,7 +43,6 @@ byte Ethernet::buffer[500];
 int mcPort = 4444;
 int localPort = 4400;
 
-
 //sending data positions
 #define GAS_DATA_POS 0
 #define T_AND_M_DATA_POS (8 * 4)
@@ -66,7 +52,7 @@ int localPort = 4400;
 //packet size is the gasData + TandMData + CO2 concentration + commas separating all data
 //gasData and TandMData and concentration are all floats or 4 bytes
 //the packet size should be the position of the last byte of data + 1
-#define packetSize HASH_POS + 1//((8 + 7 + 1) * 4)
+#define packetSize HASH_POS + 1
 unsigned char message[packetSize];
 char nack = "nack";
 int header = -127;
@@ -95,6 +81,7 @@ union floatStruct{
 #define actuatorSideB 9
 int actuatorDirection = NOTHING;
 Servo fan;
+#define fanSpeed 175
 int runFan = 0;
 #define fanPinA 6
 #define fanPinB 7
@@ -111,9 +98,11 @@ void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port
   }else{
     //Serial.println(data);
     actuatorDirection = data[ACTUATOR_DIRECTION_POS];
-    drillStuff[DRILL_ACTUATOR_SPEED] = data[ACTUATOR_SPEED_POS];
+    //no longer used
+    //drillStuff[DRILL_ACTUATOR_SPEED] = data[ACTUATOR_SPEED_POS];
     drillDirection = data[DRILL_SPEED_POS];
-    drillStuff[DRILL_OVERDRIVE] = data[OVERDRIVE_POS];
+    //maybe wont need this anymore
+    //drillStuff[DRILL_OVERDRIVE] = data[OVERDRIVE_POS];
     runFan = data[FAN_SPEED_POS];
     hash = (data[ACTUATOR_DIRECTION_POS] + data[ACTUATOR_SPEED_POS] + data[DRILL_SPEED_POS] + data[OVERDRIVE_POS] + data[FAN_SPEED_POS]) / 5;
 
@@ -246,24 +235,6 @@ void spinDrill() {
       drill.write(-drillSpeed);
     break;
   };
-  // Spin the drill
-  int val = drillStuff[OVERDRIVE_POS];
-  if (drillStuff[OVERDRIVE_POS] == 0 ) {
-    drill.write(92);
-    return;
-  }
-  if (drillStuff[3]) {//overDrive is off (remember c++ is semi boolean) this is to protect motors
-    drill.write(90 + val);
-    //afms.setPWM(1, (val * 2048/255) + 2045 );
-  }
-  else {
-    if (drillStuff[OVERDRIVE_POS] < 0) {
-      drill.write(84 + (val * 18 / 24));
-      //afms.setPWM(1, (2045 - (val * 2048/255)));
-    } else {
-      drill.write(90 + (val * 18 / 24));
-    }
-  }
 }
 
 void readTandMSensor()
@@ -273,16 +244,16 @@ void readTandMSensor()
   switch (chk)
   {
     case DHTLIB_OK:
-      flag = -127;
+      header = -127;
       break;
     case DHTLIB_ERROR_CHECKSUM:
-      flag = -120;//"Checksum error");
+      header = -120;//"Checksum error");
       break;
     case DHTLIB_ERROR_TIMEOUT:
-      flag = -119;// "Time out error");
+      header = -119;// "Time out error");
       break;
     default:
-      flag = -118;//"Unknown error");
+      header = -118;//"Unknown error");
       break;
   }
   /*TandMData[0] = flag;
@@ -297,7 +268,7 @@ void readTandMSensor()
   floatStruct nextReading;
   char *messagePointer = message;
   messagePointer += nextPos;
-  messagePointer[0] = flag;
+  messagePointer[0] = header;
   messagePointer++;
   nextReading.f = 69.69;//(float)DHT11.humidity;
   memcpy(messagePointer, nextReading.data, sizeof(nextReading));
@@ -459,7 +430,11 @@ double dewPointFast(double celsius, double humidity)
 }
 
 void spinFan() {
+  if(runFan){
     fan.write(fanSpeed);
+  }else{
+    fan.write(90);
+  }
 }
 
 void moveDrill() {
