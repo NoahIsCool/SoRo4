@@ -92,6 +92,7 @@ void Autonomous::avoidObstacle()
     array.append((char)0);
     array.append((char)0);
     mySocket.sendMessage(array);
+
     usleep(2000000);
 
     //drive forward a bit and continue(?)
@@ -195,7 +196,7 @@ void Autonomous::mainLoop()
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
 
-    BallTracker tennisTracker = new BallTracker(); //automatically starts a thread to track the tennisball
+    //BallTracker tennisTracker = new BallTracker(); //automatically starts a thread to track the tennisball
     Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
@@ -255,6 +256,6 @@ void Autonomous::mainLoop()
     }
 
     threadsRunning = false;
-    angleThread.join();
+    statusThread.join();
     std::cout << "We win!" << std::endl;
 }
