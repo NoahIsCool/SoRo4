@@ -92,6 +92,7 @@ void Autonomous::avoidObstacle()
     array.append((char)0);
     array.append((char)0);
     mySocket.sendMessage(array);
+
     usleep(2000000);
 
     //drive forward a bit and continue(?)

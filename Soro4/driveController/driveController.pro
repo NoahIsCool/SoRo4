@@ -4,9 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += network
-
-QT       -= gui
+QT       += network gui widgets gamepad
 
 TARGET = driveController
 TEMPLATE = lib
@@ -25,14 +23,24 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += $$PWD/..
+LIBS = -L../../libs -lcore -lpthread
+
+QMAKE_CXXFLAGS += -std=c++11
+
 SOURCES += \
-        drivecontroller.cpp
+        drivecontroller.cpp \
+    gamepadmonitor.cpp
 
 HEADERS += \
         drivecontroller.h \
-        drivecontroller_global.h 
+        drivecontroller_global.h \
+    gamepadmonitor.h
 
 #unix {
     target.path = $$PWD/
     INSTALLS += target
 #}
+
+FORMS += \
+    drivecontroller.ui
