@@ -3,6 +3,6 @@ libs
 bin
 Soro4/libs
 Soro4/bin
-Soro4/Soro4.pro*
-SoRo4/*/*.pro*
-Soro4/*/*.pro*
+Soro4/Soro4.pro.user
+*.pro.user*
+*.pro.user

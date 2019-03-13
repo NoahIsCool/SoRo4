@@ -1,16 +1,19 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2018-09-18T09:57:36
+# Project created by QtCreator 2019-02-21T19:43:15
 #
 #-------------------------------------------------
 
-QT       += network gui widgets gamepad
+QT -= gui
+QT += core
+QT += network
+QT += gamepad
 
-TARGET = driveController
+TARGET = sciencePackage
 TEMPLATE = lib
 DESTDIR = ../../libs
 
-DEFINES += DRIVECONTROLLER_LIBRARY
+DEFINES += SCIENCEPACKAGE_LIBRARY
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -26,21 +29,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 INCLUDEPATH += $$PWD/..
 LIBS = -L../../libs -lcore -lpthread
 
-QMAKE_CXXFLAGS += -std=c++11
-
 SOURCES += \
-        drivecontroller.cpp \
-    gamepadmonitor.cpp
+        sciencepackage.cpp \
+    gamepadmonitor.cpp \
 
 HEADERS += \
-        drivecontroller.h \
-        drivecontroller_global.h \
-    gamepadmonitor.h
+        sciencepackage.h \
+        sciencepackage_global.h \ 
+    gamepadmonitor.h \
 
-#unix {
     target.path = $$PWD/
     INSTALLS += target
-#}
-
-FORMS += \
-    drivecontroller.ui
