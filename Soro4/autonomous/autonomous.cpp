@@ -7,7 +7,7 @@
 Autonomous::Autonomous() : mySocket("lidar.conf")
 {
 	// this "should" make the comms object print out any errors it encounters to the terminal
-    connect(mySocket, SIGNAL(messageReady(QByteArray)), this, SLOT(lidarValues(QByteArray)));
+    connect(&mySocket, SIGNAL(messageReady(QByteArray)), this, SLOT(lidarValues(QByteArray)));
 	qInfo() << "library link test";
 	mainLoop();
 }
@@ -37,12 +37,12 @@ std::vector<double> Autonomous::getWheelSpeedValues(double amountOff, double bas
 }
 
 //Returns a list of cells from the rover's current location to the specified destination
-std::list<Cell> Autonomous::GeneratePath(Cell dest, SearchAlgorithm& alg)
+/*std::list<Cell> Autonomous::GeneratePath(Cell dest, SearchAlgorithm& alg)
 {
 	Cell source(pos_llh.lat, pos_llh.lon, 0.0);
 
     return alg.findPath(source, dest);
-}
+}*/
 
 //updates all of the lidar readings and checks to see if an obstacle has been spotted
 void Autonomous::lidarValues(QByteArray message)
@@ -60,7 +60,7 @@ void Autonomous::lidarValues(QByteArray message)
     //checks for holes. We may need to update this to check to make sure at least two Lidars see a hole before running avoidObstacle
     for(int i = 1; i < 4; i++)
     {
-        if(obstacleDistances[i] > maxHoleDepth[i - 1])
+        if(obstacleDistances[i] > maxHoleDepths[i - 1])
             isThereObstacle = true;
     }
 }
@@ -188,6 +188,9 @@ void Autonomous::mainLoop()
     //used to calculate the angle to turn
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
+    Cell currentGPS;
+    currentGPS.lat = lastLatitude;
+    currentGPS.lng = lastLongitude;
 
     Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
@@ -221,14 +224,15 @@ void Autonomous::mainLoop()
                 array.append((char)(speeds[0] + speeds [1]) / 5);
                 mySocket.sendMessage(array);
                 usleep(500000); //lets it drive for 500ms before continuing on
-                currentGPS.lat = pos_llh.lat;
-                currentGPS.lng = pos_llh.lon;
+                currentGPS.lat = lastLatitude;
+                currentGPS.lng = lastLongitude;
+
             }
         }
         nextCords = inputNextCoords(); //gets the next set of coords
     }
 
     threadsRunning = false;
-    angleThread.join();
+    statusThread.join();
     std::cout << "We win!" << std::endl;
 }
