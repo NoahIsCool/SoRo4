@@ -13,25 +13,14 @@
 #include <EtherCard.h>
 #include <IPAddress.h>
 // Read Data from Grove - Multichannel Gas Sensor
-#include <Wire.h>
 #include "MutichannelGasSensor.h"
 //Temperature and Moisture Sensor libs
 #include "dht11.h"
 
-//#include <Adafruit_MotorShield.h>
-
-//this one will control the fan being on or off
-#define FAN_PIN 8
-//this one will always be low
-#define FAN_LOW_PIN 9
-#define ACTUATOR_PIN_A 3
-#define ACTUATOR_PIN_B 5
-#define DRILL_PIN 12
 dht11 DHT11;
 #define DHT11PIN 2
 #define CO2_PIN 4
 
-char hash = 0;
 // Need MAC and IP address of the Arduino
 static byte ip[] = {192,168,1,105};//{10,0,0,105};
 static byte gw[] = {192,168,1,1};//{10,0,0,1};
@@ -43,7 +32,8 @@ byte Ethernet::buffer[500];
 int mcPort = 4444;
 int localPort = 4400;
 
-//sending data positions
+//data positions for the gas data to be sent back
+//all of these are floats
 #define GAS_DATA_POS 0
 #define T_AND_M_DATA_POS (8 * 4)
 #define CONCENTRATION_POS (T_AND_M_DATA_POS + (7 * 4))
@@ -56,15 +46,14 @@ int localPort = 4400;
 unsigned char message[packetSize];
 char nack = "nack";
 int header = -127;
+char hash = 0;
 
 //recieving data positions
 #define HEADER_POS 0
 #define ACTUATOR_DIRECTION_POS 1
-#define ACTUATOR_SPEED_POS 2
-#define DRILL_SPEED_POS 3
-#define OVERDRIVE_POS 4
-#define FAN_SPEED_POS 5
-#define HASH_POS 6
+#define DRILL_SPEED_POS 2
+#define FAN_SPEED_POS 3
+#define HASH_POS 4
 
 //union struct to help with copying floats into message
 union floatStruct{
@@ -73,27 +62,35 @@ union floatStruct{
 };
 
 //used for both actuator and drill
+//extend is to move the drill clockwise or to move the drill down
+//retract is to move the drill counterclockwise or to move the drill up
 #define EXTEND 1
 #define NOTHING 0
 #define RETRACT -1
 
+//actuator is using a motor controller or an hbridge
 #define actuatorSideA 5
-#define actuatorSideB 9
+#define actuatorSideB 3
 int actuatorDirection = NOTHING;
 Servo fan;
 #define fanSpeed 175
 int runFan = 0;
-#define fanPinA 6
-#define fanPinB 7
+#define fanPin 7
 Servo drill;
-#define drillPin 13
+#define drillPin 6
 int drillDirection = NOTHING;
 int drillSpeed = 70;
+
+//the fan will be controlled using a burst mode
+//time is in milliseconds
+#define burstDiration 5000
+long burstStartTime = 0;
+bool runningBurst = false;
 
 void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port, const char *data, uint16_t len){
   if(data[HEADER_POS] != header){
     Serial.print("bad message: ");
-    Serial.println(data[HEADER_POS]);
+    Serial.println((int)data[HEADER_POS]);
     ether.sendUdp(nack,sizeof(nack), localPort, mcIP, mcPort);
   }else{
     //Serial.println(data);
@@ -104,7 +101,14 @@ void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port
     //maybe wont need this anymore
     //drillStuff[DRILL_OVERDRIVE] = data[OVERDRIVE_POS];
     runFan = data[FAN_SPEED_POS];
-    hash = (data[ACTUATOR_DIRECTION_POS] + data[ACTUATOR_SPEED_POS] + data[DRILL_SPEED_POS] + data[OVERDRIVE_POS] + data[FAN_SPEED_POS]) / 5;
+    hash = (data[ACTUATOR_DIRECTION_POS] + data[DRILL_SPEED_POS] + data[FAN_SPEED_POS]) / 3;
+
+    //if burst enabled start the time
+    if(runFan == 1 && !runningBurst){
+      runningBurst = true;
+      burstStartTime = millis();
+      Serial.println("starting burst");
+    }
 
     readGasSensor();
     readTandMSensor();
@@ -158,10 +162,10 @@ void handleMessage(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port
     }
 
     ether.sendUdp(message,sizeof(message), localPort, mcIP, mcPort);
-    Serial.println("sent message: ");
+    /*Serial.println("sent message: ");
     for(int i = 0; i < sizeof(message); i++){
       Serial.println((unsigned int)message[i]);
-    }
+    }*/
   }
 }
 
@@ -176,9 +180,7 @@ void setup() {
   drill.attach(drillPin);
   //fan uses an hbridge so one side will always be low and the other
   //will control speed
-  fan.attach(fanPinA);
-  pinMode(fanPinB,OUTPUT);
-  digitalWrite(fanPinB,LOW);
+  fan.attach(fanPin);
   //actuator also uses an hbridge
   pinMode(actuatorSideA,OUTPUT);
   pinMode(actuatorSideB,OUTPUT);
@@ -188,7 +190,7 @@ void setup() {
   Serial.begin(115200);
   //Serial.setTimeout(1000);
   Serial.println("NH3,CO,NO2,C3H8,C4H10,CH4,H2,C2H5OH,Flag,Humidity,Tempature( C ),Fahrenheit,Kelvin,Dew Point,Dew Point,Hash");
-  drill.attach(DRILL_PIN);
+  drill.attach(drillPin);
 
   if (ether.begin(sizeof Ethernet::buffer, mac, 10) == 0)
     Serial.println("Failed to access Ethernet controller");
@@ -215,6 +217,17 @@ void setup() {
 
 void loop() {
   ether.packetLoop(ether.packetReceive());
+
+  //FIXME: enable after inital testing
+  //eventually need to check for burst time
+  if(runningBurst){
+    if(millis() - burstStartTime > burstDiration){
+      runFan = 0;
+      runningBurst = false;
+      spinFan();
+      Serial.println("finished burst");
+    }
+  }
 }
 
 
@@ -226,13 +239,14 @@ void stow()
 void spinDrill() {
   switch(drillDirection){
     case EXTEND:
-      drill.write(drillSpeed);
+      Serial.println("spinning drill");
+      drill.write(90+drillSpeed);
     break;
     case NOTHING:
       drill.write(90);
     break;
     case RETRACT:
-      drill.write(-drillSpeed);
+      drill.write(90-drillSpeed);
     break;
   };
 }
@@ -241,7 +255,7 @@ void readTandMSensor()
 {
   // Flag,Humidity,Tempature( C ),Fahrenheit,Kelvin,Dew Point,Dew Point  ),
   int chk = DHT11.read(DHT11PIN);
-  switch (chk)
+  /*switch (chk)
   {
     case DHTLIB_OK:
       header = -127;
@@ -255,7 +269,7 @@ void readTandMSensor()
     default:
       header = -118;//"Unknown error");
       break;
-  }
+  }*/
   /*TandMData[0] = flag;
   TandMData[1] = (float)DHT11.humidity;// Humidity (%)
   TandMData[2] = (float)DHT11.temperature; // Temperature (°C)
@@ -430,7 +444,8 @@ double dewPointFast(double celsius, double humidity)
 }
 
 void spinFan() {
-  if(runFan){
+  if(runningBurst){
+    Serial.println("spinning fan");
     fan.write(fanSpeed);
   }else{
     fan.write(90);
@@ -438,5 +453,20 @@ void spinFan() {
 }
 
 void moveDrill() {
-  drill.write(90+drillSpeed);
+  switch(actuatorDirection){
+    case EXTEND:
+      Serial.println("extending drill");
+      analogWrite(actuatorSideA,200);
+      analogWrite(actuatorSideB,0);
+    break;
+    case NOTHING:
+      analogWrite(actuatorSideA,0);
+      analogWrite(actuatorSideB,0);
+    break;
+    case RETRACT:
+      Serial.println("retracting drill");
+      analogWrite(actuatorSideA,0);
+      analogWrite(actuatorSideB,200);
+    break;
+  };
 }
