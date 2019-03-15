@@ -10,15 +10,16 @@ SUBDIRS += \
     #videoServer \
     RoverMain \
     Rover_MissionControl \
-    #videoStreamer
+    VideoServer
 
 CONFIG += ordered
 
-RoverMain.depends = autonomous slaveArm driveSystem core #videoServer
+RoverMain.depends = autonomous slaveArm driveSystem core videoServer
 RoverMain.file = RoverMain/RoverMain.pro
 autonomous.file = autonomous/autonomous.pro
 slaveArm.file = slaveArm/slaveArm.pro
 driveSystem.file = driveSystem/driveSystem.pro
+VideoServer.file = VideoServer/VideoServer.pro
 
 Rover_MissionControl.depends = driveController masterArm core
 masterArm.file = masterArm/masterArm.pro
