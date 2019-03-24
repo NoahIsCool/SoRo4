@@ -1,0 +1,4 @@
+/home/zen/CLionProjects/ballFinderMK1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/zen/CLionProjects/ballFinderMK1/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/zen/CLionProjects/ballFinderMK1/cmake-build-debug/CMakeFiles/ballFinderMK1.dir
+/home/zen/CLionProjects/ballFinderMK1/cmake-build-debug/CMakeFiles/ballTest.dir
