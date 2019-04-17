@@ -1,10 +1,12 @@
-QT       += network
+QT += network
 
 QT -= gui
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
 DESTDIR = ../../bin
+
+QMAKE_CXXFLAGS += -std=c++11
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -17,6 +19,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += /usr/local/include/opencv
 INCLUDEPATH += $$PWD/..
 #INCLUDEPATH += /usr/include/gstreamer-1.0 /usr/include/glib-2.0 /usr/lib/x86_64-linux-gnu/glib-2.0/include
 #INCLUDEPATH += /usr/lib/arm-linux-gnueabihf/glib-2.0/include
@@ -24,7 +27,8 @@ INCLUDEPATH += $$PWD/..
 SOURCES += \
         main.cpp
 
-LIBS += -L../../libs -lautonomous -ldriveSystem -lslaveArm -lcore #-lvideoServer
+LIBS += -L/usr/local/lib/ -L../../libs -lautonomous -ldriveSystem -lslaveArm -lcore #-lvideoServer
+LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_video -lopencv_imgproc -lopencv_videoio
 
 #LIBS += -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0
 
