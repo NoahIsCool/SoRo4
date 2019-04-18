@@ -2,7 +2,17 @@
 
 ERCTraversal::ERCTraversal()
 {
+    testMain();
+}
 
+int ERCTraversal::testMain()
+{
+    updateAngle();
+    while(true)
+    {
+        usleep(1000000);
+        cout << currentAngle << std::endl;
+    }
 }
 
 //this returns wheel speeds to correct for the angle that the rover is off by
@@ -24,6 +34,7 @@ std::vector<double> Autonomous::getWheelSpeedValues(double amountOff, double bas
         PIDValues[1] = baseSpeed + baseSpeed * (1.045443e-16 + 0.00001087878*amountOff - 1.0889139999999999e-27*pow(amountOff, 2) + 7.591631000000001e-17*pow(amountOff, 3) - 7.105946999999999e-38*pow(amountOff, 4));
     }
 
+    cout << "left wheel speed: " << PIDValues[0] << "\nright wheel speed: " << PIDValues[1] << std::endl;
     return PIDValues;
 }
 
