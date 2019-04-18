@@ -164,10 +164,6 @@ void setup() {
 void loop() {
    // this must be called for ethercard functions to work.
    ether.packetLoop(ether.packetReceive());
-  
-  // TODO: make the values move stuff
-  //read_data( );//TODO: add values to call
-  ether.udpServerListenOnPort(&read_data,9999);
 }
 
 void read_data(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port, const char *data, uint16_t len)

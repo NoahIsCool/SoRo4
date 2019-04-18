@@ -35,11 +35,17 @@ void CacheTracking::startTracking(){
     //range of green
                         //33, 80, 40      //102, 255, 255
     inRange(hsv, Scalar(79.333333333, 40, 40), Scalar(90, 255, 255), mask);
-    std::vector<Rect> objects = findShapes(mask);
+    std::vector<RotatedRect> objects;
+    std::cout << "searching for objects" << std::endl;
+    do{
+        objects = findShapes(mask);
+    }while(objects.size() < 1);
     //figure out object colors
-    std::cout << objects.size() << std::endl;
+    std::cout << "found " << objects.size() << "objects" << std::endl;
     for(int i = 0; i < 50; i++){
-        Mat RGB=hsv(Rect(objects[0].x + objects[0].width/2,objects[0].y + objects[0].height/2,1,1)); // use your x and y value
+        objects = findShapes(mask);
+        cv::Rect currentObject = objects[0].boundingRect();
+        Mat RGB=hsv(Rect(currentObject.x + currentObject.width/2,currentObject.y + currentObject.height/2,1,1)); // use your x and y value
         //cvtColor(RGB, frame,CV_BGR2HSV);
         Vec3b hsvVector = RGB.at<Vec3b>(0,0);
         hLow += hsvVector.val[0]; //hue
@@ -72,25 +78,67 @@ void CacheTracking::startTracking(){
         //inRange(hsv, Scalar(79.333333333, 40, 40), Scalar(90, 255, 255), mask);
         inRange(hsv, Scalar(hLow, sLow, vLow), Scalar(hHigh, sHigh, vHigh), mask);
 
-        /*erode(mask, mask, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-        dilate( mask, mask, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );*/
-
-        //morphological closing (removes small holes from the foreground)
-
-        //kernel
-        /*Mat kernelOpen = Mat::ones(5,5, CV_32F);
-        Mat kernelClose = Mat::ones(20,20,CV_32F);
-        morphologyEx(mask,mask,cv::MORPH_OPEN,kernelOpen);
-        morphologyEx(mask,mask,cv::MORPH_CLOSE,kernelClose);*/
-
-        std::vector< Rect > objects = findShapes(mask);
+        std::vector< RotatedRect > objects = findShapes(mask);
         std::cout << "found: " << objects.size() << " objects" << std::endl;
-        for(int i = 0; i < objects.size(); i++){
+
+        if(objects.size() != 0){
+            //first find the largest object
+            double largestArea = 0;
+            int largestIndex = 0;
+            for(int i = 0; i < objects.size(); i++){
+                cv::Rect brect = objects[i].boundingRect();
+                if(brect.area() > largestArea){
+                    largestArea = brect.area();
+                    largestIndex = i;
+                }
+            }
+
+            //draw the tracking rectangles
+            cv::RotatedRect targetRect = objects[largestIndex];
+            cv::Rect brect = targetRect.boundingRect();
+            cv::Point targetPoint(brect.x+brect.width/2,brect.y+brect.height/2);
+            Point2f rect_points[4]; targetRect.points( rect_points );
+            for( int j = 0; j < 4; j++ ){
+               line( frame, rect_points[j], rect_points[(j+1)%4], cv::Scalar(100, 100, 200), 5, CV_AA);
+               line( mask, rect_points[j], rect_points[(j+1)%4], cv::Scalar(100, 100, 200), 5, CV_AA);
+            }
+            cv::Rect centerRect = cv::boundingRect(cv::Mat(targetPoint).reshape(2));
+            cv::rectangle(frame, centerRect.tl(), centerRect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
+            cv::rectangle(mask, centerRect.tl(), centerRect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
+
+            //next try to match the orientation
+            //the orientation could be off if we only see the top
+            //bool matchingOrientation = true;
+            //while(matchingOrientation){
+                //calculate the rotation
+            double angle = abs(targetRect.angle);
+                std::cout << "rotation angle: " << angle << std::endl;
+                if(angle < 5 || angle > 85){
+                    std::cout << "perfectly centered. As all things should be" << std::endl;
+                }else if(angle < 45){
+                    std::cout << "rotate counter-clockwise " << angle << " degrees" << std::endl;
+                }else{
+                    angle = 90 - angle;
+                    std::cout << "rotate clockwise " << angle << " degrees" << std::endl;
+                }
+
+                //write the values
+
+                //wait until done
+            //}
+
+        /*for(int i = 0; i < objects.size(); i++){
             //if(points.size() > 0 && area > 1000){
                 //cv::Rect brect = cv::boundingRect(cv::Mat(points).reshape(2));
-                cv::Rect brect = objects[i];
-                cv::rectangle(frame, brect.tl(), brect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
-                cv::rectangle(mask, brect.tl(), brect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
+                cv::RotatedRect rrect = objects[i];
+                cv::Rect brect = rrect.boundingRect();
+                Point2f rect_points[4]; rrect.points( rect_points );
+                for( int j = 0; j < 4; j++ ){
+                   line( frame, rect_points[j], rect_points[(j+1)%4], cv::Scalar(100, 100, 200), 5, CV_AA);
+                   line( mask, rect_points[j], rect_points[(j+1)%4], cv::Scalar(100, 100, 200), 5, CV_AA);
+                }
+                //cv::rectangle(frame, brect.tl(), brect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
+                //cv::rectangle(mask, brect.tl(), brect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
                 Point objectCenter(brect.x+brect.width/2,brect.y+brect.height/2);
                 cv::Rect centerRect = cv::boundingRect(cv::Mat(objectCenter).reshape(2));
                 cv::rectangle(frame, centerRect.tl(), centerRect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
@@ -161,6 +209,7 @@ void CacheTracking::startTracking(){
                 };
                 std::cout << std::endl;
             //}
+        }*/
         }
 
         cv::Rect centerDisplay = cv::boundingRect(cv::Mat(center).reshape(2));
@@ -174,10 +223,10 @@ void CacheTracking::startTracking(){
     capture.release();
 }
 
-std::vector<Rect> CacheTracking::findShapes(Mat &frame, int minArea){
+std::vector<RotatedRect> CacheTracking::findShapes(Mat &frame, int minArea){
     std::vector< std::vector<Point> > contours;
     findContours(frame, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
-    std::vector<Rect> objects;
+    std::vector<RotatedRect> objects;
 
     for (int i = 0; i < contours.size(); i++) {
         std::vector<Point> points;
@@ -188,7 +237,7 @@ std::vector<Rect> CacheTracking::findShapes(Mat &frame, int minArea){
         double area = contourArea(contours[i]);
 
         if(area > minArea){
-            objects.push_back(cv::boundingRect(cv::Mat(points).reshape(2)));
+            objects.push_back(cv::minAreaRect(cv::Mat(points).reshape(2)));
         }
     }
 
