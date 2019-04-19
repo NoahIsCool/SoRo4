@@ -3,6 +3,7 @@
 #include "autonomous/autonomous.h"
 #include "core/gps/gps.h"
 #include "autonomous/cachetracking.h"
+#include "autonomous/erctraversal.h"
 
 int main(int argc, char *argv[])
 {
@@ -10,11 +11,13 @@ int main(int argc, char *argv[])
 
     char *ip = (char*)"192.0.0.123";
     char *host = (char*)"55555";
-    //gps_init(ip, host);
+    gps_init(ip, host);
 
     //Autonomous autonomous;
-    CacheTracking tracker("/dev/video1");
+    //CacheTracking tracker("/dev/video1");
 
-    //gps_finish();
+    ERCTraversal test;
+
+    gps_finish();
     return a.exec();
 }
