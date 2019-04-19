@@ -16,7 +16,7 @@ class ERCTraversal
         ERCTraversal();
     private:
         double currentAngle = 0;
-        int16_t biasZ;
+        uint16_t biasZ;
         msg_imu_raw_t imu;
 
         std::vector<double> getWheelSpeeds(double angleOff, double baseSpeed);

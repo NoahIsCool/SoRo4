@@ -47,7 +47,8 @@ void ERCTraversal::updateAngle()
     while(true) //TODO: add killswitch or something for this
     {
         usleep(50000);
-        currentAngle = currentAngle + (imu.gyr_z - biasZ) * .1; //this is updated every 10th of a second. Assumes gyr_z is in correct unit already
+        std::cout << imu.gyr_z << std::endl;
+        currentAngle = currentAngle + (double)(imu.gyr_z - biasZ) * .1; //this is updated every 10th of a second. Assumes gyr_z is in correct unit already
         usleep(50000);
     }
 }
