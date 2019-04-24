@@ -8,12 +8,12 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    char *ip = (char*)"192.0.0.123";
-    char *host = (char*)"55555";
+    char *ip = (char*)"10.0.0.222";
+    char *host = (char*)"55556";
     //gps_init(ip, host);
 
     //Autonomous autonomous;
-    CacheTracking tracker("/dev/video1");
+    CacheTracking tracker("/dev/video0");
 
     //gps_finish();
     return a.exec();

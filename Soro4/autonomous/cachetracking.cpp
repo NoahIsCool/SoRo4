@@ -69,6 +69,7 @@ void CacheTracking::startTracking(){
     vLow -= 90; //value
     std::cout << "got hsv values: " << hLow << " " << sLow << " " << vLow << std::endl;
 
+    bool matchOrientation = true;
     while(running){
         capture >> frame;
 
@@ -108,10 +109,9 @@ void CacheTracking::startTracking(){
 
             //next try to match the orientation
             //the orientation could be off if we only see the top
-            //bool matchingOrientation = true;
-            //while(matchingOrientation){
-                //calculate the rotation
-            double angle = abs(targetRect.angle);
+            //calculate the rotation
+            if(matchOrientation){
+                double angle = abs(targetRect.angle);
                 std::cout << "rotation angle: " << angle << std::endl;
                 if(angle < 5 || angle > 85){
                     std::cout << "perfectly centered. As all things should be" << std::endl;
@@ -125,40 +125,24 @@ void CacheTracking::startTracking(){
                 //write the values
 
                 //wait until done
-            //}
 
-        /*for(int i = 0; i < objects.size(); i++){
-            //if(points.size() > 0 && area > 1000){
-                //cv::Rect brect = cv::boundingRect(cv::Mat(points).reshape(2));
-                cv::RotatedRect rrect = objects[i];
-                cv::Rect brect = rrect.boundingRect();
-                Point2f rect_points[4]; rrect.points( rect_points );
-                for( int j = 0; j < 4; j++ ){
-                   line( frame, rect_points[j], rect_points[(j+1)%4], cv::Scalar(100, 100, 200), 5, CV_AA);
-                   line( mask, rect_points[j], rect_points[(j+1)%4], cv::Scalar(100, 100, 200), 5, CV_AA);
-                }
-                //cv::rectangle(frame, brect.tl(), brect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
-                //cv::rectangle(mask, brect.tl(), brect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
-                Point objectCenter(brect.x+brect.width/2,brect.y+brect.height/2);
-                cv::Rect centerRect = cv::boundingRect(cv::Mat(objectCenter).reshape(2));
-                cv::rectangle(frame, centerRect.tl(), centerRect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
-                cv::rectangle(mask, centerRect.tl(), centerRect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
-
-                //distances are in pixels
-                double x = abs(center.x - objectCenter.x);
-                double y = abs(center.y - objectCenter.y);
-                int up = (center.y - objectCenter.y) / y;
-                int right = (center.x - objectCenter.x) / x;
+                //update state so it will now center the object
+            }else{
+                //now center the object and drop down on it
+                double x = abs(center.x - targetPoint.x);
+                double y = abs(center.y - targetPoint.y);
+                int up = (center.y - targetPoint.y) / y;
+                int right = (center.x - targetPoint.x) / x;
                 std::cout << "distance from object to center: " << x << " " << y << std::endl;
                 int direction = NO_MOVE;
-                if(abs(center.y - objectCenter.y) > centerThreshold){
+                if(abs(center.y - targetPoint.y) > centerThreshold){
                     if(up == 1){
                         direction = UP;
                     }else{
                         direction = DOWN;
                     }
                 }
-                if(abs(center.x - objectCenter.x) > centerThreshold){
+                if(abs(center.x - targetPoint.x) > centerThreshold){
                     if(right == 1){
                         if(direction == UP){
                             direction = UP_RIGHT;
@@ -204,12 +188,96 @@ void CacheTracking::startTracking(){
                     std::cout << "up left";
                     break;
                 default:
+                    //centered. Now drop down
                     std::cout << "perfectly balanced. Like all things should be";
                     break;
                 };
                 std::cout << std::endl;
-            //}
-        }*/
+
+            /*for(int i = 0; i < objects.size(); i++){
+                //if(points.size() > 0 && area > 1000){
+                    //cv::Rect brect = cv::boundingRect(cv::Mat(points).reshape(2));
+                    cv::RotatedRect rrect = objects[i];
+                    cv::Rect brect = rrect.boundingRect();
+                    Point2f rect_points[4]; rrect.points( rect_points );
+                    for( int j = 0; j < 4; j++ ){
+                       line( frame, rect_points[j], rect_points[(j+1)%4], cv::Scalar(100, 100, 200), 5, CV_AA);
+                       line( mask, rect_points[j], rect_points[(j+1)%4], cv::Scalar(100, 100, 200), 5, CV_AA);
+                    }
+                    //cv::rectangle(frame, brect.tl(), brect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
+                    //cv::rectangle(mask, brect.tl(), brect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
+                    Point objectCenter(brect.x+brect.width/2,brect.y+brect.height/2);
+                    cv::Rect centerRect = cv::boundingRect(cv::Mat(objectCenter).reshape(2));
+                    cv::rectangle(frame, centerRect.tl(), centerRect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
+                    cv::rectangle(mask, centerRect.tl(), centerRect.br(), cv::Scalar(100, 100, 200), 5, CV_AA);
+
+                    //distances are in pixels
+                    double x = abs(center.x - objectCenter.x);
+                    double y = abs(center.y - objectCenter.y);
+                    int up = (center.y - objectCenter.y) / y;
+                    int right = (center.x - objectCenter.x) / x;
+                    std::cout << "distance from object to center: " << x << " " << y << std::endl;
+                    int direction = NO_MOVE;
+                    if(abs(center.y - objectCenter.y) > centerThreshold){
+                        if(up == 1){
+                            direction = UP;
+                        }else{
+                            direction = DOWN;
+                        }
+                    }
+                    if(abs(center.x - objectCenter.x) > centerThreshold){
+                        if(right == 1){
+                            if(direction == UP){
+                                direction = UP_RIGHT;
+                            }else if(direction == DOWN){
+                                direction = DOWN_RIGHT;
+                            }else{
+                                direction = RIGHT;
+                            }
+                        }else{
+                            if(direction == UP){
+                                direction = UP_LEFT;
+                            }else if(direction == DOWN){
+                                direction = DOWN_LEFT;
+                            }else{
+                                direction = LEFT;
+                            }
+                        }
+                    }
+                    std::cout << "direction to move: ";
+                    switch(direction){
+                    case UP:
+                        std::cout << "up";
+                        break;
+                    case UP_RIGHT:
+                        std::cout << "up right";
+                        break;
+                    case RIGHT:
+                        std::cout << "right";
+                        break;
+                    case DOWN_RIGHT:
+                        std::cout << "down right";
+                        break;
+                    case DOWN:
+                        std::cout << "down";
+                        break;
+                    case DOWN_LEFT:
+                        std::cout << "down left";
+                        break;
+                    case LEFT:
+                        std::cout << "left";
+                        break;
+                    case UP_LEFT:
+                        std::cout << "up left";
+                        break;
+                    default:
+                        std::cout << "perfectly balanced. Like all things should be";
+                        break;
+                    };
+                    std::cout << std::endl;
+                //}
+            }*/
+            }
         }
 
         cv::Rect centerDisplay = cv::boundingRect(cv::Mat(center).reshape(2));
