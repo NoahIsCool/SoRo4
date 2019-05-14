@@ -8,7 +8,7 @@
 
 #include "core/core.h"
 #include "core/comms.h"
-#include "core/gps/orientation.h"
+#include "core/gps/imu.h"
 
 class ERCTraversal
 {
@@ -17,7 +17,7 @@ class ERCTraversal
     private:
         double currentAngle = 0;
         uint16_t biasZ;
-        msg_angular_rate_t gyro;
+        msg_imu_raw_t gyro;
 
         std::vector<double> getWheelSpeeds(double angleOff, double baseSpeed);
         void updateAngle();

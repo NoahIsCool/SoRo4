@@ -7,11 +7,12 @@ ERCTraversal::ERCTraversal()
 
 int ERCTraversal::testMain()
 {
-    std::thread statusThread(&ERCTraversal::updateAngle,this);
+    //std::thread statusThread(&ERCTraversal::updateAngle,this);
+    auxIMU.imu_conf = 0x12;
     while(true)
     {
         usleep(1000000);
-        std::cout << currentAngle << std::endl;
+        std::cout << gyro.gyr_z << std::endl;
     }
 }
 
@@ -41,14 +42,14 @@ std::vector<double> ERCTraversal::getWheelSpeeds(double angleOff, double baseSpe
 void ERCTraversal::updateAngle()
 {
     usleep(500000); //sleeps for half a second to make sure the rover is still
-    biasZ = gyro.z; //It is really important that the rover is still here
+    biasZ = gyro.gyr_z; //It is really important that the rover is still here
     std::cout<< "Bias Z: " << biasZ << std::endl;
 
     while(true) //TODO: add killswitch or something for this
     {
         usleep(50000);
-        std::cout << gyro.z << std::endl;
-        currentAngle = currentAngle + (double)(gyro.z - biasZ) * .1; //this is updated every 10th of a second. Assumes gyr_z is in correct unit already
+        std::cout << gyro.gyr_z << std::endl;
+        currentAngle = currentAngle + (double)(gyro.gyr_z - biasZ) * .1; //this is updated every 10th of a second. Assumes gyr_z is in correct unit already
         usleep(50000);
     }
 }
