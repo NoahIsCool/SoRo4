@@ -41,14 +41,14 @@ std::vector<double> ERCTraversal::getWheelSpeeds(double angleOff, double baseSpe
 void ERCTraversal::updateAngle()
 {
     usleep(500000); //sleeps for half a second to make sure the rover is still
-    biasZ = imu.gyr_z; //It is really important that the rover is still here
+    biasZ = gyro.z; //It is really important that the rover is still here
     std::cout<< "Bias Z: " << biasZ << std::endl;
 
     while(true) //TODO: add killswitch or something for this
     {
         usleep(50000);
-        std::cout << imu.gyr_z << std::endl;
-        currentAngle = currentAngle + (double)(imu.gyr_z - biasZ) * .1; //this is updated every 10th of a second. Assumes gyr_z is in correct unit already
+        std::cout << gyro.z << std::endl;
+        currentAngle = currentAngle + (double)(gyro.z - biasZ) * .1; //this is updated every 10th of a second. Assumes gyr_z is in correct unit already
         usleep(50000);
     }
 }
