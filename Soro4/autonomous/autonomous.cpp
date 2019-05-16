@@ -4,10 +4,10 @@
 
 //this class assumes that the stuff to get the gpsHeading, the stuff to actually make the rover move, and everything needed for GeneratePath is available from another class.
 
-Autonomous::Autonomous() : mySocket("testConfig.conf")
+Autonomous::Autonomous() : mySocket("lidar.conf")
 {
 	// this "should" make the comms object print out any errors it encounters to the terminal
-    connect(mySocket, SIGNAL(messageReady(QByteArray)), this, SLOT(lidarValues(QByteArray)));
+    connect(&mySocket, SIGNAL(messageReady(QByteArray)), this, SLOT(lidarValues(QByteArray)));
 	qInfo() << "library link test";
 	mainLoop();
 }
@@ -37,12 +37,12 @@ std::vector<double> Autonomous::getWheelSpeedValues(double amountOff, double bas
 }
 
 //Returns a list of cells from the rover's current location to the specified destination
-std::list<Cell> Autonomous::GeneratePath(Cell dest, SearchAlgorithm& alg)
+/*std::list<Cell> Autonomous::GeneratePath(Cell dest, SearchAlgorithm& alg)
 {
 	Cell source(pos_llh.lat, pos_llh.lon, 0.0);
 
     return alg.findPath(source, dest);
-}
+}*/
 
 //updates all of the lidar readings and checks to see if an obstacle has been spotted
 void Autonomous::lidarValues(QByteArray message)
@@ -60,7 +60,7 @@ void Autonomous::lidarValues(QByteArray message)
     //checks for holes. We may need to update this to check to make sure at least two Lidars see a hole before running avoidObstacle
     for(int i = 1; i < 4; i++)
     {
-        if(obstacleDistances[i] > maxHoleDepth[i - 1])
+        if(obstacleDistances[i] > maxHoleDepths[i - 1])
             isThereObstacle = true;
     }
 }
@@ -92,6 +92,7 @@ void Autonomous::avoidObstacle()
     array.append((char)0);
     array.append((char)0);
     mySocket.sendMessage(array);
+
     usleep(2000000);
 
     //drive forward a bit and continue(?)
@@ -176,12 +177,6 @@ Cell Autonomous::inputNextCoords()
 //Calls drive for the robot to smoothly reorient itself to from one node to the next
 void Autonomous::mainLoop()
 {
-	//placeholder
-    //FIXME: get this from rob
-    //map = searcher.parseMap();
-		//FIXME: need map, MAXX, MAXY from rob
-		//SearchAlgorithm searchAlg(map, EXTX, EXTY, 1.0, 1000.0, 1000.0)
-
     threadsRunning = true;
     std::thread statusThread(&Autonomous::updateStatus,this);
 
@@ -194,67 +189,51 @@ void Autonomous::mainLoop()
     //used to calculate the angle to turn
     lastLatitude = pos_llh.lat;
     lastLongitude = pos_llh.lon;
+    Cell currentGPS;
+    currentGPS.lat = lastLatitude;
+    currentGPS.lng = lastLongitude;
 
-    BallTracker tennisTracker = new BallTracker(); //automatically starts a thread to track the tennisball
     Cell nextCords = inputNextCoords(); //variable to hold the next coords that we need to travel to. Immediately calls the method to initialize them
 
     while(nextCords != killVector) //checks to make sure that we don't want to stop the loop
     {
-			try {
-      	std::list<Cell> path = GeneratePath(nextCords);
-			} catch (AStarException e) {
-				nextCords = inputNextCoords(); //gets the next set of coords
-				continue;
-			}
-
-			std::list<Cell>::iterator it = path.begin();
-
-        //loops through each of the coordinates to get to the next checkpoint
-        while(*it != nextCords) //travels to the next set of coords.
+        while(currentGPS != nextCords) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
         {
-            Cell currentGPS(pos_llh.lat, pos_llh.lon, 0.0);
-
-            while(currentGPS != *it) //travels to the next set of coords. CurrentGPSHeading needs to be the range of coordinates that we want the rover to reach
+            if(isThereObstacle || isStuck)
             {
-                if(isThereObstacle)
-                {
-                    avoidObstacle();
-                }
-                else
-                {
-                    //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
-                    double angleToTurn = getAngleToTurn(*it);
-
-                    std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
-                    std::vector<qint8> newSpeeds(speeds.size(),0);
-
-                    //FIXME: change all speeds to ints not doubles. Dont need that accurate
-                    //mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
-                    QByteArray array;
-                    array.append(-127); //start byte
-                    array.append((char)0);
-                    array.append((char)0);
-                    array.append(newSpeeds[0]);
-                    array.append(newSpeeds[1]);
-                    array.append((char)0);
-                    array.append((char)0);
-                    array.append((char)(speeds[0] + speeds [1]) / 5);
-                    mySocket.sendMessage(array);
-                    usleep(500000); //lets it drive for 500ms before continuing on
-                    currentGPS.lat = pos_llh.lat;
-                    currentGPS.lng = pos_llh.lon;
-                }
+                avoidObstacle();
             }
-			it++;
+            else
+            {
+                //find the angle that the robot needs to turn to to be heading in the right direction to hit the next coords
+                double angleToTurn = getAngleToTurn(nextCords);
+
+                std::vector<double> speeds = getWheelSpeedValues(angleToTurn, speed);
+                std::vector<qint8> newSpeeds(speeds.size(),0);
+                newSpeeds[0] = ((int)round(speeds[0]) <= 90 && (int)round(speeds[0]) >= -90) ? (int)round(speeds[0]) : (int)round(speeds[0]) >= 90 ? 90 : -90;
+                newSpeeds[1] = ((int)round(speeds[1]) <= 90 && (int)round(speeds[1]) >= -90) ? (int)round(speeds[1]) : (int)round(speeds[1]) >= 90 ? 90 : -90;
+
+                //mySocket.sendUDP(0, 0, 0, speeds[0], speeds[1], 0, 0, (speeds[0] + speeds [1]) / 2);
+                QByteArray array;
+                array.append(-127); //start byte
+                array.append((char)0);
+                array.append((char)0);
+                array.append(newSpeeds[0]);
+                array.append(newSpeeds[1]);
+                array.append((char)0);
+                array.append((char)0);
+                array.append((char)(speeds[0] + speeds [1]) / 5);
+                mySocket.sendMessage(array);
+                usleep(500000); //lets it drive for 500ms before continuing on
+                currentGPS.lat = lastLatitude;
+                currentGPS.lng = lastLongitude;
+
+            }
         }
-
-        //wait for the tennisTracker to finish finding the tennis ball
-        //OR if the tennis ball has not been found by the time that the rover got to the given checkpoints then we will pretend like we found the tennis ball and move on as if we had
-
         nextCords = inputNextCoords(); //gets the next set of coords
     }
 
     threadsRunning = false;
-    angleThread.join();
+    statusThread.join();
     std::cout << "We win!" << std::endl;
 }
