@@ -112,18 +112,17 @@ double integralWristPitch = 0;
 
 
 //pin values
-//TODO: change
-char _yawMotor = A0;//Pin for yaw (base) motor
-char _shoulderMotor = A1;//Pin for shoulder motor
-char _elbowMotor = A2;//Pin for elbow motor
-char _wristPitchMotor = A3;//Pin for wrist pitch motor
-char _wristRollMotor = A4;//Pin for wrist motor
+char _yawMotor = D2;//Pin for yaw (base) motor
+char _shoulderMotor = D3;//Pin for shoulder motor
+char _elbowMotor = D4;//Pin for elbow motor
+char _wristPitchMotor = D7;//Pin for wrist pitch motor
+char _wristRollMotor = D6;//Pin for wrist motor
 
-char _yawPot = A5;//Pin for yaw (base) potentiometer
-char _shoulderPot = A6;//Pin for shoulder potentiometer
-char _elbowPot = A7;//Pin for elbow potentiometer
-char _wristPitchPot = 0;//Pin for wrist pitch potentiometer
-char _wristRollPot = 1;//Pin for wrist roll potentiometer
+char _yawPot = A0;//Pin for yaw (base) potentiometer
+char _shoulderPot = A1;//Pin for shoulder potentiometer
+char _elbowPot = A2;//Pin for elbow potentiometer
+char _wristPitchPot = A3;//Pin for wrist pitch potentiometer
+//char _wristRollPot = 1;//Pin for wrist roll potentiometer
 
 
 
