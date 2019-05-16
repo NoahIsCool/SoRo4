@@ -7,6 +7,7 @@
 
 //Old: Potentiometer values are 0 to 1023
 //Elbow potentiometer ranges from 479(stowed) to 401(fully extended)
+//TODO: find the max ranges for all other potentiometers and update this in every function
 //Elbow pin A2
 
 
@@ -27,6 +28,8 @@
 //       sleep(10);
 //   }
 //}
+
+//TODO: write everything for the claw
 
 
 Servo yaw,shoulder,elbow,wristPitch;
@@ -55,7 +58,7 @@ int potYaw;//Base
 int potShoulder;
 int potElbow;
 int potWristPitch;
-int potWristRoll;
+int wristRoll; //no pot for this right now. TODO: add the pot back in for this when its added for auton
 bool buttonClawOpen;
 bool buttonClawClose;
 
@@ -118,17 +121,17 @@ double integralWristPitch = 0;
 
 //pin values
 //TODO: change
-char _yawMotor = A0;//Pin for yaw (base) motor
-char _shoulderMotor = A1;//Pin for shoulder motor
-char _elbowMotor = 4;//Pin for elbow motor
-char _wristPitchMotor = A3;//Pin for wrist pitch motor
-char _wristRollMotor = A4;//Pin for wrist motor
+char _yawMotor = D2;//Pin for yaw (base) motor
+char _shoulderMotor = D3;//Pin for shoulder motor
+char _elbowMotor = D4;//Pin for elbow motor
+char _wristPitchMotor = D7;//Pin for wrist pitch motor
+char _wristRollMotor = D6;//Pin for wrist motor
 
-char _yawPot = A5;//Pin for yaw (base) potentiometer
-char _shoulderPot = A6;//Pin for shoulder potentiometer
+char _yawPot = A0;//Pin for yaw (base) potentiometer
+char _shoulderPot = A1;//Pin for shoulder potentiometer
 char _elbowPot = A2;//Pin for elbow potentiometer
-char _wristPitchPot = 0;//Pin for wrist pitch potentiometer
-char _wristRollPot = 1;//Pin for wrist roll potentiometer
+char _wristPitchPot = A3;//Pin for wrist pitch potentiometer
+//char _wristRollPot = 1;//Pin for wrist roll potentiometer
 
 
 
@@ -218,16 +221,16 @@ void read_data(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port, co
   potShoulder = (int)(data[4] << 8) + (byte)data[5];
   potElbow = (int)(data[6] << 8) + (byte)data[7];
   potWristPitch = (int)(data[8] << 8) + (byte)data[9];
-  potWristRoll = (int)(data[10] << 8) + (byte)data[11];
+  wristRoll = (int)(data[10] << 8) + (byte)data[11];
 
   buttonClawOpen = ((data[12] & 0x01) > 0);  // 2^0 bit
   buttonClawClose = ((data[12] & 0x02) > 0); // 2^1 bit
 
-  //moveYaw(potYaw);
-  //moveShoulder(potShoulder);
+  moveYaw(potYaw);
+  moveShoulder(potShoulder);
   moveElbow(potElbow);
-  //moveWristPitch(potWristPitch);
-  //moveWristRoll(potWristRoll);
+  moveWristPitch(potWristPitch);
+  moveWristRoll(wristRoll);
 
 
 
@@ -237,52 +240,40 @@ void read_data(uint16_t dest_port, uint8_t src_ip[IP_LEN], uint16_t src_port, co
 /*
 * Receives the movement info from the adjustArm method
 * and converts it into a number the yaw (base) motor can use.
-* Has PID for control system
 */
 void moveYaw(int yawTargetPosition)
 {
   if (yawTargetPosition < 0 || yawTargetPosition > 1023)
   {
     //TODO: throw error
+    Serial.print("ERROR: yaw target position is out of range");
+    return;
   }
 
-  //convert from UDP to servo (0-1023 to 0-180)
+  //convert from UDP to servo (0-1023 to 0-180). I'm assuming that this correct and doesn't need an offset
   int yawTargetAngle = (int)(CONVERSION_FACTOR * yawTargetPosition);
+  int currentPotValue = analogRead(_yawPot);
 
-  unsigned long currentTimeYaw = millis();
-  int dt = currentTimeYaw - previousTimeYaw;//change in time
-  previousTimeYaw = currentTimeYaw;//update old time
+  int diff = desiredPotValue - currentPotValue;
 
-  //error between what it is and what we want
-  int yawPosition = analogRead(_yawPot);
-  int yawAngle = yawPosition/ARDUINO_IN_VOLT;
-  int error = yawTargetAngle - yawAngle;
+  int output = 90;
 
-
-  //integral/sum of error
-  integralYaw += error * dt / 1000.0;//divide by 1000 because dt is ms, adjust for seconds
-
-
-  //derivative/rate of change of error
-  double derivative = 1000.0*(error - previousErrorYaw) / dt;
-
-  int sum = (int)(KP_YAW * error + KI_YAW * integralYaw + KD_YAW * derivative);
-
-  previousErrorYaw = error;
-
-  //TODO:output to servo
-  //working w/ full rotational servos
-  //90 = No Movement, 0 full speed one direction, 180 full speed other direction
-
-  int output = SERVO_CENTER + sum;
-
-  if (output > 180)
+  Serial.print("desired: ");
+  Serial.print(desiredPotValue);
+  Serial.print(" actual: ");
+  Serial.println(currentPotValue);
+  if (diff > 10 && desiredPotValue < 180 && currentPotValue < 180)
   {
-    output = 180;
+     output = 120;
+     Serial.println("moving clockwise");
   }
-  if (output < 0)
+  else if (diff < -10 && desiredPotValue > 0 && currentPotValue > 0)
   {
-    output = 0;
+     output = 60;
+     Serial.println("moving counter clockwise");
+  }
+  else{
+    Serial.println("perfectly ballanced. As all things should be");
   }
 
   //TODO: write to servo
@@ -292,52 +283,44 @@ void moveYaw(int yawTargetPosition)
 /*
 * Receives the movement info from the adjustArm method
 * and converts it into a number the shoulder motor can use.
-* Has PID for control system.
 */
 void moveShoulder(int shoulderTargetPosition)
 {
   if (shoulderTargetPosition < 0 || shoulderTargetPosition > 1023)
   {
     //TODO: throw error
+    Serial.print("ERROR: shoulder target position is out of range");
+    return;
   }
 
   //convert from 0-1023 to 0-180
-  int shoulderTargetAngle = (int)(CONVERSION_FACTOR * shoulderTargetPosition);
-
-  unsigned long currentTimeShoulder = millis();
-  int dt = currentTimeShoulder - previousTimeShoulder;//change in time
-  previousTimeShoulder = currentTimeShoulder;//update old time
-
-  //error between what it is and what we want
-  int shoulderPosition = analogRead(_shoulderPot);
-  int shoulderAngle = shoulderPosition/ARDUINO_IN_VOLT;
-  int error = shoulderTargetAngle - shoulderAngle;
-
-
-  //integral/sum of error
-  integralShoulder += error * dt / 1000.0;//divide by 1000 because dt is ms, adjust for seconds
-
-
-  //derivative/rate of change of error
-  double derivative = 1000.0*(error - previousErrorShoulder) / dt;
-
-  int sum = (int)(KP_SHOULDER * error + KI_SHOULDER * integralShoulder + KD_SHOULDER * derivative);
-
-  previousErrorShoulder = error;
-
-  //TODO:output to servo
-  //working w/ full rotational servos
-  //90 = No Movement, 0 full speed one direction, 180 full speed other direction
-
-  int output = SERVO_CENTER + sum;
-
-  if (output > 180)
+  //TODO, find the specific values needed to find the true shoulder target angle
+  float shoulderConversionFactor;
+  float shoulderOffset;
+  
+  int desiredPotValue = shoulderConversionFactor*shoulderTargetPosition + shoulderOffset;
+  int currentPotValue = analogRead(_shoulderPot);
+  
+  int diff = desiredPotValue - currectPotValue;
+  
+  int output = 90;
+  
+  Serial.print("desired: ");
+  Serial.print(desiredPotValue);
+  Serial.print(" actual: ");
+  Serial.println(currentPotValue);
+  if (diff > 10 && desiredPotValue < 480 && currentPotValue < 480)
   {
-    output = 180;
+     output = 120;
+     Serial.println("moving clockwise");
   }
-  if (output < 0)
+  else if (diff < -10 && desiredPotValue > 400 && currentPotValue > 400)
   {
-    output = 0;
+     output = 60;
+     Serial.println("moving counter clockwise");
+  }
+  else{
+    Serial.println("perfectly balanced. As all things should be");
   }
 
   //TODO: write to servo
@@ -347,13 +330,14 @@ void moveShoulder(int shoulderTargetPosition)
 /*
 * Receives the movement info from the adjustArm method
 * and converts it into a number the elbow motor can use.
-* Has PID for control system.
 */
 void moveElbow(int elbowTargetPosition)
 {
   if (elbowTargetPosition < 0 || elbowTargetPosition > 1023)
   {
     //TODO: throw error
+    Serial.print("ERROR: elbow target position is out of range");
+    return;
   }
 
 //  if(elbowTargetPosition < 401){
@@ -372,7 +356,7 @@ void moveElbow(int elbowTargetPosition)
   int elbowOffset = 190;//479;
 
   int desiredPotValue = elbowConversionFactor*elbowTargetPosition + elbowOffset;
-  int currentPotValue = analogRead(_shoulderPot);
+  int currentPotValue = analogRead(_elbowPot);
 
   int diff = desiredPotValue - currentPotValue;
 
@@ -393,7 +377,7 @@ void moveElbow(int elbowTargetPosition)
      Serial.println("moving counter clockwise");
   }
   else{
-    Serial.println("perfectly ballanced. As all things should be");
+    Serial.println("perfectly balanced. As all things should be");
   }
 
   //TODO: write to servo
@@ -403,53 +387,42 @@ void moveElbow(int elbowTargetPosition)
 /*
 * Receives the movement info from the adjustArm method
 * and converts it into a number the wrist motor can use.
-* Has PID for control system.
 */
 void moveWristPitch(int wristPitchTargetPosition)
 {
   if (wristPitchTargetPosition < 0 || wristPitchTargetPosition > 1023)
   {
     //TODO: throw error
+    Serial.print("ERROR: wrist target position is out of range");
+    return;
   }
 
-  //convert from 0-1023 to 0-180
-  int wristPitchTargetAngle = (int)(CONVERSION_FACTOR * wristPitchTargetPosition);
+  //convert from 0-1023 to 0-180. NOTE: I'm assuming that the wrist actually can move to these values and that there is no offset
+  int desiredPotValue = (int)(CONVERSION_FACTOR * wristPitchTargetPosition);
+  int currentPotValue = analogRead(_wristPitchPot);
+  
+  int diff = desiredPotValue - currentPotValue;
 
-  unsigned long currentTimeWristPitch = millis();
-  int dt = currentTimeWristPitch - previousTimeWristPitch;//change in time
-  previousTimeWristPitch = currentTimeWristPitch;//update old time
+  int output = 90;
 
-  //error between what it is and what we want
-  int wristPitchPosition = analogRead(_wristPitchPot);
-  int wristPitchAngle = wristPitchPosition/ARDUINO_IN_VOLT;
-  int error = wristPitchTargetAngle - wristPitchAngle;
-
-
-  //integral/sum of error
-  integralWristPitch += error * dt / 1000.0;//divide by 1000 because dt is ms, adjust for seconds
-
-
-  //derivative/rate of change of error
-  double derivative = 1000.0*(error - previousErrorWristPitch) / dt;
-
-  int sum = (int)(KP_WRIST_PITCH * error + KI_WRIST_PITCH * integralWristPitch + KD_WRIST_PITCH * derivative);
-
-  previousErrorWristPitch = error;
-
-  //TODO:output to servo
-  //working w/ full rotational servos
-  //90 = No Movement, 0 full speed one direction, 180 full speed other direction
-
-  int output = SERVO_CENTER + sum;
-
-  if (output > 180)
+  Serial.print("desired: ");
+  Serial.print(desiredPotValue);
+  Serial.print(" actual: ");
+  Serial.println(currentPotValue);
+  if (diff > 10 && desiredPotValue < 180 && currentPotValue < 180)
   {
-    output = 180;
+     output = 120;
+     Serial.println("moving clockwise");
   }
-  if (output < 0)
+  else if (diff < -10 && desiredPotValue > 0 && currentPotValue > 0)
   {
-    output = 0;
+     output = 60;
+     Serial.println("moving counter clockwise");
   }
+  else{
+    Serial.println("perfectly balanced. As all things should be");
+  }
+
 
   //TODO: write to servo
   analogWrite(_wristPitchMotor, output);
@@ -458,54 +431,25 @@ void moveWristPitch(int wristPitchTargetPosition)
 /*
 * Receives the movement info from the adjustArm method
 * and converts it into a number the wrist motor can use.
-* Has PID for control system.
 */
-void moveWristRoll(int wristRollTargetPosition)
+void moveWristRoll(int wristRollTargetSpeed)
 {
-  if (wristRollTargetPosition < 0 || wristRollTargetPosition > 1023)
+  if (wristRollTargetPosition < 0 || wristRollTargetSpeed > 1023)
   {
     //TODO: throw error
+    Serial.print("ERROR: wrist target position is out of range");
+    return;
   }
 
   //convert from 0-1023 to 0-180
-  /*int wristRollTargetAngle = (int)(CONVERSION_FACTOR * wristRollTargetPosition);
-
-  unsigned long currentTimeWristRoll = millis();
-  int dt = currentTimeWristRoll - previousTimeWristRoll;//change in time
-  previousTimeWristRoll = currentTimeWristRoll;//update old time
-
-  //error between what it is and what we want
-  int wristRollPosition = analogRead(_wristRollPot);
-  int wristRollAngle = wristRollPosition/ARDUINO_IN_VOLT;
-  int error = wristRollTargetAngle - wristRollAngle;
-
-
-  //integral/sum of error
-  integralWristRoll += error * dt / 1000.0;//divide by 1000 because dt is ms, adjust for seconds
-
-
-  //derivative/rate of change of error
-  double derivative = 1000.0*(error - previousErrorWristRoll) / dt;
-
-  int sum = (int)(KP_WRIST_ROLL * error + KI_WRIST_ROLL * integralWristRoll + KD_WRIST_ROLL * derivative);
-
-  previousErrorWristRoll = error;
-
-  //TODO:output to servo
-  //working w/ full rotational servos
-  //90 = No Movement, 0 full speed one direction, 180 full speed other direction
-
-  int output = SERVO_CENTER + sum;
-
-  if (output > 180)
+  int wristRollTargetSpeed = (int)(CONVERSION_FACTOR * wristRollTargetSpeed);
+  int currentSpeed = analogRead(_wristRollMotor);
+  if(currentSpeed > 90 && wristRollTargetSpeed < 90 || currentSpeed < 90 && wristRollTargetSpeed > 90)
   {
-    output = 180;
+    analogWrite(_wristRollMotor, 90);
+    sleep(100);
   }
-  if (output < 0)
-  {
-    output = 0;
-  }*/
 
   //TODO: write to servo
-  analogWrite(_wristRollMotor, wristRollTargetPosition);
+  analogWrite(_wristRollMotor, wristRollTargetSpeed);
 }
