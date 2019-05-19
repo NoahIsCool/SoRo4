@@ -72,6 +72,7 @@ const double CONVERSION_FACTOR = (double)MAX_ANGLE / (double)MAX_ACCURACY;
 const int SERVO_CENTER = 90;
 const int ARDUINO_IN_VOLT = 1024;
 
+//Not sure if these are still used for this specific program
 //yaw (base) angle (perp to ground)
 int yawAngle = 135;
 //shoulder angle (perpendicular to ground)
@@ -80,44 +81,6 @@ int shoulderAngle = 135;
 int elbowAngle = 135;
 //wrist pitch angle (perpendicular to ground)
 int wristPitchAngle = 135;
-
-
-//PID constants
-//TODO: tune
-const double KP_YAW = 1;
-const double KI_YAW = 0;
-const double KD_YAW = 0;
-
-const double KP_SHOULDER = 1;
-const double KI_SHOULDER = 0;
-const double KD_SHOULDER = 0;
-
-const double KP_ELBOW = 1;
-const double KI_ELBOW = 0;
-const double KD_ELBOW = 0;
-
-const double KP_WRIST_PITCH = 1;
-const double KI_WRIST_PITCH = 0;
-const double KD_WRIST_PITCH = 0;
-
-//PID vars
-//TODO: can these be shared?
-unsigned long previousTimeYaw = 0;
-int previousErrorYaw = 0;
-double integralYaw = 0;
-
-unsigned long previousTimeShoulder = 0;
-int previousErrorShoulder = 0;
-double integralShoulder = 0;
-
-unsigned long previousTimeElbow = 0;
-int previousErrorElbow = 0;
-double integralElbow = 0;
-
-unsigned long previousTimeWristPitch = 0;
-int previousErrorWristPitch = 0;
-double integralWristPitch = 0;
-
 
 //pin values
 //TODO: change
@@ -250,8 +213,11 @@ void moveYaw(int yawTargetPosition)
     return;
   }
 
-  //convert from UDP to servo (0-1023 to 0-180). I'm assuming that this correct and doesn't need an offset
-  int yawTargetAngle = (int)(CONVERSION_FACTOR * yawTargetPosition);
+  //convert. TODO: add the conversion factor, the offset and change the 180 and 0 below to the max and min positions
+  float yawConversionFactor;
+  int yawOffset;
+  
+  int yawTargetAngle = yawConversionFactor * yawTargetPosition + yawOffset;
   int currentPotValue = analogRead(_yawPot);
 
   int diff = desiredPotValue - currentPotValue;
@@ -293,8 +259,7 @@ void moveShoulder(int shoulderTargetPosition)
     return;
   }
 
-  //convert from 0-1023 to 0-180
-  //TODO, find the specific values needed to find the true shoulder target angle
+  //convert. TODO: add the conversion factor, the offset and change the 480 and 400 below to the max and min positions
   float shoulderConversionFactor;
   float shoulderOffset;
   
@@ -397,8 +362,10 @@ void moveWristPitch(int wristPitchTargetPosition)
     return;
   }
 
-  //convert from 0-1023 to 0-180. NOTE: I'm assuming that the wrist actually can move to these values and that there is no offset
-  int desiredPotValue = (int)(CONVERSION_FACTOR * wristPitchTargetPosition);
+  //convert. TODO: add the conversion factor, the offset and change the 180 and 0 below to the max and min positions
+  float wristPitchConversionFactor;
+  int wristPitchOffset;
+  int desiredPotValue = wristPitchConversionFactor * wristPitchTargetPosition + wristPitchOffset;
   int currentPotValue = analogRead(_wristPitchPot);
   
   int diff = desiredPotValue - currentPotValue;
