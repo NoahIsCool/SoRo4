@@ -396,8 +396,7 @@ void moveWristPitch(int wristPitchTargetPosition)
 }
 
 /*
-* Receives the movement info from the adjustArm method
-* and converts it into a number the wrist motor can use.
+* This may need to be slowed down more if Oliver lied
 */
 void moveWristRoll(int wristRollTargetSpeed)
 {
