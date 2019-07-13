@@ -2,13 +2,24 @@
 
 ERCTraversal::ERCTraversal()
 {
+    detect.setDictionary("erc.dict"); //this dictionary is in core
+    capture.set(CV_CAP_PROP_FRAME_WIDTH, 1290);
+    capture.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
+    if(!capture.isOpened()){
+        //error in opening the video input
+        std::cout << "Unable to open video file: " << videoSource << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    namedWindow("Frame");
+    namedWindow("final");
     testMain();
+    //mainLoop();
 }
 
 int ERCTraversal::testMain()
 {
     //std::thread statusThread(&ERCTraversal::updateAngle,this);
-    auxIMU.imu_conf = 0x12;
     while(true)
     {
         usleep(1000000);
@@ -51,5 +62,57 @@ void ERCTraversal::updateAngle()
         std::cout << gyro.gyr_z << std::endl;
         currentAngle = currentAngle + (double)(gyro.gyr_z - biasZ) * .1; //this is updated every 10th of a second. Assumes gyr_z is in correct unit already
         usleep(50000);
+    }
+}
+
+void ERCTraversal::mainLoop()
+{
+    driveToMarker(10);//NOTE: the final value for this won't be known untill september. For now we just need to test
+    trackMarker();
+    //TODO: add in a wait command here. We should probably create a universal command for that
+    driveToMarker(20);//NOTE: the final value for this won't be known untill september. For now we just need to test
+    trackMarker();
+    //TODO: add in a wait command here. We should probably create a universal command for that
+    driveToMarker(30);//NOTE: the final value for this won't be known untill september. For now we just need to test
+    trackMarker();
+    //TODO: add in a wait command here. We should probably create a universal command for that
+    driveToMarker(40);//NOTE: the final value for this won't be known untill september. For now we just need to test
+    trackMarker();
+}
+
+void ERCTraversal::driveToMarker(int angleToMarker)
+{
+    int timesDetected = 0; //should help filter out false readings
+    while(timesDetected < 5)
+    {
+        capture >> image;
+        Markers = detect.detect(image);
+        if(Markers.size() == 0)
+        {
+            timesDetected++;
+            break;
+        }
+        else
+            timesDetected = 0;
+        QByteArray array;
+        array.append((char)-127);          //start message
+        array.append((char)0);          //drive device ID is 0
+        array.append((char)0);          //no modifiers
+        array.append((char)getWheelSpeeds(angleToMarker-currentAngle, baseSpeed)[0]);     //left wheels
+        array.append((char)getWheelSpeeds(angleToMarker-currentAngle, baseSpeed)[1]);     //right wheels
+        array.append((char)0);          //gimble vertical
+        array.append((char)0);          //gimble horizontal
+        array.append((char)-2*speed/5); //hash - average of the previous 5 bytes
+        mySocket.sendMessage(array);
+        usleep(100000); //goes at this speed for .1 seconds. May need to go for longer
+    }
+}
+
+void ERCTraversal::trackMarker()
+{
+    currentArea = (Markers[0][0].x - Markers[0][1].x) * (Markers[0][0].y - Markers[0][3].y);
+    while(currentArea < stopArea)
+    {
+        //TODO: implement the tracking logic here
     }
 }
