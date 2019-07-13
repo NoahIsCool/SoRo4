@@ -113,6 +113,47 @@ void ERCTraversal::trackMarker()
     currentArea = (Markers[0][0].x - Markers[0][1].x) * (Markers[0][0].y - Markers[0][3].y);
     while(currentArea < stopArea)
     {
-        //TODO: implement the tracking logic here
+        while((Markers[0][0].x + Markers[0][1].x) / 2 < arucoCenter - 50 || (Markers[0][0].x + Markers[0][1].x) / 2 > arucoCenter + 50)
+        {
+            if((Markers[0][0].x + Markers[0][1].x) / 2 < arucoCenter - 50)
+            {
+                QByteArray array;
+                array.append((char)-127);          //start message
+                array.append((char)0);          //drive device ID is 0
+                array.append((char)0);          //no modifiers
+                array.append((char)baseSpeed/2);     //left wheels
+                array.append((char)-baseSpeed/2);     //right wheels
+                array.append((char)0);          //gimble vertical
+                array.append((char)0);          //gimble horizontal
+                array.append((char)-2*speed/5); //hash - average of the previous 5 bytes
+                mySocket.sendMessage(array);
+                usleep(100000); //goes at this speed for .1 seconds. May need to go for longer
+            }
+            else
+            {
+                QByteArray array;
+                array.append((char)-127);          //start message
+                array.append((char)0);          //drive device ID is 0
+                array.append((char)0);          //no modifiers
+                array.append((char)-baseSpeed/2);     //left wheels
+                array.append((char)baseSpeed/2);     //right wheels
+                array.append((char)0);          //gimble vertical
+                array.append((char)0);          //gimble horizontal
+                array.append((char)-2*speed/5); //hash - average of the previous 5 bytes
+                mySocket.sendMessage(array);
+                usleep(100000); //goes at this speed for .1 seconds. May need to go for longer
+            }
+        }
+        QByteArray array;
+        array.append((char)-127);          //start message
+        array.append((char)0);          //drive device ID is 0
+        array.append((char)0);          //no modifiers
+        array.append((char)baseSpeed);     //left wheels
+        array.append((char)baseSpeed);     //right wheels
+        array.append((char)0);          //gimble vertical
+        array.append((char)0);          //gimble horizontal
+        array.append((char)-2*speed/5); //hash - average of the previous 5 bytes
+        mySocket.sendMessage(array);
+        usleep(3000000); //goes at this speed for 3 seconds. May need adjusted
     }
 }

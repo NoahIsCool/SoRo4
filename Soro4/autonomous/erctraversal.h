@@ -37,7 +37,7 @@ class ERCTraversal
         std::vector<double> getWheelSpeeds(double angleOff, double baseSpeed);
         void updateAngle();
         void driveToMarker(int angleToMarker);
-        bool trackMarker();
+        void trackMarker();
 
         int testMain();
         void mainLoop();
