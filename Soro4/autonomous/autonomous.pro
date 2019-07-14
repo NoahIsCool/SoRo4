@@ -29,18 +29,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 INCLUDEPATH += $$PWD/..
 INCLUDEPATH += /usr/local/include/opencv
+
 LIBS += -L/usr/local/lib/ -L../../libs -lcore
 LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_video -lopencv_imgproc -lopencv_videoio
 
 SOURCES += \
         autonomous.cpp \
-    cachetracking.cpp
+    cachetracking.cpp \
+    erctraversal.cpp
         SearchAlgorithm.cpp
 
 HEADERS += \
         autonomous.h \
         autonomous_global.h \
-    cachetracking.h
+    cachetracking.h \
+    erctraversal.h
         SearchAlgorithm.h
 
 #unix {
