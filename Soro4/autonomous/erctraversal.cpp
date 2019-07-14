@@ -13,18 +13,24 @@ ERCTraversal::ERCTraversal(std::string videoSource) : capture(videoSource), mySo
 
     cv::namedWindow("Frame");
     cv::namedWindow("final");
-    testMain();
+    testGyro();
+    //testAruco();
     //mainLoop();
 }
 
-int ERCTraversal::testMain()
+int ERCTraversal::testGyro()
 {
     //std::thread statusThread(&ERCTraversal::updateAngle,this);
-    /*while(true)
+    while(true)
     {
         usleep(1000000);
-        std::cout << gyro.gyr_z << std::endl;
-    }*/
+        std::cout << imu_raw.gyr_z << std::endl;
+    }
+}
+
+int ERCTraversal::testAruco()
+{
+
     std::cout << "got here" << std::endl;
     while(true)
     {
@@ -68,14 +74,14 @@ std::vector<double> ERCTraversal::getWheelSpeeds(double angleOff, double baseSpe
 void ERCTraversal::updateAngle()
 {
     usleep(500000); //sleeps for half a second to make sure the rover is still
-    biasZ = gyro.gyr_z; //It is really important that the rover is still here
+    //biasZ = gyro.gyr_z; //It is really important that the rover is still here
     std::cout<< "Bias Z: " << biasZ << std::endl;
 
     while(true) //TODO: add killswitch or something for this
     {
         usleep(50000);
-        std::cout << gyro.gyr_z << std::endl;
-        currentAngle = currentAngle + (double)(gyro.gyr_z - biasZ) * .1; //this is updated every 10th of a second. Assumes gyr_z is in correct unit already
+        //std::cout << gyro.gyr_z << std::endl;
+        //currentAngle = currentAngle + (double)(gyro.gyr_z - biasZ) * .1; //this is updated every 10th of a second. Assumes gyr_z is in correct unit already
         usleep(50000);
     }
 }

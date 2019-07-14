@@ -9,15 +9,15 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    //char *ip = (char*)"192.168.1.222";
-    //char *host = (char*)"55556";
-    //gps_init(ip, host);
+    char *ip = (char*)"192.168.1.222";
+    char *host = (char*)"55556";
+    gps_init(ip, host);
 
     //Autonomous autonomous;
     //CacheTracking tracker("/dev/video1");
 
     ERCTraversal test("/dev/video0");
 
-    //gps_finish();
+    gps_finish();
     return a.exec();
 }

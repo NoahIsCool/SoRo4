@@ -34,16 +34,16 @@ LIBS += -L/usr/local/lib/ -L../../libs -lcore
 LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_video -lopencv_imgproc -lopencv_videoio
 
 SOURCES += \
-        autonomous.cpp \
     cachetracking.cpp \
-    erctraversal.cpp
+    erctraversal.cpp #\
+    autonomous.cpp
         SearchAlgorithm.cpp
 
 HEADERS += \
-        autonomous.h \
         autonomous_global.h \
     cachetracking.h \
-    erctraversal.h
+    erctraversal.h #\
+    autonomous.h
         SearchAlgorithm.h
 
 #unix {

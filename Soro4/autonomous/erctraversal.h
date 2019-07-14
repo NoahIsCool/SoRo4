@@ -16,7 +16,8 @@
 
 #include "core/core.h"
 #include "core/comms.h"
-#include "core/gps/imu.h"
+//#include "core/gps/imu.h"
+#include "core/gps/gps.h"
 
 class ERCTraversal
 {
@@ -25,7 +26,7 @@ class ERCTraversal
     private:
         double currentAngle = 0;
         uint16_t biasZ;
-        msg_imu_raw_t gyro;
+        //msg_imu_raw_t gyro;
         int baseSpeed = 60; //this will likely need adjusted
         comms mySocket;
         int stopArea = 1000; //this will be the area that the aruco marker is when we want to stop. TODO: Adjust this value
@@ -42,7 +43,8 @@ class ERCTraversal
         void driveToMarker(int angleToMarker);
         void trackMarker();
 
-        int testMain();
+        int testGyro();
+        int testAruco();
         void mainLoop();
 
         //TODO: add GUI stuff

@@ -7,19 +7,16 @@ extern "C" {
 #include "sbp.h"
 #include "system.h"
 #include "navigation.h"
-#include "imu.h"
 
 
         /****** VARIABLES RELATED TO GPS STUFF *******/
-        
-        
+               
 /* SBP structs that messages from Piksi will feed. */
 msg_pos_llh_t      pos_llh;
 msg_baseline_ned_t baseline_ned;
 msg_vel_ned_t      vel_ned;
 msg_dops_t         dops;
-msg_gps_time_t gps_time; 
-msg_imu_raw_t      imu_raw;
+msg_gps_time_t gps_time;
 
 /*
  * SBP callback nodes must be statically allocated. Each message ID / callback
@@ -30,7 +27,6 @@ sbp_msg_callbacks_node_t baseline_ned_node;
 sbp_msg_callbacks_node_t vel_ned_node;
 sbp_msg_callbacks_node_t dops_node;
 sbp_msg_callbacks_node_t gps_time_node;
-sbp_msg_callbacks_node_t imu_raw_node;
 
 // IP address and port that of the Piksi Multi
 char *tcp_ip_addr;
@@ -89,7 +85,6 @@ void sbp_baseline_ned_callback(u16 sender_id, u8 len, u8 msg[], void *context);
 void sbp_vel_ned_callback(u16 sender_id, u8 len, u8 msg[], void *context);
 void sbp_dops_callback(u16 sender_id, u8 len, u8 msg[], void *context);
 void sbp_gps_time_callback(u16 sender_id, u8 len, u8 msg[], void *context);
-void sbp_imu_raw_callback(u16 sender_id, u8 len, u8 msg[], void *context);
 
 #ifdef __cplusplus
 } // extern "C"
