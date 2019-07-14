@@ -29,10 +29,10 @@ class ERCTraversal
         int baseSpeed = 60; //this will likely need adjusted
         comms mySocket;
         int stopArea = 1000; //this will be the area that the aruco marker is when we want to stop. TODO: Adjust this value
-        int currentArea; //current size of the marker
+        float currentArea; //current size of the marker
         int arucoCenter = 500; //TODO: change this. This will be the x coordinate of where we want the aruco marker to be at
 
-        aruco::MarkerDetector detect;
+        aruco::MarkerDetector detector;
         std::vector<aruco::Marker> Markers;
         cv::VideoCapture capture;
         cv::Mat image;

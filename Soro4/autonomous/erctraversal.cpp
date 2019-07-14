@@ -2,7 +2,7 @@
 
 ERCTraversal::ERCTraversal(std::string videoSource) : capture(videoSource), mySocket("traversal.conf")
 {
-    detect.setDictionary("erc.dict"); //this dictionary is in core
+    detector.setDictionary("/home/soro/Desktop/RezasSorRo4/SoRo4/Soro4/autonomous/erc.dict"); //FIXME: can't find this dict without the absolute path
     capture.set(CV_CAP_PROP_FRAME_WIDTH, 1290);
     capture.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
     if(!capture.isOpened()){
@@ -20,10 +20,25 @@ ERCTraversal::ERCTraversal(std::string videoSource) : capture(videoSource), mySo
 int ERCTraversal::testMain()
 {
     //std::thread statusThread(&ERCTraversal::updateAngle,this);
-    while(true)
+    /*while(true)
     {
         usleep(1000000);
         std::cout << gyro.gyr_z << std::endl;
+    }*/
+    std::cout << "got here" << std::endl;
+    while(true)
+    {
+        capture >> image;
+        std::cout << "got here 1" << std::endl;
+        Markers = detector.detect(image);
+        std::cout << "got here 2" << std::endl;
+        if(Markers.size() > 0)
+        {
+            currentArea = (Markers[0][0].x - Markers[0][1].x) * (Markers[0][0].y - Markers[0][3].y);
+            std::cout << currentArea << std::endl;
+        }
+        else std::cout << "Nothing found" << std::endl;
+        usleep(1000000);
     }
 }
 
@@ -86,7 +101,7 @@ void ERCTraversal::driveToMarker(int angleToMarker)
     while(timesDetected < 5)
     {
         capture >> image;
-        Markers = detect.detect(image);
+        Markers = detector.detect(image);
         if(Markers.size() == 0)
         {
             timesDetected++;
@@ -155,5 +170,9 @@ void ERCTraversal::trackMarker()
         array.append((char)0); //hash - average of the previous 5 bytes
         mySocket.sendMessage(array);
         usleep(3000000); //goes at this speed for 3 seconds. May need adjusted
+
+        capture >> image;
+        Markers = detector.detect(image);
+        currentArea = (Markers[0][0].x - Markers[0][1].x) * (Markers[0][0].y - Markers[0][3].y);
     }
 }
