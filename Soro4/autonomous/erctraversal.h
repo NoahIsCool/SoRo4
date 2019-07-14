@@ -42,7 +42,8 @@ class ERCTraversal
         void driveToMarker(int angleToMarker);
         void trackMarker();
 
-        int testMain();
+        int testGyro();
+        int testAruco();
         void mainLoop();
 
         //TODO: add GUI stuff

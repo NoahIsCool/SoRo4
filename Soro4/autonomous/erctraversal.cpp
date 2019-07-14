@@ -13,25 +13,27 @@ ERCTraversal::ERCTraversal(std::string videoSource) : capture(videoSource), mySo
 
     cv::namedWindow("Frame");
     cv::namedWindow("final");
-    testMain();
+    //testGyro();
+    testAruco();
     //mainLoop();
 }
 
-int ERCTraversal::testMain()
+int ERCTraversal::testGyro()
 {
     //std::thread statusThread(&ERCTraversal::updateAngle,this);
-    /*while(true)
+    while(true)
     {
         usleep(1000000);
         std::cout << gyro.gyr_z << std::endl;
-    }*/
-    std::cout << "got here" << std::endl;
+    }
+}
+
+int ERCTraversal::testAruco()
+{
     while(true)
     {
         capture >> image;
-        std::cout << "got here 1" << std::endl;
         Markers = detector.detect(image);
-        std::cout << "got here 2" << std::endl;
         if(Markers.size() > 0)
         {
             currentArea = (Markers[0][0].x - Markers[0][1].x) * (Markers[0][0].y - Markers[0][3].y);
