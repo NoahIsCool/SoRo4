@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     //Autonomous autonomous;
     //CacheTracking tracker("/dev/video1");
 
-    ERCTraversal test;
+    ERCTraversal test("/dev/video1");
 
     gps_finish();
     return a.exec();

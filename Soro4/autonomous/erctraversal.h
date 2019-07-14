@@ -6,10 +6,13 @@
 #include <math.h>
 #include <thread>
 #include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
 #include <aruco/markerdetector.h>
 #include <opencv2/flann.hpp>
-#include <opencv2/aruco.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/videoio.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/video.hpp>
 
 #include "core/core.h"
 #include "core/comms.h"
@@ -18,7 +21,7 @@
 class ERCTraversal
 {
     public:
-        ERCTraversal();
+        ERCTraversal(std::string videoSource);
     private:
         double currentAngle = 0;
         uint16_t biasZ;

@@ -1,6 +1,6 @@
 #include "erctraversal.h"
 
-ERCTraversal::ERCTraversal()
+ERCTraversal::ERCTraversal(std::string videoSource) : capture(videoSource), mySocket("traversal.conf")
 {
     detect.setDictionary("erc.dict"); //this dictionary is in core
     capture.set(CV_CAP_PROP_FRAME_WIDTH, 1290);
@@ -11,8 +11,8 @@ ERCTraversal::ERCTraversal()
         exit(EXIT_FAILURE);
     }
 
-    namedWindow("Frame");
-    namedWindow("final");
+    cv::namedWindow("Frame");
+    cv::namedWindow("final");
     testMain();
     //mainLoop();
 }
@@ -102,7 +102,7 @@ void ERCTraversal::driveToMarker(int angleToMarker)
         array.append((char)getWheelSpeeds(angleToMarker-currentAngle, baseSpeed)[1]);     //right wheels
         array.append((char)0);          //gimble vertical
         array.append((char)0);          //gimble horizontal
-        array.append((char)-2*speed/5); //hash - average of the previous 5 bytes
+        array.append((char)(getWheelSpeeds(angleToMarker-currentAngle, baseSpeed)[0] + getWheelSpeeds(angleToMarker-currentAngle, baseSpeed)[1]) / 5); //hash - average of the previous 5 bytes
         mySocket.sendMessage(array);
         usleep(100000); //goes at this speed for .1 seconds. May need to go for longer
     }
@@ -125,7 +125,7 @@ void ERCTraversal::trackMarker()
                 array.append((char)-baseSpeed/2);     //right wheels
                 array.append((char)0);          //gimble vertical
                 array.append((char)0);          //gimble horizontal
-                array.append((char)-2*speed/5); //hash - average of the previous 5 bytes
+                array.append((char)0); //hash - average of the previous 5 bytes
                 mySocket.sendMessage(array);
                 usleep(100000); //goes at this speed for .1 seconds. May need to go for longer
             }
@@ -139,7 +139,7 @@ void ERCTraversal::trackMarker()
                 array.append((char)baseSpeed/2);     //right wheels
                 array.append((char)0);          //gimble vertical
                 array.append((char)0);          //gimble horizontal
-                array.append((char)-2*speed/5); //hash - average of the previous 5 bytes
+                array.append((char)0); //hash - average of the previous 5 bytes
                 mySocket.sendMessage(array);
                 usleep(100000); //goes at this speed for .1 seconds. May need to go for longer
             }
@@ -152,7 +152,7 @@ void ERCTraversal::trackMarker()
         array.append((char)baseSpeed);     //right wheels
         array.append((char)0);          //gimble vertical
         array.append((char)0);          //gimble horizontal
-        array.append((char)-2*speed/5); //hash - average of the previous 5 bytes
+        array.append((char)0); //hash - average of the previous 5 bytes
         mySocket.sendMessage(array);
         usleep(3000000); //goes at this speed for 3 seconds. May need adjusted
     }
