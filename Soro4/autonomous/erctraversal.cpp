@@ -35,9 +35,7 @@ int ERCTraversal::testAruco()
     while(true)
     {
         capture >> image;
-        std::cout << "got here 1" << std::endl;
         Markers = detector.detect(image);
-        std::cout << "got here 2" << std::endl;
         if(Markers.size() > 0)
         {
             currentArea = (Markers[0][0].x - Markers[0][1].x) * (Markers[0][0].y - Markers[0][3].y);
@@ -74,14 +72,14 @@ std::vector<double> ERCTraversal::getWheelSpeeds(double angleOff, double baseSpe
 void ERCTraversal::updateAngle()
 {
     usleep(500000); //sleeps for half a second to make sure the rover is still
-    //biasZ = gyro.gyr_z; //It is really important that the rover is still here
+    biasZ = imu_raw.gyr_z; //It is really important that the rover is still here
     std::cout<< "Bias Z: " << biasZ << std::endl;
 
     while(true) //TODO: add killswitch or something for this
     {
         usleep(50000);
         //std::cout << gyro.gyr_z << std::endl;
-        //currentAngle = currentAngle + (double)(gyro.gyr_z - biasZ) * .1; //this is updated every 10th of a second. Assumes gyr_z is in correct unit already
+        currentAngle = currentAngle + (double)(imu_raw.gyr_z - biasZ) * .1; //this is updated every 10th of a second. Assumes gyr_z is in correct unit already
         usleep(50000);
     }
 }
@@ -108,10 +106,11 @@ void ERCTraversal::driveToMarker(int angleToMarker)
     {
         capture >> image;
         Markers = detector.detect(image);
-        if(Markers.size() == 0)
+        if(Markers.size() > 0)
         {
             timesDetected++;
-            break;
+            usleep(100000);
+            continue;
         }
         else
             timesDetected = 0;
