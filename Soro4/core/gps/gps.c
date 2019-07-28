@@ -42,6 +42,8 @@ void gps_init(char *ip, char *port)
                         NULL, &vel_ned_node);
     sbp_register_callback(&s, SBP_MSG_DOPS, &sbp_dops_callback,
                         NULL, &dops_node);
+    sbp_register_callback(&s, SBP_MSG_IMU_RAW, &sbp_imu_raw_callback,
+                        NULL, &imu_raw_node);
                         
     printf("about to start thread\n"); 
     
@@ -133,4 +135,8 @@ void sbp_dops_callback(u16 sender_id, u8 len, u8 msg[], void *context)
 void sbp_gps_time_callback(u16 sender_id, u8 len, u8 msg[], void *context)
 {
   gps_time = *(msg_gps_time_t *)msg;
+}
+void sbp_imu_raw_callback(u16 sender_id, u8 len, u8 msg[], void *context)
+{
+  imu_raw = *(msg_imu_raw_t *)msg;
 }
