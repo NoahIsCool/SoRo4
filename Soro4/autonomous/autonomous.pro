@@ -35,6 +35,7 @@ LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_video -lopenc
 
 SOURCES += \
     cachetracking.cpp \
+    urcauton2020.cpp
     erctraversal.cpp #\
     autonomous.cpp
         SearchAlgorithm.cpp
@@ -42,7 +43,8 @@ SOURCES += \
 HEADERS += \
         autonomous_global.h \
     cachetracking.h \
-    erctraversal.h #\
+    urcauton2020.h
+    erctraversal.h
     autonomous.h
         SearchAlgorithm.h
 
