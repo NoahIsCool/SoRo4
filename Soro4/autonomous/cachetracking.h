@@ -31,7 +31,7 @@ public:
 private:
     void startTracking();
 
-    std::vector< Rect > findShapes(Mat &frame, int minArea = 1000);
+    std::vector< RotatedRect > findShapes(Mat &frame, int minArea = 1000);
 
     VideoCapture capture;
     Mat greenMask;
