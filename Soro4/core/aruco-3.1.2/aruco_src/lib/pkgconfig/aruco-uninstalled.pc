@@ -1,0 +1,10 @@
+
+libdir=/home/reza/Desktop/SoRo/aruco-3.1.2/build
+includedir=/home/reza/Desktop/SoRo/aruco-3.1.2/src
+
+Name: aruco
+Description: ArUco: a minimal library for Augmented Reality applications based on OpenCv, uninstalled Version.
+Version: 3.1.2
+Requires: opencv >= 2.1.0
+Libs: -L${libdir} -laruco
+Cflags: -I${includedir}

@@ -21,6 +21,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 INCLUDEPATH += /usr/local/include/opencv
 INCLUDEPATH += $$PWD/..
+#INCLUDEPATH += ../core/aruco-3.1.2/aruco_src/lib/
+#INCLUDEPATH += ../core/aruco-3.1.2/aruco_src/include/aruco/
 #INCLUDEPATH += /usr/include/gstreamer-1.0 /usr/include/glib-2.0 /usr/lib/x86_64-linux-gnu/glib-2.0/include
 #INCLUDEPATH += /usr/lib/arm-linux-gnueabihf/glib-2.0/include
 
@@ -28,7 +30,7 @@ SOURCES += \
         main.cpp
 
 LIBS += -L/usr/local/lib/ -L../../libs -lautonomous -ldriveSystem -lslaveArm -lcore #-lvideoServer
-LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_video -lopencv_imgproc -lopencv_videoio
+LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_video -lopencv_imgproc -lopencv_videoio -laruco
 
 #LIBS += -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0
 
